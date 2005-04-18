@@ -1,1 +1,1 @@
-"""The P&P RPG Client."""
+"""RPG Assistant."""

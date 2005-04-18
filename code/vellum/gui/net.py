@@ -1,3 +1,5 @@
+"""HTTP and PB client."""
+
 from twisted.internet import reactor, defer
 from twisted.spread import pb
 from twisted.python import log
