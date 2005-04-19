@@ -1,9 +1,4 @@
-from twisted.application import service, internet
-from twisted.spread import pb, util
-from nevow import static, appserver
-
-
-from net import PBPORT, HTTPPORT
+"""The PB service of the vellum server."""
 
 map = '/grimcatch.jpg'
 
@@ -32,13 +27,3 @@ class Gameness(pb.Root):
     # character and object: name, image_mode, top, left
     # sound: name, top, left
     # text: title, top, left
-
-
-webroot = static.File('.')
-
-application = service.Application('SeeFantasy')
-pbsvc = internet.TCPServer(PBPORT, pb.PBServerFactory(Gameness()))
-httpsvc = internet.TCPServer(HTTPPORT, appserver.NevowSite(webroot))
-pbsvc.setServiceParent(application)
-httpsvc.setServiceParent(application)
-

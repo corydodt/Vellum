@@ -4,14 +4,12 @@ from twisted.internet import reactor, defer
 from twisted.spread import pb
 from twisted.python import log
 
-from filesystem import fs
+from vellum.gui.filesystem import fs
+from vellum.server import PBPORT, HTTPPORT
 
 def _cb_connected(pbobject):
     log.msg('connected %s' % (repr(pbobject,)))
     return pbobject
-
-PBPORT = 9559
-HTTPPORT = 9580
 
 
 class NetClient:
