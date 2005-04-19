@@ -1,3 +1,4 @@
+#!python
 import sys, os
 # this must happen first because reactors are magikal
 from twisted.internet import gtk2reactor
@@ -5,8 +6,8 @@ gtk2reactor.install()
 from twisted.internet import reactor, defer
 from twisted.python import log, usage, failure
 
-from frontend import FrontEnd
-from net import NetClient
+from vellum.gui.frontend import FrontEnd
+from vellum.gui.net import NetClient
 
 class Options(usage.Options):
     synopsis = 'Usage: vellumapp.py [options]'
