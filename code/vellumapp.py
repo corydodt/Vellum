@@ -4,10 +4,12 @@ import sys, os
 from twisted.internet import gtk2reactor
 gtk2reactor.install()
 from twisted.internet import reactor, defer
-from twisted.python import log, usage, failure
+from twisted.python import log, usage
 
 from vellum.gui.frontend import FrontEnd
 from vellum.gui.net import NetClient
+
+import gtk
 
 class Options(usage.Options):
     synopsis = 'Usage: vellumapp.py [options]'
@@ -15,10 +17,12 @@ class Options(usage.Options):
                      ['logfile', 'l', None, 'File to use for logging'],
                      ]
 
-def quitWithMessage(fail=failure.Failure()):
-    log.err(fail)
-    gtk.main_quit()
-
+def finish(fail=None):
+    try:
+        if fail is not None:
+            log.err(fail)
+    finally:
+        reactor.stop()
 
 
 def run(argv = None):
@@ -35,9 +39,12 @@ def run(argv = None):
     d = defer.Deferred()
     netclient = NetClient()
     gui = FrontEnd(d, netclient, o['fps'])
-    d.addCallback(lambda _: gui.quit()).addErrback(quitWithMessage)
+    d.addCallback(finish).addErrback(finish)
 
     reactor.run()
+    # #@!@# -- without the following, we can't quit the app after an error.
+    reactor.suggestThreadPoolSize(0)
+
 
 if __name__ == '__main__':
     run()

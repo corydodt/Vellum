@@ -1,5 +1,6 @@
 from twisted.application import service, internet
-from twisted.spread import pb, util
+from twisted.spread import pb
+
 from nevow import static, appserver
 
 

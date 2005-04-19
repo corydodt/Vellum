@@ -113,6 +113,3 @@ class FrontEnd:
 
     def _cb_gotFileInfos(self, fileinfos):
         self.fileinfos = fileinfos
-
-    def quit(self):
-        gtk.main_quit()

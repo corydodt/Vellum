@@ -1,5 +1,7 @@
 """The PB service of the vellum server."""
 
+from twisted.spread import pb
+
 map = '/grimcatch.jpg'
 
 class Gameness(pb.Root):
