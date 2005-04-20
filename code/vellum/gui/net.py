@@ -1,11 +1,14 @@
 """HTTP and PB client."""
 
+import md5
+
 from twisted.internet import reactor, defer
 from twisted.spread import pb
 from twisted.python import log
+from twisted.web.client import downloadPage
 
 from vellum.gui.filesystem import fs
-from vellum.server import PBPORT, HTTPPORT
+from vellum.server import HTTPPORT
 
 def _cb_connected(pbobject):
     log.msg('connected %s' % (repr(pbobject,)))
@@ -17,6 +20,7 @@ class NetClient:
         self.pbfactory = pb.PBClientFactory()
 
     def startPb(self, server, port):
+        self.server = server
         reactor.connectTCP(server, port, self.pbfactory)
         d = self.pbfactory.getRootObject()
         d.addErrback(lambda reason: 'error: '+str(reason.value))
@@ -45,8 +49,8 @@ class NetClient:
                 return defer.maybeDeferred(self._getNextFile, fileinfos)
             except ValueError:
                 log.msg('Getting file at %s' % (fi['uri'],))
-                uri = 'http://%s:%s%s' % (self.options['server'],
-                                          self.options['httpport'],
+                uri = 'http://%s:%s%s' % (self.server,
+                                          HTTPPORT,
                                           fi['uri'],
                                           )
                 return downloadPage(uri, fs.downloads(fi['name'])

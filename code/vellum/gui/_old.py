@@ -9,7 +9,6 @@ class Viewed:
         self.rect = 0,0
         self.characters = []
 
-        pygame.display.set_caption('SeeFantasy')
         self.screen = pygame.display.set_mode((320,240))
 
 

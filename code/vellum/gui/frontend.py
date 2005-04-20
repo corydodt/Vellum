@@ -61,8 +61,8 @@ from gtk import glade
 
 from twisted.python import log
 
-from net import PBPORT
-from filesystem import fs
+from vellum.server import PBPORT
+from vellum.gui.filesystem import fs
 
 class FrontEnd:
     def __getattr__(self, name):
@@ -102,7 +102,7 @@ class FrontEnd:
     def displayMap(self):
         mapinfo = self._getMapInfo()
         log.msg('displaying map %s' % (mapinfo['name'],))
-        image_object = pygame.image.load(self.fs(mapinfo['name']))
+        image_object = pygame.image.load(fs.downloads(mapinfo['name']))
         self.view.setMap(image_object)
         # self.view.addCharacter
         # self.view.addItem
