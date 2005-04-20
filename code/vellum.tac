@@ -13,7 +13,7 @@ webroot = static.File('.')
 application = service.Application('SeeFantasy')
 
 ircsvc = internet.TCPClient('irc.freenode.net', 6667, 
-                            VellumTalk('#where'))
+                            VellumTalk('#vellum'))
 
 pbsvc = internet.TCPServer(PBPORT, pb.PBServerFactory(Gameness()))
 
