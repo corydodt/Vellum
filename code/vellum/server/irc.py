@@ -118,7 +118,11 @@ class LogBot(irc.IRCClient):
             return self._handleDice(channel, user, command)
         m = getattr(self, 'respondTo_%s' % (command_word,), 
                     self.respondTo_DEFAULT)
-        m(channel, user, args)
+        try:
+            m(channel, user, args)
+        except Exception, e:
+            log.err(e)
+            self.msg(channel, '** Sorry, %s: %s' % (user, str(e)))
 
     def _resetWtfCount(self):
         self.wtf = 0
