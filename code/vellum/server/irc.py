@@ -5,13 +5,13 @@ Vellum's face.  The bot that answers actions in the channel.
 import time, sys
 import re
 
-
 # twisted imports
 from twisted.protocols import irc
 from twisted.internet import reactor, protocol, task
 from twisted.python import log
 
 import yaml
+
 
 from vellum.server import dice
 
@@ -89,7 +89,7 @@ class LogBot(irc.IRCClient):
         return self._handleDice(channel, user, msg)
 
     def _handleDice(self, channel, user, msg):
-        dice_expressions = re.findall('{.+?}', msg)
+        dice_expressions = re.findall(r'\[.+?\]|{.+?}', msg)
         for exp in dice_expressions:
             self.respondTo_DICE(channel, user, exp)
 
@@ -114,6 +114,8 @@ class LogBot(irc.IRCClient):
             command_word = _splits.pop(0)
             if len(_splits) > 0:
                 args = _splits[0]
+        if re.match(r'\[.+?\]|{.+?}', command_word):
+            return self._handleDice(channel, user, command)
         m = getattr(self, 'respondTo_%s' % (command_word,), 
                     self.respondTo_DEFAULT)
         m(channel, user, args)
@@ -127,13 +129,30 @@ class LogBot(irc.IRCClient):
         if self.wtf < 3:
             self.msg(channel, "wtf?")
             self.wtf = self.wtf + 1
+            return
+        if self.wtf < 4:
+            print "Spam blocking tripped. WTF counter exceeded."
+            self.wtf = self.wtf + 1
 
     def respondTo_DICE(self, channel, user, exp):
         """{d1ce} expressions -- see dice.py for user syntax"""
-        exp = exp.strip('{}')
+        if exp[0] == '[':
+            sorted = 1
+        else:
+            sorted = 0
+        exp = exp.strip('{}[]')
         try:
             roll = self.roller.roll(exp)
-            response = '%s, you rolled: %s = %s' % (user, exp, roll)
+            if sorted:
+                roll.sort()
+                roll = map(str, roll)
+                _roll = '[%s]' % (', '.join(roll),)
+                if len(roll) > 1:
+                    _roll = _roll + ' (sorted)'
+            else:
+                roll = map(str, roll)
+                _roll = '{%s}' % (', '.join(roll),)
+            response = '%s, you rolled: %s = %s' % (user, exp, _roll)
             self.msg(channel, response)
         except RuntimeError, e:
             pass
