@@ -18,7 +18,7 @@ from vellum.server.fs import fs
 
 
 
-class LogBot(irc.IRCClient):
+class VellumTalk(irc.IRCClient):
     """A logging IRC bot."""
 
     def __init__(self, *args, **kwargs):
@@ -203,14 +203,14 @@ class LogBot(irc.IRCClient):
         # TODO - change the player name list
 
 
-class VellumTalk(protocol.ClientFactory):
-    """A factory for LogBots.
+class VellumTalkFactory(protocol.ClientFactory):
+    """A factory for VellumTalks.
 
     A new protocol instance will be created each time we connect to the server.
     """
 
     # the class of the protocol to build when new connection is made
-    protocol = LogBot
+    protocol = VellumTalk 
 
     def __init__(self, channel):
         self.channel = channel
