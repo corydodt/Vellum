@@ -10,7 +10,7 @@ import glob
 # twisted imports
 from twisted.protocols import irc
 from twisted.internet import reactor, protocol, task
-from twisted.python import log, failure
+from twisted.python import log
 
 
 from vellum.server import dice, encounter
@@ -31,8 +31,8 @@ class LogBot(irc.IRCClient):
 
         self.responding = 0 # don't start responding until i'm in a channel
         self.club = encounter.Club()
-        # irc.IRCClient.__init__(self, *args, **kwargs)
         self._loadParty()
+        # irc.IRCClient.__init__(self, *args, **kwargs)
     
     nickname = "VellumTalk"
     
