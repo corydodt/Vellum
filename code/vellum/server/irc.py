@@ -167,10 +167,6 @@ class VellumTalk(irc.IRCClient):
         for char in self.party.bodies:
             self.msg(channel, '%(name)s: %(classes)s' % char.summarize())
 
-    def _reportEncounterCount(self, channel):
-        self.msg(channel, 
-                 'There are now %s characters in the encounter.' % 
-                 (len(self.encounter.bodies),))
 
     def respondTo_iam(self, channel, user, charname):
         """Take control of a character by name."""
@@ -186,10 +182,9 @@ class VellumTalk(irc.IRCClient):
 
     def respondTo_remove(self, channel, user, charname):
         """Remove a character from an encounter by name."""
-        char = self.encounter.dismiss(charname)
-        self.msg(channel, "%s is no longer in the encounter." % 
+        char = self.party.dismiss(charname)
+        self.msg(channel, "%s is no longer in the party." % 
                  (char.getName(),))
-        self._reportEncounterCount(channel)
 
     def respondTo_help(self, channel, user, _):
         self.msg(channel, user + ', help is on the way. (TBD)')

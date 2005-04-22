@@ -86,13 +86,20 @@ class Roller:
     def finish(self):
         # set these to defaults in the finish step, not in the init, 
         # so the parser instance can be reused
+        identity = lambda l: l
         if self.count == 0:
             self.count = 1
         if self.repeat == 0:
             self.repeat = 1
         if self.filter == None:
-            self.filter = lambda l: l
+            self.filter = identity
         if self.dice == 0:
+            # an int by itself is just an int.
+            if self.count > 0 and self.filter is identity:
+                for n in xrange(self.repeat):
+                    yield self.count + self.modifier
+                self.reset()
+                return
             raise RuntimeError("No die size was given")
         for n in xrange(self.repeat):
             tot = sum(self.filter(
@@ -106,7 +113,7 @@ class Roller:
 def test():
     r = Roller()
     for dice in ['d6xz',  # repeat not a number
-                 '1d', '1+2', # left out die size 
+                 '1d', # left out die size 
                  '1d6l3l3', '1d6h3l3',  # can't specify more than one filter
                  '1d6h+1', # can't leave the die count out of the filter
                  '1d6h2+1', # can't keep more dice than you started with
@@ -118,6 +125,9 @@ def test():
             print e
         else:
             assert 0, "%s did not cause an error, and should've" % (dice,)
+    print r.roll('5')
+    print r.roll('5x3')
+    print r.roll('5+1x3')
     print r.roll('d6x3')
     print r.roll('9d6l3-10x2')
     print r.roll('9d6h3+10x2')
@@ -125,6 +135,9 @@ def test():
     print r.roll('d 6 -2 x 3')
     print r.roll('2d6-2x1')
     for n in xrange(1000):
+        assert r.roll('5')[0] == 5
+        assert r.roll('5x3')[2] == 5
+        assert r.roll('5+1x3')[2] == 6
         assert 1 <= r.roll('d6')[0] <= 6
         assert 3 <= r.roll('3d6')[0] <= 18
         assert 2 <= r.roll('9d6l3-1x2')[0] <= 17
