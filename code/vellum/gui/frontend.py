@@ -62,7 +62,7 @@ from gtk import glade
 from twisted.python import log
 
 from vellum.server import PBPORT
-from vellum.gui.filesystem import fs
+from vellum.gui.fs import fs
 
 class FrontEnd:
     def __getattr__(self, name):

@@ -7,7 +7,7 @@ from twisted.spread import pb
 from twisted.python import log
 from twisted.web.client import downloadPage
 
-from vellum.gui.filesystem import fs
+from vellum.gui.fs import fs
 from vellum.server import HTTPPORT
 
 def _cb_connected(pbobject):

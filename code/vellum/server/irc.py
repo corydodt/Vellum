@@ -4,47 +4,35 @@ Vellum's face.  The bot that answers actions in the channel.
 # system imports
 import time, sys
 import re
+import traceback
+import glob
 
 # twisted imports
 from twisted.protocols import irc
 from twisted.internet import reactor, protocol, task
-from twisted.python import log
-
-import yaml
+from twisted.python import log, failure
 
 
-from vellum.server import dice
+from vellum.server import dice, encounter
+from vellum.server.fs import fs
 
-
-class MessageLogger:
-    """
-    An independant logger class (because separation of application
-    and protocol logic is a good thing).
-    """
-    def __init__(self, file):
-        self.file = file
-
-    def log(self, message):
-        """Write a message to the file."""
-        timestamp = time.strftime("[%H:%M:%S]", time.localtime(time.time()))
-        self.file.write('%s %s\n' % (timestamp, message))
-        self.file.flush()
-
-    def close(self):
-        self.file.close()
 
 
 class LogBot(irc.IRCClient):
     """A logging IRC bot."""
 
     def __init__(self, *args, **kwargs):
+        self.encounters = []
+        self.party = encounter.Encounter()
         self.roller = dice.Roller()
         self.wtf = 0  # number of times a "wtf" has occurred recently.
         # reset wtf's every 30 seconds 
         self.resetter = task.LoopingCall(self._resetWtfCount).start(30.0)
 
         self.responding = 0 # don't start responding until i'm in a channel
+        self.club = encounter.Club()
         # irc.IRCClient.__init__(self, *args, **kwargs)
+        self._loadParty()
     
     nickname = "VellumTalk"
     
@@ -53,6 +41,7 @@ class LogBot(irc.IRCClient):
 
     def connectionLost(self, reason):
         irc.IRCClient.connectionLost(self, reason)
+        # TODO - this might be a good place to save
 
 
     # callbacks for events
@@ -121,8 +110,8 @@ class LogBot(irc.IRCClient):
         try:
             m(channel, user, args)
         except Exception, e:
-            log.err(e)
             self.msg(channel, '** Sorry, %s: %s' % (user, str(e)))
+            log.msg(''.join(traceback.format_exception(*sys.exc_info())))
 
     def _resetWtfCount(self):
         self.wtf = 0
@@ -165,11 +154,42 @@ class LogBot(irc.IRCClient):
         """Greet."""
         self.msg(channel, 'Hello %s.' % (user,))
 
-    def respondTo_load(self, channel, user, filename):
-        """Load a character from a yml file"""
-        char = yaml.loadFile(filename).next()
+    def _loadParty(self):
+        """Load characters in the party/ dir"""
+        for filename in glob.glob(fs.party('*.yml')):
+            char = encounter.Character(filename=fs.party(filename))
+            self.party.addCharacter(char)
+
+    def respondTo_party(self, channel, user, _):
+        if len(self.party.bodies) == 0:
+            self.msg(channel, '%s, nobody is in the party.' % (user,))
+            return
+        for char in self.party.bodies:
+            self.msg(channel, '%(name)s: %(classes)s' % char.summarize())
+
+    def _reportEncounterCount(self, channel):
         self.msg(channel, 
-                 user + ', I loaded %(name)s, a %(classes)s' % char)
+                 'There are now %s characters in the encounter.' % 
+                 (len(self.encounter.bodies),))
+
+    def respondTo_iam(self, channel, user, charname):
+        """Take control of a character by name."""
+        try:
+            player = self.club.findExact(user)
+        except ValueError:
+            player = encounter.Player(user)
+            self.club.registerPlayer(player)
+        char = self.encounter.find(charname, first=1)
+        player.own(char)
+        self.msg(channel, "%s now owns %s." % (player.getName(), 
+                                               char.getName()))
+
+    def respondTo_remove(self, channel, user, charname):
+        """Remove a character from an encounter by name."""
+        char = self.encounter.dismiss(charname)
+        self.msg(channel, "%s is no longer in the encounter." % 
+                 (char.getName(),))
+        self._reportEncounterCount(channel)
 
     def respondTo_help(self, channel, user, _):
         self.msg(channel, user + ', help is on the way. (TBD)')
@@ -180,6 +200,7 @@ class LogBot(irc.IRCClient):
         """Called when an IRC user changes their nickname."""
         old_nick = prefix.split('!')[0]
         new_nick = params[0]
+        # TODO - change the player name list
 
 
 class VellumTalk(protocol.ClientFactory):
