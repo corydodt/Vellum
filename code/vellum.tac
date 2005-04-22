@@ -6,7 +6,7 @@ from nevow import static, appserver
 
 from vellum.server import PBPORT, HTTPPORT
 from vellum.server.pb import Gameness
-from vellum.server.irc import VellumTalk
+from vellum.server.irc import VellumTalkFactory
 
 webroot = static.File('.')
 
