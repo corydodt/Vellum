@@ -13,7 +13,7 @@ from twisted.internet import reactor, protocol, task
 from twisted.python import log
 
 
-from vellum.server import dice, encounter
+from vellum.server import encounter, alias
 from vellum.server.fs import fs
 
 
@@ -24,7 +24,6 @@ class VellumTalk(irc.IRCClient):
     def __init__(self, *args, **kwargs):
         self.encounters = []
         self.party = encounter.Encounter()
-        self.roller = dice.Roller()
         self.wtf = 0  # number of times a "wtf" has occurred recently.
         # reset wtf's every 30 seconds 
         self.resetter = task.LoopingCall(self._resetWtfCount).start(30.0)
@@ -128,27 +127,17 @@ class VellumTalk(irc.IRCClient):
             self.wtf = self.wtf + 1
 
     def respondTo_DICE(self, channel, user, exp):
-        """{d1ce} expressions -- see dice.py for user syntax"""
-        if exp[0] == '[':
-            sorted = 1
-        else:
-            sorted = 0
-        exp = exp.strip('{}[]')
-        try:
-            roll = self.roller.roll(exp)
-            if sorted:
-                roll.sort()
-                roll = map(str, roll)
-                _roll = '[%s]' % (', '.join(roll),)
-                if len(roll) > 1:
-                    _roll = _roll + ' (sorted)'
-            else:
-                roll = map(str, roll)
-                _roll = '{%s}' % (', '.join(roll),)
-            response = '%s, you rolled: %s = %s' % (user, exp, _roll)
+        """{d1ce} expressions
+        Understands all the expressions in dice.py
+        Also understands aliases, for example:
+        <bob> {battleaxe 1d20+3} => rolls 1d20+3, and remembers that bob's
+            alias {battleaxe} is 1d20+3
+        When defining an alias, the dice expression must not contain spaces
+        """
+        result = alias.resolve(user, exp)
+        if result is not None:
+            response = '%s, you rolled: %s' % (user, result)
             self.msg(channel, response)
-        except RuntimeError, e:
-            pass
 
     def respondTo_hello(self, channel, user, _):
         """Greet."""
