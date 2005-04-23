@@ -62,9 +62,11 @@ class Roller:
         num = int(token[1:])
         if self.filter is not None:
             s = "Syntax error: Multiple filters specified in %s"
+            self.reset()
             raise RuntimeError(s % (token,))
         if num > self.count:
             s = "Syntax error: Keeping more dice than you are rolling in %s"
+            self.reset()
             raise RuntimeError(s % (token,))
         if key in 'lL':
             self.filter = lambda l: least(l, num)
@@ -87,20 +89,26 @@ class Roller:
         # set these to defaults in the finish step, not in the init, 
         # so the parser instance can be reused
         identity = lambda l: l
+        _autocount = 0
         if self.count == 0:
             self.count = 1
+            _autocount = 1   # remember that count was set automatically
         if self.repeat == 0:
             self.repeat = 1
         if self.filter == None:
             self.filter = identity
         if self.dice == 0:
             # an int by itself is just an int.
-            if self.count > 0 and self.filter is identity:
+            if (self.count > 0 
+                and self.filter is identity 
+                and _autocount == 0 # tell blank count from count = 1 for real
+                ):
                 for n in xrange(self.repeat):
                     yield self.count + self.modifier
                 self.reset()
                 return
-            raise RuntimeError("No die size was given")
+            self.reset()
+            raise RuntimeError("Syntax error: No die size was given")
         for n in xrange(self.repeat):
             tot = sum(self.filter(
                             [roll(self.dice, 0) for n in xrange(self.count)]
@@ -117,6 +125,7 @@ def test():
                  '1d6l3l3', '1d6h3l3',  # can't specify more than one filter
                  '1d6h+1', # can't leave the die count out of the filter
                  '1d6h2+1', # can't keep more dice than you started with
+                 '', # empty should be an error
                  #'1d6+5 1d1' # FIXME, last one doesn't fail correctly
                  ]:
         try:
