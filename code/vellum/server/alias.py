@@ -25,7 +25,7 @@ def registerAliasHook(alias, hook):
 
     def rememberInitiative(user, initroll):
         iniatives.append((initroll, user))
-    >>> addAliasHook('init', rememberInitiative)
+    >>> addAliasHook(('init',), rememberInitiative)
 
     Now rememberInitiative will get called any time someone uses "{init ..}"
     """
@@ -49,12 +49,20 @@ def parseAlias(st, user):
     rolled = rollSafe(dicetry)
     if rolled is None:
         # alias or junk. roll it if we can
-        expression = aliases.get(user, {}).get(tuple(words), '')
-        return rollSafe(expression)
+        words = tuple(words)
+        expression = aliases.get(user, {}).get(words, '')
+        rolled = rollSafe(expression)
     else:
         # alias assignment
-        aliases.setdefault(user, {})[tuple(words[:-1])] = dicetry 
-        return rolled
+        words = tuple(words[:-1])
+        aliases.setdefault(user, {})[words] = dicetry 
+    callAliasHooks(words, user, rolled)
+    return rolled
+
+def callAliasHooks(words, user, rolled):
+    hooks = alias_hooks.get(words, [])
+    for hook in hooks:
+        hook(user, rolled)
 
 def test_parseAlias():
     # junk
@@ -78,9 +86,6 @@ def resolve(user, alias):
     alias = alias.strip('{}[]')
 
     rolled = parseAlias(alias, user)
-    for alias in alias_hooks:
-        for hook in alias_hooks[alias]:
-            hook(user, rolled)
 
     if rolled is not None:
         return '%s = %s' % (alias, formatDice(rolled, sorted))

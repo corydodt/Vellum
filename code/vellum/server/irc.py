@@ -59,7 +59,7 @@ class VellumTalk(irc.IRCClient):
         self._loadParty()
         # TODO - move this into d20-specific code somewhere
         self.initiatives = []
-        alias.registerAliasHook('init', self.doInitiative)
+        alias.registerAliasHook(('init',), self.doInitiative)
         # irc.IRCClient.__init__(self, *args, **kwargs)
 
     def _loadParty(self):
@@ -102,6 +102,14 @@ class VellumTalk(irc.IRCClient):
         # This also reminds us that private messages are always commands.
         if channel == self.nickname:
             channel = user
+
+        # if the line begins with *foo, then I am talking as foo, and
+        # foo should be considered the user
+        if msg.startswith('*'):
+            first = msg.split()[0]
+            name = first[1:]
+            if len(name) > 0:
+                user = name
 
         # if the bot is being addressed, do stuff
         hail = self.nickname.lower() + ':'
