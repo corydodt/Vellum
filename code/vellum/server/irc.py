@@ -43,6 +43,8 @@ atexit.register(saveAliases)
 
 class VellumTalk(irc.IRCClient):
     """A logging IRC bot."""
+    
+    nickname = "VellumTalk"
 
     def __init__(self, *args, **kwargs):
         loadAliases()
@@ -55,15 +57,28 @@ class VellumTalk(irc.IRCClient):
         self.responding = 0 # don't start responding until i'm in a channel
         self.club = encounter.Club()
         self._loadParty()
+        # TODO - move this into d20-specific code somewhere
+        self.initiatives = []
+        alias.registerAliasHook('init', self.doInitiative)
         # irc.IRCClient.__init__(self, *args, **kwargs)
-    
-    nickname = "VellumTalk"
+
+    def _loadParty(self):
+        """Load characters in the party/ dir"""
+        for filename in glob.glob(fs.party('*.yml')):
+            char = encounter.Character(filename=fs.party(filename))
+            self.party.addCharacter(char)
     
     def connectionMade(self):
         irc.IRCClient.connectionMade(self)
 
     def connectionLost(self, reason):
         irc.IRCClient.connectionLost(self, reason)
+
+
+    def doInitiative(self, user, result):
+        self.initiatives.append((result[0], user))
+        self.initiatives.sort()
+        self.initiatives.reverse()
 
 
     # callbacks for events
@@ -135,8 +150,8 @@ class VellumTalk(irc.IRCClient):
             self.msg(channel, '** Sorry, %s: %s' % (user, str(e)))
             log.msg(''.join(traceback.format_exception(*sys.exc_info())))
 
-    def _resetWtfCount(self):
-        self.wtf = 0
+
+    # responses to being hailed by a user
 
     def respondTo_DEFAULT(self, channel, user, args):
         # we don't want to get caught looping, so respond up to 3 times
@@ -148,6 +163,9 @@ class VellumTalk(irc.IRCClient):
         if self.wtf < 4:
             print "Spam blocking tripped. WTF counter exceeded."
             self.wtf = self.wtf + 1
+
+    def _resetWtfCount(self):
+        self.wtf = 0
 
     def respondTo_DICE(self, channel, user, exp):
         """{d1ce} expressions
@@ -166,11 +184,22 @@ class VellumTalk(irc.IRCClient):
         """Greet."""
         self.msg(channel, 'Hello %s.' % (user,))
 
-    def _loadParty(self):
-        """Load characters in the party/ dir"""
-        for filename in glob.glob(fs.party('*.yml')):
-            char = encounter.Character(filename=fs.party(filename))
-            self.party.addCharacter(char)
+    def respondTo_n(self, channel, user, _):
+        """Next initiative"""
+        next = self.initiatives.pop(0)
+        self.msg(channel, next)
+        self.initiatives.append(next)
+
+    def respondTo_p(self, channel, user, _):
+        """Previous initiative"""
+        prev = self.initiatives.pop(-1)
+        self.msg(channel, self.initiatives[-1])
+        self.initiatives.insert(0, prev)
+
+    def respondTo_combat(self, channel, user, _):
+        """Start combat by resetting initiatives"""
+        self.initiatives = [(9999, '++New round ++')]
+        self.msg(channel, '** Beginning combat **')
 
     def respondTo_party(self, channel, user, _):
         if len(self.party.bodies) == 0:
@@ -178,7 +207,6 @@ class VellumTalk(irc.IRCClient):
             return
         for char in self.party.bodies:
             self.msg(channel, '%(name)s: %(classes)s' % char.summarize())
-
 
     def respondTo_iam(self, channel, user, charname):
         """Take control of a character by name."""

@@ -17,6 +17,21 @@ def test_rollSafe():
     assert rollSafe('1 d +1') is None
 
 
+alias_hooks = {}
+
+def registerAliasHook(alias, hook):
+    """Register a handler for a particular alias.  Handlers must
+    take two arguments, username and evaluated result.
+
+    def rememberInitiative(user, initroll):
+        iniatives.append((initroll, user))
+    >>> addAliasHook('init', rememberInitiative)
+
+    Now rememberInitiative will get called any time someone uses "{init ..}"
+    """
+    alias_hooks.setdefault(alias, []).append(hook)
+
+
 def parseAlias(st, user):
     """Valid syntaxes:
     {anything you want here} => look up entire str on alias table
@@ -63,6 +78,9 @@ def resolve(user, alias):
     alias = alias.strip('{}[]')
 
     rolled = parseAlias(alias, user)
+    for alias in alias_hooks:
+        for hook in alias_hooks[alias]:
+            hook(user, rolled)
 
     if rolled is not None:
         return '%s = %s' % (alias, formatDice(rolled, sorted))
