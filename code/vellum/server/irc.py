@@ -47,7 +47,10 @@ class VellumTalk(irc.IRCClient):
     nickname = "VellumTalk"
 
     def __init__(self, *args, **kwargs):
-        loadAliases()
+        loadAliases() # FIXME! - if we're going to overwrite aliases at 
+                      # shutdown, we HAVE to load them at startup.
+                      # if VellumTalk never initializes, aliases.pkl
+                      # gets written EMPTY
         self.encounters = []
         self.party = encounter.Encounter()
         self.wtf = 0  # number of times a "wtf" has occurred recently.
