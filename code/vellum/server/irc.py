@@ -195,18 +195,19 @@ class VellumTalk(irc.IRCClient):
     def respondTo_n(self, channel, user, _):
         """Next initiative"""
         next = self.initiatives.pop(0)
-        self.msg(channel, next)
+        self.msg(channel, '%s (init %s)' % (next[1], next[0],))
         self.initiatives.append(next)
 
     def respondTo_p(self, channel, user, _):
         """Previous initiative"""
         prev = self.initiatives.pop(-1)
-        self.msg(channel, self.initiatives[-1])
+        _init = self.initiatives[-1]
+        self.msg(channel, '%s (init %s)' % (_init[1], _init[0],))
         self.initiatives.insert(0, prev)
 
     def respondTo_combat(self, channel, user, _):
         """Start combat by resetting initiatives"""
-        self.initiatives = [(9999, '++New round ++')]
+        self.initiatives = [(9999, '++ New round ++')]
         self.msg(channel, '** Beginning combat **')
 
     def respondTo_party(self, channel, user, _):
