@@ -6,6 +6,8 @@ except ImportError:
 import atexit
 import errno
 
+from twisted.python import log
+
 from vellum.server import dice
 from vellum.server.fs import fs
 
@@ -14,7 +16,7 @@ roller = dice.Roller()
 aliases = {}
 
 def saveAliases():
-    print 'saving aliases'
+    log.msg('saving aliases')
     pickle.dump(aliases, 
                 file(fs.aliases('aliases.pkl'), 'wb'), 
                 2)
@@ -22,11 +24,11 @@ def saveAliases():
 def loadAliases():
     try:
         aliases = pickle.load(file(fs.aliases('aliases.pkl'), 'rb'))
-        print 'loaded aliases'
+        log.msg('loaded aliases')
     except IOError, e:
         # if the file just doesn't exist, assume we have to create it.
         if e.errno == errno.ENOENT:
-            print 'new aliases.pkl'
+            log.msg('new aliases.pkl')
         else:
             raise
 

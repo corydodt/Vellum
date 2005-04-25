@@ -71,7 +71,7 @@ class VellumTalk(irc.IRCClient):
     def privmsg(self, user, channel, msg):
         """This will get called when the bot receives a message."""
         user = user.split('!', 1)[0]
-        print user, channel, msg
+        log.msg(user, channel, msg)
         if not self.responding:
             return
         # Check to see if they're sending me a private message
@@ -109,14 +109,14 @@ class VellumTalk(irc.IRCClient):
     def action(self, user, channel, msg):
         """This will get called when the bot sees someone do an action."""
         user = user.split('!', 1)[0]
-        print user, channel, msg
+        log.msg(user, channel, msg)
         if not self.responding:
             return
         if channel == self.nickname:
             channel = user
 
         # only dice are handled in actions
-        self._handleDice(channel, user, msg)
+        return self._handleDice(channel, user, msg)
 
     def dispatchCommand(self, channel, user, command):
         """Choose a method based on the command word, and pass args if any"""
@@ -174,7 +174,7 @@ class VellumTalk(irc.IRCClient):
     def respondTo_n(self, channel, user, _):
         """Next initiative"""
         next = self.initiatives.pop(0)
-        if next is None:
+        if next[1] is None:
             self.msg(channel, '++ New round ++')
             # TODO - update timed events here (don't update on prev init)
         else:
@@ -184,15 +184,15 @@ class VellumTalk(irc.IRCClient):
 
     def respondTo_p(self, channel, user, _):
         """Previous initiative"""
-        prev = self.initiatives.pop(-1)
-        _init = self.initiatives[-1]
-        if _init is None:
+        last, prev = self.initiatives.pop(-1), self.initiatives.pop(-1)
+        if prev[1] is None:
             self.msg(channel, '++ New round ++')
         else:
             self.msg(channel, 
-                     '%s (init %s) is ready to act . . .' % (_init[1], 
-                                                             _init[0],))
-        self.initiatives.insert(0, prev)
+                     '%s (init %s) is ready to act . . .' % (prev[1], 
+                                                             prev[0],))
+        self.initiatives.append(prev)
+        self.initiatives.insert(0, last)
 
     def respondTo_combat(self, channel, user, _):
         """Start combat by resetting initiatives"""
@@ -293,3 +293,88 @@ class VellumTalkFactory(protocol.ClientFactory):
     def clientConnectionFailed(self, connector, reason):
         print "connection failed:", reason
         reactor.stop()
+
+testcommands = [
+('MFen', 'VellumTalk', 'MFen', 'hello', r'Hello MFen\.'),
+('MFen', 'VellumTalk', 'MFen', 'VellumTalk: hello', r'Hello MFen\.'),
+('MFen', 'VellumTalk', 'MFen', 'VellumTalk: hello there', r'Hello MFen\.'),
+('MFen', 'VellumTalk', 'MFen', '.hello', r'Hello MFen\.'),
+('MFen', '#vellum', '#vellum', 'hello', None),
+('MFen', '#vellum', '#vellum', 'VellumTalk: hello', r'Hello MFen\.'),
+('MFen', '#vellum', '#vellum', '.hello', r'Hello MFen\.'),
+('MFen', 'VellumTalk', 'MFen', 'combat', r'\*\* Beginning combat \*\*'),
+('MFen', '#vellum', 'MFen', '[init 20]', None), # FIXME
+('MFen', 'VellumTalk', 'MFen', 'n', r'\+\+ New round \+\+'),
+            
+('MFen', 'VellumTalk', 'MFen', 'n', 
+        r'MFen \(init 20\) is ready to act \. \. \.'),
+('MFen', 'VellumTalk', 'MFen', 'p', r'\+\+ New round \+\+'),
+('MFen', 'VellumTalk', 'MFen', 'p', 
+        r'MFen \(init 20\) is ready to act \. \. \.'),
+('MFen', 'VellumTalk', 'MFen', 'help', r'\s+hello: Greet\.'),
+]
+testdice = [
+('MFen', '#vellum', '#vellum', 'I smackdown with [1d20+2]', 
+        r'MFen, you rolled: 1d20+2 = \[\S+\]'),
+('MFen', '#vellum', '#vellum', 'I [smackdown 100]', 
+        'MFen, you rolled: smackdown 100 = [100]'),
+('MFen', '#vellum', '#vellum', 'I [smackdown] [smackdown]', 
+        'MFen, you rolled: smackdown = [100]\n'
+        'MFen, you rolled: smackdown = [100]'),
+('MFen', 'VellumTalk', 'MFen', 'I [smackdown]', 
+        'MFen, you rolled: smackdown 100 = [100]'),
+('MFen', 'VellumTalk', 'MFen', '*grimlock1 does a [smackdown 1000]', 
+        'grimlock1, you rolled: smackdown 1000 = [1000]'),
+('MFen', 'VellumTalk', 'MFen', '*grimlock1 does a [smackdown]', 
+        'grimlock1, you rolled: smackdown = [1000]'),
+('MFen', 'VellumTalk', 'MFen', 'I do a [smackdown]', 
+        'MFen, you rolled: smackdown = [100]'),
+]
+
+# TODO - d20-specific tests, e.g. init and other alias hooks?
+
+def test():
+    from twisted.words.test.test_irc import StringIOWithoutClosing
+    f = StringIOWithoutClosing()
+    transport = protocol.FileWrapper(f)
+    vt = VellumTalk()
+    vt.performLogin = 0
+    vt.responding = 1
+    vt.makeConnection(transport)
+    pos = ([0],)
+
+    def check(nick, channel, target, expected):
+        _pos = pos[0] # ugh, python
+        f.seek(_pos.pop(0))
+        actual = f.read().strip()
+        _pos.append(f.tell())
+        if expected is None:
+            if actual == '':
+                pass
+            else:
+                print
+                print expected
+                print actual
+                return
+        else:
+            for left, right in zip(actual.splitlines(), expected.splitlines()):
+                pattern = 'PRIVMSG %s :%s' % (re.escape(target), right)
+                if re.match(pattern, left, re.MULTILINE):
+                    break
+            else:
+                print
+                print expected
+                print actual
+                return
+        print '+++'
+
+
+    for nick, channel, target, sent, received in testcommands:
+        vt.privmsg(nick, channel, sent)
+        check(nick, channel, target, received)
+#    for nick, channel, target, sent, received in testdice:
+#        vt.privmsg(nick, channel, sent)
+#        check(nick, channel, target, received)
+        #vt.action(nick, channel, sent)
+        #check(nick, channel, target, received)
+
