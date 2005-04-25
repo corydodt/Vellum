@@ -327,10 +327,13 @@ testdice = [
  r'MFen, you rolled: 1 = \[1\]'),
 ('MFen', '#vellum', '#vellum', 'I [smackdown] [1]', 
  r'MFen, you rolled: smackdown = \[100\]'),
+
 ('MFen', 'VellumTalk', 'MFen', 'I [smackdown]', 
  r'MFen, you rolled: smackdown = \[100\]'),
-# ('MFen', 'VellumTalk', 'MFen', 'MFen, you rolled ??? = {???} (sorted)'),
-# TODO ^
+
+# the next test is lame, but it'll have to do
+('MFen', 'VellumTalk', 'MFen', '{100x2}',
+        r'MFen, you rolled: 100x2 = {100, 100} \(sorted\)'),
 ]
 testhijack = [
 ('MFen', 'VellumTalk', 'MFen', '*grimlock1 does a [smackdown 1000]', 
@@ -343,7 +346,7 @@ testhijack = [
         'MFen, you rolled: smackdown = \[100\]'),
 ]
 
-# TODO - d20-specific tests, e.g. init and other alias hooks?
+# TODO - move d20-specific tests, e.g. init and other alias hooks?
 
 def test():
     from twisted.words.test.test_irc import StringIOWithoutClosing
