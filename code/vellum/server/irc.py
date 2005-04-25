@@ -89,9 +89,10 @@ class VellumTalk(irc.IRCClient):
                 user = name
 
         # if the bot is being addressed, do stuff
-        hail = self.nickname.lower() + ':'
-        if msg.lower().startswith(hail) or msg.startswith('.'):
-            command = msg[len(hail):]
+        _hail = re.compile(r'^(%s:) |^(.)' % (self.nickname,))
+        match = _hail.search(msg)
+        if match is not None:
+            command = msg[match.end():]
             return self.dispatchCommand(channel, user, command)
         if channel == user:
             return self.dispatchCommand(channel, user, msg)
