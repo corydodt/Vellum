@@ -127,10 +127,12 @@ class VellumTalk(irc.IRCClient):
             command_word = _splits.pop(0)
             if len(_splits) > 0:
                 args = _splits[0]
-        if re.match(r'\[.+?\]|{.+?}', command_word):
-            return self._handleDice(channel, user, command)
         m = getattr(self, 'respondTo_%s' % (command_word,), 
                     self.respondTo_DEFAULT)
+        # try harder to find dice expressions when there's no command
+        if m == self.respondTo_DEFAULT:
+            if re.search(r'\[.+?\]|{.+?}', command) is not None:
+                return self._handleDice(channel, user, command)
         try:
             m(channel, user, args)
         except Exception, e:
@@ -303,7 +305,8 @@ testcommands = [
 ('MFen', '#vellum', '#vellum', 'VellumTalk: hello', r'Hello MFen\.'),
 ('MFen', '#vellum', '#vellum', '.hello', r'Hello MFen\.'),
 ('MFen', 'VellumTalk', 'MFen', 'combat', r'\*\* Beginning combat \*\*'),
-('MFen', '#vellum', 'MFen', '[init 20]', None), # FIXME
+('MFen', '#vellum', '#vellum', '[init 20]', 
+        r'MFen, you rolled: init 20 = \[20\]'),
 ('MFen', 'VellumTalk', 'MFen', 'n', r'\+\+ New round \+\+'),
             
 ('MFen', 'VellumTalk', 'MFen', 'n', 
@@ -315,20 +318,26 @@ testcommands = [
 ]
 testdice = [
 ('MFen', '#vellum', '#vellum', 'I smackdown with [1d20+2]', 
-        r'MFen, you rolled: 1d20+2 = \[\S+\]'),
+        r'MFen, you rolled: 1d20\+2 = \[\S+\]'),
 ('MFen', '#vellum', '#vellum', 'I [smackdown 100]', 
-        'MFen, you rolled: smackdown 100 = [100]'),
-('MFen', '#vellum', '#vellum', 'I [smackdown] [smackdown]', 
-        'MFen, you rolled: smackdown = [100]\n'
-        'MFen, you rolled: smackdown = [100]'),
+        'MFen, you rolled: smackdown 100 = \[100\]'),
+#('MFen', '#vellum', '#vellum', 'I \[smackdown\] \[smackdown\]', 
+# 'MFen, you rolled: smackdown = \[100\]'
+# 'MFen, you rolled: smackdown = \[100\]'), # FIXME
 ('MFen', 'VellumTalk', 'MFen', 'I [smackdown]', 
-        'MFen, you rolled: smackdown 100 = [100]'),
+        'MFen, you rolled: smackdown = \[100\]'),
+# ('MFen', 'VellumTalk', 'MFen', 'MFen, you rolled ??? = {???} (sorted)'),
+# TODO ^
+]
+testhijack = [
 ('MFen', 'VellumTalk', 'MFen', '*grimlock1 does a [smackdown 1000]', 
-        'grimlock1, you rolled: smackdown 1000 = [1000]'),
+        'grimlock1, you rolled: smackdown 1000 = \[1000\]'),
+('MFen', '#vellum', '#vellum', '*grimlock1 does a [bitchslap 1000]', 
+        'grimlock1, you rolled: bitchslap 1000 = \[1000\]'),
 ('MFen', 'VellumTalk', 'MFen', '*grimlock1 does a [smackdown]', 
-        'grimlock1, you rolled: smackdown = [1000]'),
+        'grimlock1, you rolled: smackdown = \[1000\]'),
 ('MFen', 'VellumTalk', 'MFen', 'I do a [smackdown]', 
-        'MFen, you rolled: smackdown = [100]'),
+        'MFen, you rolled: smackdown = \[100\]'),
 ]
 
 # TODO - d20-specific tests, e.g. init and other alias hooks?
@@ -353,17 +362,17 @@ def test():
                 pass
             else:
                 print
-                print expected
+                print ' '*10 + ' '*len(target) + expected
                 print actual
                 return
         else:
-            for left, right in zip(actual.splitlines(), expected.splitlines()):
-                pattern = 'PRIVMSG %s :%s' % (re.escape(target), right)
-                if re.match(pattern, left, re.MULTILINE):
+            for _line in actual.splitlines():
+                pattern = 'PRIVMSG %s :%s' % (re.escape(target), expected)
+                if re.match(pattern, _line):
                     break
             else:
                 print
-                print expected
+                print ' '*10 + ' '*len(target) + expected
                 print actual
                 return
         print '+++'
@@ -372,9 +381,12 @@ def test():
     for nick, channel, target, sent, received in testcommands:
         vt.privmsg(nick, channel, sent)
         check(nick, channel, target, received)
-#    for nick, channel, target, sent, received in testdice:
-#        vt.privmsg(nick, channel, sent)
-#        check(nick, channel, target, received)
-        #vt.action(nick, channel, sent)
-        #check(nick, channel, target, received)
+    for nick, channel, target, sent, received in testdice:
+        vt.privmsg(nick, channel, sent)
+        check(nick, channel, target, received)
+        vt.action(nick, channel, sent)
+        check(nick, channel, target, received)
+    for nick, channel, target, sent, received in testhijack:
+        vt.privmsg(nick, channel, sent)
+        check(nick, channel, target, received)
 
