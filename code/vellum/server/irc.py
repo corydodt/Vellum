@@ -89,7 +89,8 @@ class VellumTalk(irc.IRCClient):
                 user = name
 
         # if the bot is being addressed, do stuff
-        _hail = re.compile(r'^(%s:) |^(.)' % (self.nickname,))
+        _re = r'^(%s:) |^(\.)' % (self.nickname,)
+        _hail = re.compile(_re, re.I)
         match = _hail.search(msg)
         if match is not None:
             command = msg[match.end():]
@@ -173,19 +174,29 @@ class VellumTalk(irc.IRCClient):
     def respondTo_n(self, channel, user, _):
         """Next initiative"""
         next = self.initiatives.pop(0)
-        self.msg(channel, '%s (init %s)' % (next[1], next[0],))
+        if next is None:
+            self.msg(channel, '++ New round ++')
+            # TODO - update timed events here (don't update on prev init)
+        else:
+            self.msg(channel, '%s (init %s) is ready to act . . .' % (next[1], 
+                                                                      next[0],))
         self.initiatives.append(next)
 
     def respondTo_p(self, channel, user, _):
         """Previous initiative"""
         prev = self.initiatives.pop(-1)
         _init = self.initiatives[-1]
-        self.msg(channel, '%s (init %s)' % (_init[1], _init[0],))
+        if _init is None:
+            self.msg(channel, '++ New round ++')
+        else:
+            self.msg(channel, 
+                     '%s (init %s) is ready to act . . .' % (_init[1], 
+                                                             _init[0],))
         self.initiatives.insert(0, prev)
 
     def respondTo_combat(self, channel, user, _):
         """Start combat by resetting initiatives"""
-        self.initiatives = [(9999, '++ New round ++')]
+        self.initiatives = [(9999, None)]
         self.msg(channel, '** Beginning combat **')
 
     def respondTo_party(self, channel, user, _):
@@ -214,7 +225,45 @@ class VellumTalk(irc.IRCClient):
                  (char.getName(),))
 
     def respondTo_help(self, channel, user, _):
-        self.msg(channel, user + ', help is on the way. (TBD)')
+        """This drivel."""
+        _commands = []
+        commands = []
+        for att in dir(self):
+            member = getattr(self, att)
+            if (att.startswith('respondTo_') 
+                and callable(member)
+                and att[10:].upper() != att[10:]):  # DICE and DEFAULT reserved.
+                _commands.append('%s: %s' % (att[10:], member.__doc__))
+        _d = {'commands': '\n    '.join(_commands), 
+              'nick': self.nickname}
+
+        response = '''Recognized commands:
+    %(commands)s
+Commands can be used one of three ways, by hailing me, by /msg or with ".":
+    Biff: %(nick)s: hello
+    %(nick)s: Biff, hello.
+    /msg %(nick)s: hello
+    Private message from %(nick)s: Biff, hello.
+    Biff: .hello
+    %(nick)s: Biff, hello.
+I also understand dice aliases...
+    Biff: I roll [1d20+1]
+    %(nick)s: Biff, you rolled 1d20+1 = [17]
+    Biff: I roll [smackdown 1d10+17]
+    %(nick)s: Biff, you rolled smackdown 1d10+17 = [23]
+    Biff: I use a few more attacks, [smackdown] [smackdown]
+    %(nick)s: Biff, you rolled smackdown = [21]
+    %(nick)s: Biff, you rolled smackdown = [26]
+I also can sort any dice alias result.  Use {} instead of []...
+    Biff: I roll {stats 3d6x7}
+    %(nick)s: Biff, you rolled stats 3d6x7 = {2, 9, 11, 13, 14, 14, 17} (sorted)
+I also understand "npc hijacking".
+    (TBD .. this may grow more features)
+    Biff: *grimlock1 ... [foo 1d20+2]
+    %(nick)s: grimlock1, you rolled foo 1d20+2 = [11]
+''' % _d
+        for line in response.splitlines():
+            self.msg(channel, line)
 
     # irc callbacks
 
