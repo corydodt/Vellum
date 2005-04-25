@@ -4,6 +4,7 @@ try:
 except ImportError:
     import pickle
 import atexit
+import errno
 
 from vellum.server import dice
 from vellum.server.fs import fs
@@ -55,16 +56,16 @@ def registerAliasHook(alias, hook):
         iniatives.append((initroll, user))
     >>> addAliasHook(('init',), rememberInitiative)
 
-    Now rememberInitiative will get called any time someone uses "{init ..}"
+    Now rememberInitiative will get called any time someone uses "[init ..]"
     """
     alias_hooks.setdefault(alias, []).append(hook)
 
 
 def parseAlias(st, user):
     """Valid syntaxes:
-    {anything you want here} => look up entire str on alias table
-    {anything <dice_expression>} => assign <dice_expression> to anything
-    {<dice_expression>} => dice expression
+    [anything you want here] => look up entire str on alias table
+    [anything <dice_expression>] => assign <dice_expression> to anything
+    [<dice_expression>] => dice expression
     """
     # try the whole thing as a dice expression first
     rolled = rollSafe(st)
@@ -108,11 +109,11 @@ def test_parseAlias():
 
 
 def resolve(user, alias):
-    if alias[0] == '[':
+    if alias[0] == '{':
         sorted = 1
     else:
         sorted = 0
-    alias = alias.strip('{}[]')
+    alias = alias.strip('[]{}')
 
     rolled = parseAlias(alias, user)
 
@@ -124,33 +125,33 @@ def test_resolve():
         resolve('foo', '')
     except IndexError:
         pass
-    assert resolve('foo', '[xyz]') is None
-    assert resolve('foo', '{1d1}') == '1d1 = {1}'
-    assert resolve('foo', '[1 d1]') == '1 d1 = [1]'
-    remember = 'xyz 1d1x5 = [1, 1, 1, 1, 1] (sorted)'
-    assert resolve('foo', '[xyz 1d1x5]'
+    assert resolve('foo', '{xyz}') is None
+    assert resolve('foo', '[1d1]') == '1d1 = [1]'
+    assert resolve('foo', '{1 d1}') == '1 d1 = {1}'
+    remember = 'xyz 1d1x5 = {1, 1, 1, 1, 1} (sorted)'
+    assert resolve('foo', '{xyz 1d1x5}'
                    ) == remember
-    assert resolve('foo', '[xyz 1d 1]') == 'xyz 1d 1 = [1]'
-    assert resolve('foo', '{xyz }') == 'xyz  = {1, 1, 1, 1, 1}'
-    assert resolve('foo', '[ xyz]') == ' xyz = [1, 1, 1, 1, 1] (sorted)'
+    assert resolve('foo', '{xyz 1d 1}') == 'xyz 1d 1 = {1}'
+    assert resolve('foo', '[xyz ]') == 'xyz  = [1, 1, 1, 1, 1]'
+    assert resolve('foo', '{ xyz}') == ' xyz = {1, 1, 1, 1, 1} (sorted)'
 
 
 def formatDice(rolls, sorted):
     if sorted:
         rolls.sort()
         rolls = map(str, rolls)
-        _roll = '[%s]' % (', '.join(rolls),)
+        _roll = '{%s}' % (', '.join(rolls),)
         if len(rolls) > 1:
             _roll = _roll + ' (sorted)'
     else:
         rolls = map(str, rolls)
-        _roll = '{%s}' % (', '.join(rolls),)
+        _roll = '[%s]' % (', '.join(rolls),)
     return _roll
 
 def test_formatDice():
-    assert formatDice([1,2,3,2], 0) == '{1, 2, 3, 2}'
-    assert formatDice([1,2,3,2], 1) == '[1, 2, 2, 3] (sorted)'
-    assert formatDice([], 1) == '[]'
+    assert formatDice([1,2,3,2], 0) == '[1, 2, 3, 2]'
+    assert formatDice([1,2,3,2], 1) == '{1, 2, 2, 3} (sorted)'
+    assert formatDice([], 1) == '{}'
     try:
         formatDice(None, 1)
     except AttributeError:
@@ -185,13 +186,19 @@ def _chewLog(filename):
     import re
     for line in file(filename, 'rb'):
         line = line.strip()
+        # scan to determine whether this line is a privmsg or should be
+        # ignored
         for pat in m:
             matched = re.match(pat, line)
             if matched is not None: break
         else:
+            # all lines should match one of the above regex's
             assert matched is not None, '"%s"' % (line,)
-        if matched.groupdict().get('nick', None) is not None:
-            nick = matched.group('nick')
+
+        # pull out nick and extract expressions from msg, then parse exprs
+        nick = matched.groupdict().get('nick', None)
+        if nick is not None:
             msg = matched.group('msg')
-            for exp in re.findall(r'\[.+?\]|{.+?}', msg):
-                print parseAlias(exp[1:-1], nick)
+            for exp in re.findall(r'{.+?}|\[.+?\]', msg):
+                print parseAlias(exp[1:-1], nick),
+    print

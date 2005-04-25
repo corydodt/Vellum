@@ -1,3 +1,5 @@
+import warnings; warnings.filterwarnings('ignore')
+
 from twisted.application import service, internet
 from twisted.spread import pb
 

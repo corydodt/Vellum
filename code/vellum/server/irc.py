@@ -6,10 +6,9 @@ import time, sys
 import re
 import traceback
 import glob
-import errno
 
 # twisted imports
-from twisted.protocols import irc
+from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol, task
 from twisted.python import log
 
@@ -19,7 +18,9 @@ from vellum.server.fs import fs
 
 
 class VellumTalk(irc.IRCClient):
-    """A logging IRC bot."""
+    """An irc boy that handles D&D game sessions.
+    (Currently contains d20-specific assumption about initiative.)
+    """
     
     nickname = "VellumTalk"
 
