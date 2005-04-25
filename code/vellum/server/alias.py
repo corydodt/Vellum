@@ -55,7 +55,7 @@ def parseAlias(st, user):
     else:
         # alias assignment
         words = tuple(words[:-1])
-        aliases.setdefault(user, {})[words] = dicetry 
+        aliases.setdefault(user, {})[words] = dicetry
     callAliasHooks(words, user, rolled)
     return rolled
 
@@ -76,7 +76,7 @@ def test_parseAlias():
     assert parseAlias('anything', 'foo') == [1]
     assert parseAlias('anything 5', 'foo') == [5]
     assert parseAlias('anything', 'foo') == [5]
-        
+
 
 def resolve(user, alias):
     if alias[0] == '[':
@@ -135,3 +135,34 @@ def test():
     test_parseAlias()
     print 'all tests passed'
 
+
+
+def _chewLog(filename):
+    """Take a gaim-format irc log and reprocess it, parsing aliases.
+    """
+    m = (r'^$',
+         r'Conversation with \S+',
+         r'\(..:..:..\) The topic for \S+ is: \S+',
+         r'\(..:..:..\) \S+ \[.*@.*\..*\] entered the room',
+         r'\(..:..:..\) \S+ \[.*@.*\..*\] left the room',
+         r'\(..:..:..\) \S+ left the room \(quit: .*?\)\.',
+         r'\(..:..:..\) \S+ is now known as \S+',
+         r'\(..:..:..\) You are now known as \S+',
+         r'\(..:..:..\) \S+: \*(?P<nick>\S+) (?P<msg>.*)',
+         r'\(..:..:..\) (?P<nick>\S+): (?P<msg>.*)',
+         r'\(..:..:..\) \*\*\*(?P<nick>\S+) (?P<msg>\S+)',
+         )
+
+    import re
+    for line in file(filename, 'rb'):
+        line = line.strip()
+        for pat in m:
+            matched = re.match(pat, line)
+            if matched is not None: break
+        else:
+            assert matched is not None, '"%s"' % (line,)
+        if matched.groupdict().get('nick', None) is not None:
+            nick = matched.group('nick')
+            msg = matched.group('msg')
+            for exp in re.findall(r'\[.+?\]|{.+?}', msg):
+                parseAlias(exp[1:-1], nick)
