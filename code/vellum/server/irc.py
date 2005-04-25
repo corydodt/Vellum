@@ -321,11 +321,14 @@ testdice = [
         r'MFen, you rolled: 1d20\+2 = \[\S+\]'),
 ('MFen', '#vellum', '#vellum', 'I [smackdown 100]', 
         'MFen, you rolled: smackdown 100 = \[100\]'),
-#('MFen', '#vellum', '#vellum', 'I \[smackdown\] \[smackdown\]', 
-# 'MFen, you rolled: smackdown = \[100\]'
-# 'MFen, you rolled: smackdown = \[100\]'), # FIXME
+# the next 2 test the same thing.. that both inline expressions
+# will get evaluated
+('MFen', '#vellum', '#vellum', 'I [smackdown] [1]', 
+ r'MFen, you rolled: 1 = \[1\]'),
+('MFen', '#vellum', '#vellum', 'I [smackdown] [1]', 
+ r'MFen, you rolled: smackdown = \[100\]'),
 ('MFen', 'VellumTalk', 'MFen', 'I [smackdown]', 
-        'MFen, you rolled: smackdown = \[100\]'),
+ r'MFen, you rolled: smackdown = \[100\]'),
 # ('MFen', 'VellumTalk', 'MFen', 'MFen, you rolled ??? = {???} (sorted)'),
 # TODO ^
 ]
