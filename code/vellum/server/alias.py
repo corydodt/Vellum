@@ -1,9 +1,31 @@
 """A table of aliases."""
 from vellum.server import dice
+from vellum.server import fs
 
 roller = dice.Roller()
 
 aliases = {}
+
+def saveAliases():
+    print 'saving aliases'
+    dump(alias.aliases, 
+         file(fs.aliases('aliases.pkl'), 'wb'), 
+         2)
+
+def loadAliases():
+    try:
+        alias.aliases = load(file(fs.aliases('aliases.pkl'), 'rb'))
+        print 'loaded aliases'
+    except IOError, e:
+        # if the file just doesn't exist, assume we have to create it.
+        if e.errno == errno.ENOENT:
+            print 'new aliases.pkl'
+        else:
+            raise
+
+
+loadAliases()
+atexit.register(saveAliases)
 
 
 def rollSafe(st):
@@ -56,6 +78,7 @@ def parseAlias(st, user):
         # alias assignment
         words = tuple(words[:-1])
         aliases.setdefault(user, {})[words] = dicetry
+        saveAliases()
     callAliasHooks(words, user, rolled)
     return rolled
 
@@ -165,4 +188,4 @@ def _chewLog(filename):
             nick = matched.group('nick')
             msg = matched.group('msg')
             for exp in re.findall(r'\[.+?\]|{.+?}', msg):
-                parseAlias(exp[1:-1], nick)
+                print parseAlias(exp[1:-1], nick)

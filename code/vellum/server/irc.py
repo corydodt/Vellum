@@ -22,24 +22,6 @@ from twisted.python import log
 from vellum.server import encounter, alias
 from vellum.server.fs import fs
 
-def saveAliases():
-    print 'saving aliases'
-    dump(alias.aliases, file(fs.aliases('aliases.pkl'), 'wb'))
-
-def loadAliases():
-    try:
-        alias.aliases = load(file(fs.aliases('aliases.pkl'), 'rb'))
-        print 'loaded aliases'
-    except IOError, e:
-        # if the file just doesn't exist, assume we have to create it.
-        if e.errno == errno.ENOENT:
-            print 'new aliases.pkl'
-        else:
-            raise
-
-
-atexit.register(saveAliases)
-
 
 class VellumTalk(irc.IRCClient):
     """A logging IRC bot."""
@@ -47,10 +29,6 @@ class VellumTalk(irc.IRCClient):
     nickname = "VellumTalk"
 
     def __init__(self, *args, **kwargs):
-        loadAliases() # FIXME! - if we're going to overwrite aliases at 
-                      # shutdown, we HAVE to load them at startup.
-                      # if VellumTalk never initializes, aliases.pkl
-                      # gets written EMPTY
         self.encounters = []
         self.party = encounter.Encounter()
         self.wtf = 0  # number of times a "wtf" has occurred recently.
