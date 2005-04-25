@@ -1,6 +1,12 @@
 """A table of aliases."""
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+import atexit
+
 from vellum.server import dice
-from vellum.server import fs
+from vellum.server.fs import fs
 
 roller = dice.Roller()
 
@@ -8,13 +14,13 @@ aliases = {}
 
 def saveAliases():
     print 'saving aliases'
-    dump(alias.aliases, 
-         file(fs.aliases('aliases.pkl'), 'wb'), 
-         2)
+    pickle.dump(aliases, 
+                file(fs.aliases('aliases.pkl'), 'wb'), 
+                2)
 
 def loadAliases():
     try:
-        alias.aliases = load(file(fs.aliases('aliases.pkl'), 'rb'))
+        aliases = pickle.load(file(fs.aliases('aliases.pkl'), 'rb'))
         print 'loaded aliases'
     except IOError, e:
         # if the file just doesn't exist, assume we have to create it.

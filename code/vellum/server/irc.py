@@ -7,11 +7,6 @@ import re
 import traceback
 import glob
 import errno
-import atexit
-try:
-    from cPickle import dump, load
-except ImportError:
-    from pickle import dump, load
 
 # twisted imports
 from twisted.protocols import irc
@@ -94,7 +89,7 @@ class VellumTalk(irc.IRCClient):
 
         # if the bot is being addressed, do stuff
         hail = self.nickname.lower() + ':'
-        if msg.lower().startswith(hail):
+        if msg.lower().startswith(hail) or msg.startswith('.'):
             command = msg[len(hail):]
             return self.dispatchCommand(channel, user, command)
         if channel == user:
