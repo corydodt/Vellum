@@ -23,6 +23,7 @@ def saveAliases():
 
 def loadAliases():
     try:
+        global aliases
         aliases = pickle.load(file(fs.aliases('aliases.pkl'), 'rb'))
         log.msg('loaded aliases')
     except IOError, e:
@@ -32,7 +33,7 @@ def loadAliases():
         else:
             raise
 
-
+# This is horrible, FIXME
 loadAliases()
 atexit.register(saveAliases)
 
