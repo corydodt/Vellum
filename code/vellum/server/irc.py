@@ -224,18 +224,20 @@ class VellumTalk(irc.IRCClient):
         self.initiatives.insert(0, last)
 
     def respondTo_inits(self, channel, user, _):
-        """List inits, starting with the currently active character, in
-        order"""
+        """List inits, starting with the currently active character, in order"""
         # the "current" initiative is always at the end of the list
-        current = self.initiatives[-1]
-        inits = ['%s/%s' % (current[1], current[0])]
-        for init in self.initiatives[:-1]:
-            if init[1] is None:
-                name = 'NEW ROUND'
-            else:
-                name = init[1]
-            inits.append('%s/%s' % (name, init[0]))
-        self.msg(channel, ', '.join(inits))
+        if len(self.initiatives) > 0:
+            current = self.initiatives[-1]
+            inits = ['%s/%s' % (current[1], current[0])]
+            for init in self.initiatives[:-1]:
+                if init[1] is None:
+                    name = 'NEW ROUND'
+                else:
+                    name = init[1]
+                inits.append('%s/%s' % (name, init[0]))
+            self.msg(channel, 'Initiative list: ' + ', '.join(inits))
+        else:
+            self.msg(channel, 'Initiative list: (none)')
 
     def respondTo_combat(self, channel, user, _):
         """Start combat by resetting initiatives"""
@@ -305,8 +307,13 @@ I also understand "npc hijacking".
     Biff: *grimlock1 ... [foo 1d20+2]
     %(nick)s: grimlock1, you rolled foo 1d20+2 = [11]
 ''' % _d
-        for line in response.splitlines():
-            self.msg(channel, line)
+        self.msgSlowly(channel, response.splitlines())
+
+    def msgSlowly(self, channel, lines):
+        """Send multiple lines to the channel with delays in the middle"""
+        send = lambda line: self.msg(channel, line)
+        for n, line in enumerate(lines):
+            reactor.callLater(n, send, line)
 
     # irc callbacks
 
@@ -345,19 +352,19 @@ testcommands = [
 ('MFen', '#vellum', '#vellum', 'hello', None),
 ('MFen', '#vellum', '#vellum', 'VellumTalk: hello', r'Hello MFen\.'),
 ('MFen', '#vellum', '#vellum', '.hello', r'Hello MFen\.'),
+('MFen', 'VellumTalk', 'MFen', 'inits', r'Initiative list: \(none\)'),
 ('MFen', 'VellumTalk', 'MFen', 'combat', r'\*\* Beginning combat \*\*'),
 ('MFen', '#vellum', '#vellum', '[init 20]', 
         r'MFen, you rolled: init 20 = \[20\]'),
 ('MFen', 'VellumTalk', 'MFen', 'n', r'\+\+ New round \+\+'),
-            
 ('MFen', 'VellumTalk', 'MFen', 'n', 
         r'MFen \(init 20\) is ready to act \. \. \.'),
 ('MFen', 'VellumTalk', 'MFen', 'p', r'\+\+ New round \+\+'),
 ('MFen', 'VellumTalk', 'MFen', 'p', 
         r'MFen \(init 20\) is ready to act \. \. \.'),
 ('MFen', 'VellumTalk', 'MFen', 'inits', 
-        r'MFen/20, NEW ROUND/9999'),
-('MFen', 'VellumTalk', 'MFen', 'help', r'\s+hello: Greet\.'),
+        r'Initiative list: MFen/20, NEW ROUND/9999'),
+# ('MFen', 'VellumTalk', 'MFen', 'help', r'\s+hello: Greet\.'), FIXME
 ('MFen', 'VellumTalk', 'MFen', 'aliases', 
         r'Aliases for MFen:   init=20'),
 ('MFen', 'VellumTalk', 'MFen', 'aliases MFen', 

@@ -81,6 +81,23 @@ def shortFormatAliases(user):
         formatted_aliases.append('%s=%s' % (formatted_key, value))
     return ', '.join(formatted_aliases)
 
+def test_shortFormatAliases():
+    global aliases
+    orig_aliases = aliases
+    aliases = {'foobar': {('buncha', 'crunch'): '2d20+20',
+                          ('yums',): '1234'
+                          },
+               'empty': {},
+               }
+    try:
+        assert shortFormatAliases('foobar') == (
+                'buncha crunch=2d20+20, yums=1234')
+        assert shortFormatAliases('empty') == '(none)'
+        assert shortFormatAliases('NOBODY') == '(none)'
+    finally:
+        aliases = orig_aliases
+
+
 def parseAlias(st, user):
     """Valid syntaxes:
     [anything you want here] => look up entire str on alias table
@@ -115,17 +132,23 @@ def callAliasHooks(words, user, rolled):
         hook(user, rolled)
 
 def test_parseAlias():
-    # junk
-    assert parseAlias('anything', 'foo') is None
-    assert parseAlias('anything 1d1', 'foo')  == [1]
-    assert parseAlias('anything 1d 1', 'foo') == [1]
-    assert parseAlias('1 d 1', 'foo') == [1]
-    assert parseAlias('anything', 'bar') is None
-    assert parseAlias('anything 500', 'bar') == [500]
-    assert parseAlias('anything', 'bar') == [500]
-    assert parseAlias('anything', 'foo') == [1]
-    assert parseAlias('anything 5', 'foo') == [5]
-    assert parseAlias('anything', 'foo') == [5]
+    global aliases
+    orig_aliases = aliases
+    aliases = {}
+    try:
+        # junk
+        assert parseAlias('anything', 'foo') is None
+        assert parseAlias('anything 1d1', 'foo')  == [1]
+        assert parseAlias('anything 1d 1', 'foo') == [1]
+        assert parseAlias('1 d 1', 'foo') == [1]
+        assert parseAlias('anything', 'bar') is None
+        assert parseAlias('anything 500', 'bar') == [500]
+        assert parseAlias('anything', 'bar') == [500]
+        assert parseAlias('anything', 'foo') == [1]
+        assert parseAlias('anything 5', 'foo') == [5]
+        assert parseAlias('anything', 'foo') == [5]
+    finally:
+        aliases = orig_aliases
 
 
 def resolve(user, alias):
@@ -141,19 +164,25 @@ def resolve(user, alias):
         return '%s = %s' % (alias, formatDice(rolled, sorted))
 
 def test_resolve():
+    global aliases
+    orig_aliases = aliases
+    aliases = {}
     try:
-        resolve('foo', '')
-    except IndexError:
-        pass
-    assert resolve('foo', '{xyz}') is None
-    assert resolve('foo', '[1d1]') == '1d1 = [1]'
-    assert resolve('foo', '{1 d1}') == '1 d1 = {1}'
-    remember = 'xyz 1d1x5 = {1, 1, 1, 1, 1} (sorted)'
-    assert resolve('foo', '{xyz 1d1x5}'
-                   ) == remember
-    assert resolve('foo', '{xyz 1d 1}') == 'xyz 1d 1 = {1}'
-    assert resolve('foo', '[xyz ]') == 'xyz  = [1, 1, 1, 1, 1]'
-    assert resolve('foo', '{ xyz}') == ' xyz = {1, 1, 1, 1, 1} (sorted)'
+        try:
+            resolve('foo', '')
+        except IndexError:
+            pass
+        assert resolve('foo', '{xyz}') is None
+        assert resolve('foo', '[1d1]') == '1d1 = [1]'
+        assert resolve('foo', '{1 d1}') == '1 d1 = {1}'
+        remember = 'xyz 1d1x5 = {1, 1, 1, 1, 1} (sorted)'
+        assert resolve('foo', '{xyz 1d1x5}'
+                       ) == remember
+        assert resolve('foo', '{xyz 1d 1}') == 'xyz 1d 1 = {1}'
+        assert resolve('foo', '[xyz ]') == 'xyz  = [1, 1, 1, 1, 1]'
+        assert resolve('foo', '{ xyz}') == ' xyz = {1, 1, 1, 1, 1} (sorted)'
+    finally:
+        aliases = orig_aliases
 
 
 def formatDice(rolls, sorted):
@@ -182,6 +211,7 @@ def test():
     test_rollSafe()
     test_resolve()
     test_formatDice()
+    test_shortFormatAliases()
     test_parseAlias()
     print 'all tests passed'
 
