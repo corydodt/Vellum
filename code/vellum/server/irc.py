@@ -196,6 +196,20 @@ class VellumTalk(irc.IRCClient):
         self.initiatives.append(prev)
         self.initiatives.insert(0, last)
 
+    def respondTo_inits(self, channel, user, _):
+        """List inits, starting with the currently active character, in
+        order"""
+        # the "current" initiative is always at the end of the list
+        current = self.initiatives[-1]
+        inits = ['%s/%s' % (current[1], current[0])]
+        for init in self.initiatives[:-1]:
+            if init[1] is None:
+                name = '++ New round ++'
+            else:
+                name = init[1]
+            inits.append('%s/%s' % (name, init[0]))
+        self.msg(channel, ', '.join(inits))
+
     def respondTo_combat(self, channel, user, _):
         """Start combat by resetting initiatives"""
         self.initiatives = [(9999, None)]
@@ -314,6 +328,8 @@ testcommands = [
 ('MFen', 'VellumTalk', 'MFen', 'p', r'\+\+ New round \+\+'),
 ('MFen', 'VellumTalk', 'MFen', 'p', 
         r'MFen \(init 20\) is ready to act \. \. \.'),
+('MFen', 'VellumTalk', 'MFen', 'inits', 
+        r'MFen/20, \+\+ New round \+\+/9999'),
 ('MFen', 'VellumTalk', 'MFen', 'help', r'\s+hello: Greet\.'),
 ]
 testdice = [
