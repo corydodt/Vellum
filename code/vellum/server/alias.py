@@ -63,6 +63,23 @@ def registerAliasHook(alias, hook):
     """
     alias_hooks.setdefault(alias, []).append(hook)
 
+def removeAlias(st, user):
+    user_aliases = aliases.get(user, {})
+    key = tuple(st.split())
+    return user_aliases.pop(key, None)
+
+def shortFormatAliases(user):
+    """Return all the aliases for user in a short format"""
+    my_aliases = aliases.get(user, {})
+    if len(my_aliases) == 0:
+        return '(none)'
+    formatted_aliases = []
+    alias_items = my_aliases.items()
+    alias_items.sort()
+    for key, value in alias_items:
+        formatted_key = ' '.join(key)
+        formatted_aliases.append('%s=%s' % (formatted_key, value))
+    return ', '.join(formatted_aliases)
 
 def parseAlias(st, user):
     """Valid syntaxes:

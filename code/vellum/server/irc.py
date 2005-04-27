@@ -173,6 +173,33 @@ class VellumTalk(irc.IRCClient):
         """Greet."""
         self.msg(channel, 'Hello %s.' % (user,))
 
+    def respondTo_aliases(self, channel, user, character):
+        """Show aliases for a character or for myself"""
+        if character is None or character.strip() == '':
+            character = user
+        formatted = alias.shortFormatAliases(character)
+        self.msg(channel, 'Aliases for %s:   %s' % (character, formatted))
+
+    def respondTo_unalias(self, channel, user, remove):
+        """Remove an alias from a character: unalias [character] <alias>"""
+        words = remove.split(None, 1)
+        if len(words) > 1:
+            key = words[1]
+            character = words[0]
+        else:
+            key = words[0]
+            character = user
+
+        removed = alias.removeAlias(key, character)
+        if removed is not None:
+            self.msg(channel, 
+                     "%s, removed your alias for %s" % (character, key))
+        else:
+            self.msg(channel,
+                     "** No alias \"%s\" for %s" % (key, character))
+        
+
+
     def respondTo_n(self, channel, user, _):
         """Next initiative"""
         next = self.initiatives.pop(0)
@@ -331,6 +358,16 @@ testcommands = [
 ('MFen', 'VellumTalk', 'MFen', 'inits', 
         r'MFen/20, NEW ROUND/9999'),
 ('MFen', 'VellumTalk', 'MFen', 'help', r'\s+hello: Greet\.'),
+('MFen', 'VellumTalk', 'MFen', 'aliases', 
+        r'Aliases for MFen:   init=20'),
+('MFen', 'VellumTalk', 'MFen', 'aliases MFen', 
+        r'Aliases for MFen:   init=20'),
+('MFen', 'VellumTalk', 'MFen', 'unalias foobar', 
+        r'\*\* No alias "foobar" for MFen'),
+('MFen', 'VellumTalk', 'MFen', 'unalias init', 
+        r'MFen, removed your alias for init'),
+('MFen', 'VellumTalk', 'MFen', 'aliases', 
+        r'Aliases for MFen:   \(none\)'),
 ]
 testdice = [
 ('MFen', '#vellum', '#vellum', 'I smackdown with [1d20+2]', 
@@ -360,55 +397,68 @@ testhijack = [
         'grimlock1, you rolled: smackdown = \[1000\]'),
 ('MFen', 'VellumTalk', 'MFen', 'I do a [smackdown]', 
         'MFen, you rolled: smackdown = \[100\]'),
+('MFen', 'VellumTalk', 'MFen', 'aliases grimlock1',
+        'Aliases for grimlock1:   bitchslap=1000, smackdown=1000'),
+('MFen', 'VellumTalk', 'MFen', 'unalias grimlock1 smackdown',
+        'grimlock1, removed your alias for smackdown'),
+('MFen', 'VellumTalk', 'MFen', 'aliases grimlock1',
+        'Aliases for grimlock1:   bitchslap=1000'),
 ]
 
 # TODO - move d20-specific tests, e.g. init and other alias hooks?
 
 def test():
     from twisted.words.test.test_irc import StringIOWithoutClosing
-    f = StringIOWithoutClosing()
-    transport = protocol.FileWrapper(f)
-    vt = VellumTalk()
-    vt.performLogin = 0
-    vt.responding = 1
-    vt.makeConnection(transport)
-    pos = ([0],)
+    # save off and clear alias.aliases, since it gets persisted # FIXME
+    orig_aliases = alias.aliases
+    alias.aliases = {}
+    try:
+        f = StringIOWithoutClosing()
+        transport = protocol.FileWrapper(f)
+        vt = VellumTalk()
+        vt.performLogin = 0
+        vt.responding = 1
+        vt.makeConnection(transport)
+        pos = ([0],)
 
-    def check(nick, channel, target, expected):
-        _pos = pos[0] # ugh, python
-        f.seek(_pos.pop(0))
-        actual = f.read().strip()
-        _pos.append(f.tell())
-        if expected is None:
-            if actual == '':
-                pass
+        def check(nick, channel, target, expected):
+            _pos = pos[0] # ugh, python
+            f.seek(_pos.pop(0))
+            actual = f.read().strip()
+            _pos.append(f.tell())
+            if expected is None:
+                if actual == '':
+                    pass
+                else:
+                    print
+                    print ' '*10 + ' '*len(target) + expected
+                    print actual
+                    return
             else:
-                print
-                print ' '*10 + ' '*len(target) + expected
-                print actual
-                return
-        else:
-            for _line in actual.splitlines():
-                pattern = 'PRIVMSG %s :%s' % (re.escape(target), expected)
-                if re.match(pattern, _line):
-                    break
-            else:
-                print
-                print ' '*10 + ' '*len(target) + expected
-                print actual
-                return
-        print '+++'
+                for _line in actual.splitlines():
+                    pattern = 'PRIVMSG %s :%s' % (re.escape(target), expected)
+                    if re.match(pattern, _line):
+                        break
+                else:
+                    print
+                    print ' '*10 + ' '*len(target) + expected
+                    print actual
+                    return
+            print '+++'
 
 
-    for nick, channel, target, sent, received in testcommands:
-        vt.privmsg(nick, channel, sent)
-        check(nick, channel, target, received)
-    for nick, channel, target, sent, received in testdice:
-        vt.privmsg(nick, channel, sent)
-        check(nick, channel, target, received)
-        vt.action(nick, channel, sent)
-        check(nick, channel, target, received)
-    for nick, channel, target, sent, received in testhijack:
-        vt.privmsg(nick, channel, sent)
-        check(nick, channel, target, received)
+        for nick, channel, target, sent, received in testcommands:
+            vt.privmsg(nick, channel, sent)
+            check(nick, channel, target, received)
+        for nick, channel, target, sent, received in testdice:
+            vt.privmsg(nick, channel, sent)
+            check(nick, channel, target, received)
+            vt.action(nick, channel, sent)
+            check(nick, channel, target, received)
+        for nick, channel, target, sent, received in testhijack:
+            vt.privmsg(nick, channel, sent)
+            check(nick, channel, target, received)
+    finally:
+        # restore original aliases when done, so save works
+        alias.aliases = orig_aliases
 
