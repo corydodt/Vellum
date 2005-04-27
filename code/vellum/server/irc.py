@@ -204,7 +204,7 @@ class VellumTalk(irc.IRCClient):
         inits = ['%s/%s' % (current[1], current[0])]
         for init in self.initiatives[:-1]:
             if init[1] is None:
-                name = '++ New round ++'
+                name = 'NEW ROUND'
             else:
                 name = init[1]
             inits.append('%s/%s' % (name, init[0]))
@@ -329,7 +329,7 @@ testcommands = [
 ('MFen', 'VellumTalk', 'MFen', 'p', 
         r'MFen \(init 20\) is ready to act \. \. \.'),
 ('MFen', 'VellumTalk', 'MFen', 'inits', 
-        r'MFen/20, \+\+ New round \+\+/9999'),
+        r'MFen/20, NEW ROUND/9999'),
 ('MFen', 'VellumTalk', 'MFen', 'help', r'\s+hello: Greet\.'),
 ]
 testdice = [
