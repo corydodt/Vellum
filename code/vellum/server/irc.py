@@ -310,10 +310,11 @@ I also understand "npc hijacking".
         self.msgSlowly(channel, response.splitlines())
 
     def msgSlowly(self, channel, lines):
-        """Send multiple lines to the channel with delays in the middle"""
+        """Send multiple lines to the channel with 700ms delays in the middle"""
         send = lambda line: self.msg(channel, line)
-        for n, line in enumerate(lines):
-            reactor.callLater(n, send, line)
+        send(line[0])
+        for n, line in enumerate(lines[1:]):
+            reactor.callLater(n*(0.7), send, line)
 
     # irc callbacks
 
