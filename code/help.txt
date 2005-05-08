@@ -1,0 +1,24 @@
+Recognized commands:
+    %(commands)s
+Commands can be used one of three ways, by hailing me, by /msg or with ".":
+    Biff: VellumTalk: hello
+    VellumTalk: Biff, hello.
+    /msg VellumTalk: hello
+    Private message from VellumTalk: Biff, hello.
+    Biff: .hello
+    VellumTalk: Biff, hello.
+I also understand dice aliases...
+    Biff: I roll [1d20+1]
+    VellumTalk: Biff, you rolled 1d20+1 = [17]
+    Biff: I roll [smackdown 1d10+17]
+    VellumTalk: Biff, you rolled smackdown 1d10+17 = [23]
+    Biff: I use a few more attacks, [smackdown] [smackdown]
+    VellumTalk: Biff, you rolled smackdown = [21]
+    VellumTalk: Biff, you rolled smackdown = [26]
+I also can sort any dice alias result.  Use {} instead of []...
+    Biff: I roll {stats 3d6x7}
+    VellumTalk: Biff, you rolled stats 3d6x7 = {2, 9, 11, 13, 14, 14, 17} (sorted)
+I also understand "npc hijacking".
+    (TBD .. this may grow more features)
+    Biff: *grimlock1 ... [foo 1d20+2]
+    VellumTalk: grimlock1, you rolled foo 1d20+2 = [11]
