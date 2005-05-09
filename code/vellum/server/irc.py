@@ -441,7 +441,7 @@ class VellumTalk(irc.IRCClient):
         pass
 
     def irc_unknown(self, prefix, command, params):
-        log.msg('|||'.join((prefix, command, params)))
+        log.msg('|||'.join((prefix, command, repr(params))))
 
     def irc_INVITE(self, prefix, (user, channel)):
         self.join(channel)
