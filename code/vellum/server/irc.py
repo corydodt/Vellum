@@ -41,11 +41,11 @@ class Session:
         raise UnknownHailError()
 
     def respondTo_DICE(self, user, exp):
-        """{d1ce} expressions
+        """[d1ce] expressions
         Understands all the expressions in dice.py
         Also understands aliases, for example:
-        <bob> {battleaxe 1d20+3} => rolls 1d20+3, and remembers that bob's
-            alias {battleaxe} is 1d20+3
+        <bob> [battleaxe 1d20+3] => rolls 1d20+3, and remembers that bob's
+            alias [battleaxe] is 1d20+3
         When defining an alias, the dice expression must not contain spaces
         """
         result = alias.resolve(user, exp)
@@ -176,12 +176,14 @@ class Session:
         """True if nick is part of this session."""
         return nick in self.nicks
 
+
+
+
     def handlePrivateDice(self, user, msg):
         return self.doDice(user, msg, user, *self.observers)
 
     def handleDice(self, user, msg):
         return self.doDice(user, msg, self.channel)
-
 
     def doDice(self, user, msg, *targets):
         # FIXME - whoa, this is really broken
@@ -195,7 +197,15 @@ class Session:
         
         return Response(text, msg, *targets)
                 
+
+
+
+    def command(self, user, command):
+        """Choose a method based on the command word, and pass args if any"""
+        return self.doCommand(user, command, self.channel)
         
+    def privateCommand(self, user, command):
+        return self.doCommand(user, command, user, *self.observers)
 
     def doCommand(self, user, command, *targets):
         m = self.getCommandMethod(command)
@@ -217,13 +227,6 @@ class Session:
             text = '** Sorry, %s: %s' % (user, str(e)), 
             return Response(text, context, *targets)
         
-    def command(self, user, command):
-        """Choose a method based on the command word, and pass args if any"""
-        return self.doCommand(user, command, self.channel)
-        
-    def privateCommand(self, user, command):
-        return self.doCommand(user, command, user, *self.observers)
-
     def getCommandMethod(self, command):
         command_word = 'DEFAULT'
         args = None
@@ -241,6 +244,8 @@ class Session:
 
     def removeNick(self, *nicks):
         self.nicks ^= Set(nicks)
+        # also update self.observers
+        self.observers ^= Set(nicks)
         return self.reportNicks('Removed %s' % (str(nicks),))
 
     def reportNicks(self, why):
@@ -253,6 +258,12 @@ class Session:
     def rename(self, old, new):
         self.nicks -= Set((old,))
         self.nicks |= Set((new,))
+        # also update self.observers
+        self.observers -= Set((old,))
+        self.observers |= Set((new,))
+        if old in self.observers:
+            self.observers.remove(old)
+            self.observers.append(new)
         # TODO - rename old's aliases so they work for new
         return self.reportNicks('%s renamed to %s' % (old, new))
 
@@ -268,10 +279,14 @@ class Response:
     def getMessages(self):
         """Generate messages to each channel"""
         if len(self.more_channels) > 0:
+            text = self.text + ' (observed)'
             more_text = '%s (<%s>  %s)' % (self.text, 
                                            self.channel,
                                            self.context)
-        yield (self.channel, self.text)
+        else:
+            text = self.text
+
+        yield (self.channel, text)
         for ch in self.more_channels:
             yield (ch, more_text)
 
@@ -289,6 +304,7 @@ class VellumTalk(irc.IRCClient):
         self.resetter = task.LoopingCall(self._resetWtfCount).start(30.0)
         self.sessions = []
         self.defaultSession = None
+        # TODO - analyze, do i *really* need responding?
         self.responding = 0 # don't start responding until i'm in a channel
         # irc.IRCClient.__init__(self, *args, **kwargs)
 
@@ -571,7 +587,8 @@ def test():
         transport = protocol.FileWrapper(f)
         vt = VellumTalk()
         vt.performLogin = 0
-        vt.responding = 1
+        vt.joined("#testing")
+        vt.defaultSession = Session('#testing')
         vt.makeConnection(transport)
         pos = ([0],)
 
