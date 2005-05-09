@@ -440,6 +440,12 @@ class VellumTalk(irc.IRCClient):
     def irc_RPL_ENDOFNAMES(self, prefix, params):
         pass
 
+    def irc_unknown(self, prefix, command, params):
+        print prefix, command, params
+
+    def irc_INVITE(self, prefix, (user, channel)):
+        self.join(channel)
+
     def privmsg(self, user, channel, msg):
         """This will get called when the bot receives a message."""
         user = user.split('!', 1)[0]
