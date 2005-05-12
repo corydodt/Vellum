@@ -201,6 +201,7 @@
 	      <child>
 		<widget class="GtkDrawingArea" id="drawingarea1">
 		  <property name="visible">True</property>
+		  <signal name="size_allocate" handler="on_drawingarea1_size_allocate" last_modification_time="Thu, 12 May 2005 06:18:04 GMT"/>
 		</widget>
 	      </child>
 	    </widget>

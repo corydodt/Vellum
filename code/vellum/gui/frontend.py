@@ -64,6 +64,26 @@ from twisted.python import log
 from vellum.server import PBPORT
 from vellum.gui.fs import fs
 
+
+class Icon:
+    """
+    - image: the image used for the icon
+    - xy: a 2-tuple specify the top-left corner of the icon
+    """
+    def __init__(self):
+        self.image = None
+        self.xy = (None, None)
+
+class Model:
+    """
+    - background: the image used as the background (usually, a map)
+    - icons: a list of icon objects
+    """
+    def __init__(self, background):
+        self.background = background
+        self.icons = []
+
+
 class FrontEnd:
     def __getattr__(self, name):
         if name.startswith("gw_"):
@@ -82,9 +102,20 @@ class FrontEnd:
         drawing = self.gw_drawingarea1
         drawing.connect('map-event', sdlHack)
 
+        # coordinate and scale for displaying the model
+        self.scale = 1.0
+        self.corner = (0,0)
+
+        # force size_allocate hook to get called
+        self.gw_drawingarea1.queue_draw()
+
+
     def on_Tester_destroy(self, widget):
         log.msg("Goodbye.")
         self.deferred.callback(None)
+
+    def on_drawingarea1_size_allocate(self, widget, rectangle):
+        pygame.display.set_mode((rectangle.width, rectangle.height))
 
     def on_connect_button_clicked(self, widget):
         text = self.gw_server.get_child().get_text()
@@ -103,7 +134,8 @@ class FrontEnd:
         mapinfo = self._getMapInfo()
         log.msg('displaying map %s' % (mapinfo['name'],))
         image_object = pygame.image.load(fs.downloads(mapinfo['name']))
-        self.view.setMap(image_object)
+        self.model = Model(image_object)
+        self.view = View(self.model)
         # self.view.addCharacter
         # self.view.addItem
         # self.view.addText
