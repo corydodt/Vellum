@@ -60,6 +60,7 @@ import gtk
 from gtk import glade
 
 from twisted.python import log
+from twisted.internet import task, reactor
 
 from vellum.server import PBPORT
 from vellum.gui.fs import fs
@@ -106,8 +107,24 @@ class FrontEnd:
         self.scale = 1.0
         self.corner = (0,0)
 
-        # force size_allocate hook to get called
-        self.gw_drawingarea1.queue_draw()
+        # start updating pygame after map-event has occurred
+        reactor.callLater(0.1, self.mainScreenTurnOn)
+
+        # force size_allocate hook to get called, and draw on the display
+        da_w = self.gw_drawingarea1.get_allocation().width
+        da_h = self.gw_drawingarea1.get_allocation().height
+        reactor.callLater(0.15, lambda : 
+                self.on_drawingarea1_size_allocate(self.gw_drawingarea1,
+                        gtk.gdk.Rectangle(0,0,da_w,da_h)
+                                                   ))
+
+        self.model = None
+
+    def mainScreenTurnOn(self):
+        """Start updating PyGame, and draw the background image"""
+        self.bg = pygame.image.load(fs.background)
+        self.redraw = task.LoopingCall(pygame.display.update)
+        self.redraw.start(0.04)
 
 
     def on_Tester_destroy(self, widget):
@@ -115,7 +132,20 @@ class FrontEnd:
         self.deferred.callback(None)
 
     def on_drawingarea1_size_allocate(self, widget, rectangle):
-        pygame.display.set_mode((rectangle.width, rectangle.height))
+        rect = (rectangle.width, rectangle.height)
+        self.main = pygame.display.set_mode(rect, pygame.DOUBLEBUF)
+        # count how many times to repeat in each direction
+        tile_w = self.bg.get_width()
+        tile_h = self.bg.get_height()
+        num_x = rectangle.width / tile_w + 1
+        num_y = rectangle.height / tile_h + 1
+        # tile the texture
+        if self.model is None:
+            for x in range(num_x):
+                for y in range(num_y):
+                    self.main.blit(self.bg, (x*tile_w, y*tile_h))
+        else:
+            self.main.blit(self.model.background, (0,0))
 
     def on_connect_button_clicked(self, widget):
         text = self.gw_server.get_child().get_text()
@@ -129,19 +159,17 @@ class FrontEnd:
             if fi['type'] == 'map':
                 return fi
 
-
     def displayMap(self):
         mapinfo = self._getMapInfo()
         log.msg('displaying map %s' % (mapinfo['name'],))
-        image_object = pygame.image.load(fs.downloads(mapinfo['name']))
-        self.model = Model(image_object)
-        self.view = View(self.model)
-        # self.view.addCharacter
-        # self.view.addItem
-        # self.view.addText
-        # self.view.addSound
-        self.view.clearObscurement()
-        # self.view.obscure?
+        self.model = Model(pygame.image.load(fs.downloads(mapinfo['name'])))
+        self.main.blit(self.model.background, (0,0))
+        # self.addCharacter
+        # self.addItem
+        # self.addText
+        # self.addSound
+        # self.clearObscurement()
+        # self.obscure?
 
     def _cb_gotFileInfos(self, fileinfos):
         self.fileinfos = fileinfos

@@ -12,4 +12,4 @@ if not os.path.isfile(__file__):
 fs = Filesystem(util.sibpath(sys.argv[0], ''))
 fs.downloads = Filesystem(fs("downloads"), mkdir=1)
 fs.gladefile = fs("vellum.glade")
-print fs.gladefile
+fs.background = fs("slatebg.png")
