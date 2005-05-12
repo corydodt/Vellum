@@ -146,24 +146,38 @@ class FrontEnd:
                     self.main.blit(self.bg, (x*tile_w, y*tile_h))
         else:
             self.main.blit(self.model.background, (0,0))
+            for icon in self.model.icons:
+                self.main.blit(icon.image, icon.xy)
 
     def on_connect_button_clicked(self, widget):
         text = self.gw_server.get_child().get_text()
         d = self.netclient.startPb(text, PBPORT)
         d.addErrback(log.err)
         d.addCallback(self._cb_gotFileInfos)
-        d.addCallback(lambda _: self.displayMap())
+        d.addCallback(lambda _: self.displayModel())
 
     def _getMapInfo(self):
         for fi in self.fileinfos:
             if fi['type'] == 'map':
                 return fi
 
-    def displayMap(self):
+    def _getCharacterInfo(self):
+        for fi in self.fileinfos:
+            if fi['type'] == 'character':
+                yield fi
+
+    def displayModel(self):
         mapinfo = self._getMapInfo()
         log.msg('displaying map %s' % (mapinfo['name'],))
         self.model = Model(pygame.image.load(fs.downloads(mapinfo['name'])))
         self.main.blit(self.model.background, (0,0))
+        for n, character in enumerate(self._getCharacterInfo()):
+            icon_image = pygame.image.load(fs.downloads(character['name']))
+            icon = Icon()
+            self.model.icons.append(icon)
+            icon.image = icon_image
+            icon.xy = n*80, n*80
+            self.main.blit(icon.image, icon.xy)
         # self.addCharacter
         # self.addItem
         # self.addText
