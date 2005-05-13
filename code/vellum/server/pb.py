@@ -1,31 +1,29 @@
 """The PB service of the vellum server."""
+import ConfigParser
+import glob
 
 from twisted.spread import pb
 
-map = '/images/grimcatch.jpg'
+import yaml
 
 class Gameness(pb.Root):
+    """PLEASE BE CAREFUL.
+    Removing any of the remote_ methods here, or changing any of their return
+    values, will result in incompatible network changes.  Be aware of that and
+    try to minimize incompatible network changes.
+
+    At some point in the future, there will be a policy about what changes are
+    allowed in what versions.
+    """
+    def __init__(self):
+        cp = ConfigParser.ConfigParser()
+        cp.read('vellumpb.ini')
+        lastmap = cp.get('vellumpb', 'lastmap', None)
+        if lastmap is None:
+            self.map = None
+        else:
+            self.map = yaml.loadFile(lastmap).next()
+
     def remote_listAvailableFiles(self):
-        return [{'uri': map, 
-                 'name': 'grimcatch',
-                 'type': 'map', # others: 'character', 'object', 'sound', 'text'
-                 'md5': '6b8846cb4b4de9ad6bb7f3471c4bd23a',
-                 },
-                {'uri': '/images/shara-kw.png',
-                 'name': 'shara',
-                 'type': 'character',
-                 'md5': '0865ea97c08cb3cb47e68312a48222cb',
-                 'top': 200,
-                 'left': 200,
-                 },
-                {'uri': '/images/halbren.png',
-                 'name': 'halbren',
-                 'type': 'character',
-                 'md5': 'ee9d888024cf8456402eb3883995398a',
-                 'top': 50,
-                 'left': 50,
-                 },
-                ]
-    # character and object: name, image_mode, top, left
-    # sound: name, top, left
-    # text: title, top, left
+        return self.map
+

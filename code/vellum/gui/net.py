@@ -28,16 +28,16 @@ class NetClient:
         d.addCallback(lambda pbobject: 
                         pbobject.callRemote('listAvailableFiles')
                       )
-        d.addCallback(self.getAllFiles)
+        d.addCallback(self.getMapInfo)
         return d
 
-    def getAllFiles(self, fileinfos):
-        self.fileinfos = fileinfos
-        fileiter = iter(fileinfos)
+    def getMapInfo(self, map):
+        self.map = map
+        fileiter = iter(map['files'])
         d = defer.maybeDeferred(self._getNextFile, fileiter)
         # TODO - this might be called after the first _getNextFile instead of
         # the intended behavior, after the last one.  Please check.
-        d.addCallback(lambda _: fileinfos)
+        d.addCallback(lambda _: map['files'])
         return d
 
     def _getNextFile(self, fileinfos):
@@ -49,7 +49,7 @@ class NetClient:
                 return defer.maybeDeferred(self._getNextFile, fileinfos)
             except ValueError:
                 log.msg('Getting file at %s' % (fi['uri'],))
-                uri = 'http://%s:%s%s' % (self.server,
+                uri = 'http://%s:%s/%s' % (self.server,
                                           HTTPPORT,
                                           fi['uri'],
                                           )

@@ -1,0 +1,26 @@
+# vi:ft=yaml
+# types: character, item, sound, text, map, obscurement
+# character/item fields: name, image_mode, top, left
+# sound fields: name, top, left
+# text fields: title, top, left
+---
+files:
+    -
+        name: The Gnoll Huddle
+        uri: images/gnoll-huddle.jpg
+        type: map
+        md5: fd693cc6ce9fc63ca03ed9600b9feeae
+    -
+        name: Shara
+        uri: images/shara-kw.png
+        type: character
+        md5: 0865ea97c08cb3cb47e68312a48222cb
+        corner: [200, 200]
+        scale: 1.0
+    -
+        name: Halbren
+        uri: images/halbren.png
+        type: character
+        md5: ee9d888024cf8456402eb3883995398a
+        corner: [50, 50]
+        scale: 1.0
