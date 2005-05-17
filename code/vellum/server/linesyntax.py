@@ -2,20 +2,227 @@ r"""Define the syntax for parsing statements on IRC.
 Lines beginning with . are commands, unless the next significant character is
 a dot as well.
 Lines that are not commands may contain the following syntax:
+    - A message that begins with the bot's name or begins with a dot
+      is a structured command (beginning on the first token after the bot's
+      name, if present), and it may take arguments.
     - A single word beginning with a letter and prefixed by a * anywhere in
       the line is the name of an NPC or a PC.
     - An expression inside brackets [] or braces {} is a verb.
-    - A verb starts with zero or more verbnames, and ends with a dice
+    - A verb starts with zero or more verbnames, and ends with an optional dice
       expression.
-    - A dice expression obeys the following regex (verbose, whitespace ignored):
-\[0-9\]* (d\s*[0-9]+)? ((\+|\-)\s*[0-9]+)? ([lLhH]\s*[0-9]+)? ([Xx]\s*[0-9]+)?
-count    size          modifier            filter             repeat
-      So all of the following are valid dice expressions:
+    - A dice expression: all of the following are valid..
         5    5x3    5+1x3    d6    3d6     9d6l3-1x2    d6+2
-    - 
+    - A targetting expression starts with "vs" or "vs." and is followed by a
+      comma-separated list of character names
 """
 
+"""
+bot_name = r'''FIXME''' # monkeypatch this
 
-<Shara> I [attack 1d6+1] vs grimlock1
-<DM> *grimlock1 [attack 1d2+10]s vs shara
-<Rade> I [cast] a [fireball] vs grimlock1, grimlock2
+hail = r'''^\w+(:|,)?|\.'''
+
+"""
+
+try:
+    import psyco # TODO - see how much of a difference this makes
+    psyco.profile()
+except ImportError:
+    pass
+
+import string
+
+import pyparsing as P
+
+def R(name):
+    """A testy function that just reports the name of the thing parsed
+    along with the tokens found
+    """
+    def reporter(s, loc, toks):
+        print "%20s %-50s" % (name, toks)
+    return reporter
+
+L = P.Literal
+Sup = P.Suppress
+
+
+# commands
+# commands
+# commands
+identifier = P.Word(P.alphas+"_", P.alphanums+"_")
+command_leader = L(".")
+
+command = (Sup(command_leader) + 
+           identifier + 
+           P.Optional(Sup(P.White()) + 
+                      P.restOfLine)
+           )
+
+
+# interactions
+# interactions
+# interactions
+
+# referring to the actor
+character_name = P.Word(P.alphas, P.alphanums+"_")
+
+actor = Sup('*') + character_name 
+actor.setParseAction(R("actor"))
+
+# dice expressions
+number = P.Word(P.nums)
+number.setParseAction(lambda s,p,t: map(int, t))
+
+dice_count = number.copy()
+dice_size = Sup(L('d')) + number
+dice_modifier = P.oneOf('+ -') + number
+dice_filter = P.oneOf('h l', caseless=True) + number
+dice_repeat = Sup(P.CaselessLiteral('x')) + number
+
+def combineModifier(sign, num):
+    values = {'-':-1, '+':1}
+    return num * values[sign]
+
+
+class FilterException(Exception):
+    """Filter has more dice than the dice_count"""
+
+
+dice_modifier.setParseAction(lambda s, p, t: combineModifier(*t))
+
+dice_optionals = (P.Optional(dice_filter) +
+                  P.Optional(dice_modifier) + 
+                  P.Optional(dice_repeat))
+
+nonrandom = dice_count + dice_optionals
+random = P.Optional(dice_count) + dice_size + dice_optionals
+
+dice = random | nonrandom 
+
+# verb phrases
+# verb phrases
+
+def _bookendedVerb(opener, terminator):
+    o = L(opener)
+    t = L(terminator)
+    wordchars = P.alphanums + string.punctuation.replace(terminator, '')
+
+    v_word = P.Word(wordchars)
+    v_words = P.OneOrMore(v_word)
+    
+    v_word_nonterminal = v_word + P.NotAny(t)
+    v_words_nonterminal = P.OneOrMore(v_word_nonterminal)
+
+    v_content = P.Optional(v_words_nonterminal) + dice | v_words
+    v_phrase = Sup(o) + v_content + Sup(t)
+    return v_phrase
+
+unsorted_v_phrase = _bookendedVerb('[', ']')
+sorted_v_phrase = _bookendedVerb('{', '}')
+
+verb_phrase = sorted_v_phrase | unsorted_v_phrase
+
+# targets (TODO)
+
+# bring it all together
+FA = find_actor = Sup(P.SkipTo(actor)) + actor
+FV = find_verb_phrase = Sup(P.SkipTo(verb_phrase)) + verb_phrase
+# FT = find_targets = ..
+
+interaction = (P.Optional(FA) + FV | FV + FA
+               ) + Sup(P.restOfLine)
+interaction.setParseAction(R("interaction"))
+
+# etc
+# etc
+# etc
+nonsense = P.NotAny(command | interaction)
+nonsense.setParseAction(R("nonsense"))
+
+# sentence
+# sentence
+# sentence
+sentence = command | interaction | nonsense
+
+
+
+
+# tests!
+_test_dice = [("5", "[5]"),
+("5x3","[5, 3]"),
+("5+1x3","[5, 1, 3]"),
+("d6x3","[6, 3]"),
+("1d20+1","[1, 20, 1]"),
+("9d6l3-10x2","[9, 6, 'l', 3, -10, 2]"),
+("9d6H3+10x2","[9, 6, 'h', 3, 10, 2]"),
+("1d  6 X3","[1, 6, 3]"),
+("d 6 -2 x 3","[6, -2, 3]"),
+("2d6-2x1","[2, 6, -2, 1]"),
+("d6xz", P.ParseException),
+("1d", P.ParseException),
+("1d6l3l3", P.ParseException),
+("1d6h3l3", P.ParseException),
+("d6h+1", P.ParseException),
+("1d6h2+1", FilterException),
+]
+
+_test_verb_phrases = [
+("[]", P.ParseException),
+("[star]", "['star']"),
+("[i am a star]", "['i', 'am', 'a', 'star']"),
+("[woo 1d20+1]", "['woo', 1, 20, 1]"),
+("[1d20+1]", "[1, 20, 1]"),
+("{1d20+1}", "[1, 20, 1]"),
+("{arrr matey 1d20+1}", "['arrr', 'matey', 1, 20, 1]"),
+("{arrr matey}", "['arrr', 'matey']"),
+("[i am a star}", P.ParseException),
+]
+
+_test_interactions = [] # TODO
+
+_test_sentences = [
+("lalala", "[]"),
+(".aliases shara", "['aliases', 'shara']"),
+(".foobly doobly doo", "['foobly', 'doobly doo']"),
+(".gm", "['gm']"),
+(".combat", "['combat']"),
+("*woop1", "['woop1']"),
+("foo *woop2", "['woop2']"),
+("I [attack 1d6+1] vs grimlock1", "['attack', 1, 6, 1, 'grimlock1']"),
+("*grimlock1 [attack 1d2+10]s vs shara", 
+        "['grimlock1', 'attack', 1, 2, 10, 'shara']"),
+("I [cast] a [fireball] vs grimlock1, grimlock2", 
+        "['cast', 'fireball', 'grimlock1', 'grimlock2']"),
+("VellumTalk: n", "['n']"),
+("VellumTalk, n", "['n']"),
+("VellumTalk n", "['n']"),
+]
+
+
+def test_stuff(element, tests):
+    for input, expected in tests:
+        try:
+            parsed = element.parseString(input)
+            if isinstance(expected, basestring):
+                if str(parsed) != expected:
+                    print input, expected, str(parsed)
+                else:
+                    print ".",
+        except Exception, e:
+            if isinstance(expected, basestring):
+                print "FAILED:", input, expected
+                raise
+            if not isinstance(e, expected):
+                print input, expected, str(parsed)
+            else:
+                print ".",
+
+
+def test():
+    test_stuff(dice, _test_dice)
+    #dice.setDebug()
+    test_stuff(verb_phrase, _test_verb_phrases)
+    test_stuff(interaction, _test_interactions)
+    test_stuff(sentence, _test_sentences)
+
+if __name__ == '__main__':
+    test()
