@@ -16,13 +16,6 @@ Lines that are not commands may contain the following syntax:
       comma-separated list of character names
 """
 
-"""
-bot_name = r'''FIXME''' # monkeypatch this
-
-hail = r'''^\w+(:|,)?|\.'''
-
-"""
-
 try:
     import psyco # TODO - see how much of a difference this makes
     psyco.profile()
@@ -33,12 +26,21 @@ import string
 
 import pyparsing as P
 
+class BotName(P.CaselessLiteral):
+    """Token to caseless match the botname, whatever it happens to be now."""
+    def setBotName(self, matchString):
+        self.__init__(matchString)
+
+botname = BotName('BOTNAME_NOT_SET')
+
+
+
 def R(name):
     """A testy function that just reports the name of the thing parsed
     along with the tokens found
     """
     def reporter(s, loc, toks):
-        print "%20s %-50s" % (name, toks)
+        pass # print "%20s %-50s" % (name, toks)
     return reporter
 
 L = P.Literal
@@ -50,23 +52,34 @@ Sup = P.Suppress
 # commands
 identifier = P.Word(P.alphas+"_", P.alphanums+"_")
 command_leader = L(".")
+hail = botname + P.Optional(L(":") | L(","))
 
-command = (Sup(command_leader) + 
+
+command = (P.StringStart() + 
+           Sup(command_leader | hail) + 
            identifier + 
-           P.Optional(Sup(P.White()) + 
-                      P.restOfLine)
-           )
+           P.restOfLine)
 
+_test_commands = [(".hello", "['hello', '']"),
+(".foo bar", "['foo', ' bar']"),
+(". foo", "['foo', '']"),
+("..foo", P.ParseException),
+("TestBot foo", "['foo', '']"),
+("TestBot: foo", "['foo', '']"),
+("tesTBot, foo", "['foo', '']"),
+("tesTBotfoo", P.ParseException),
+]
 
 # interactions
 # interactions
 # interactions
 
-# referring to the actor
+# actor
 character_name = P.Word(P.alphas, P.alphanums+"_")
 
 actor = Sup('*') + character_name 
 actor.setParseAction(R("actor"))
+
 
 # dice expressions
 number = P.Word(P.nums)
@@ -82,10 +95,8 @@ def combineModifier(sign, num):
     values = {'-':-1, '+':1}
     return num * values[sign]
 
-
 class FilterException(Exception):
     """Filter has more dice than the dice_count"""
-
 
 dice_modifier.setParseAction(lambda s, p, t: combineModifier(*t))
 
@@ -98,55 +109,6 @@ random = P.Optional(dice_count) + dice_size + dice_optionals
 
 dice = random | nonrandom 
 
-# verb phrases
-# verb phrases
-
-def _bookendedVerb(opener, terminator):
-    o = L(opener)
-    t = L(terminator)
-    wordchars = P.alphanums + string.punctuation.replace(terminator, '')
-
-    v_word = P.Word(wordchars)
-    v_words = P.OneOrMore(v_word)
-    
-    v_word_nonterminal = v_word + P.NotAny(t)
-    v_words_nonterminal = P.OneOrMore(v_word_nonterminal)
-
-    v_content = P.Optional(v_words_nonterminal) + dice | v_words
-    v_phrase = Sup(o) + v_content + Sup(t)
-    return v_phrase
-
-unsorted_v_phrase = _bookendedVerb('[', ']')
-sorted_v_phrase = _bookendedVerb('{', '}')
-
-verb_phrase = sorted_v_phrase | unsorted_v_phrase
-
-# targets (TODO)
-
-# bring it all together
-FA = find_actor = Sup(P.SkipTo(actor)) + actor
-FV = find_verb_phrase = Sup(P.SkipTo(verb_phrase)) + verb_phrase
-# FT = find_targets = ..
-
-interaction = (P.Optional(FA) + FV | FV + FA
-               ) + Sup(P.restOfLine)
-interaction.setParseAction(R("interaction"))
-
-# etc
-# etc
-# etc
-nonsense = P.NotAny(command | interaction)
-nonsense.setParseAction(R("nonsense"))
-
-# sentence
-# sentence
-# sentence
-sentence = command | interaction | nonsense
-
-
-
-
-# tests!
 _test_dice = [("5", "[5]"),
 ("5x3","[5, 3]"),
 ("5+1x3","[5, 1, 3]"),
@@ -165,64 +127,141 @@ _test_dice = [("5", "[5]"),
 ("1d6h2+1", FilterException),
 ]
 
+
+# verb phrases
+# verb phrases
+def _bookendedVerb(opener, terminator):
+    o = L(opener)
+    t = L(terminator)
+    wordchars = P.alphanums + string.punctuation.replace(terminator, '')
+
+    v_word = P.Word(wordchars)
+    v_words = P.OneOrMore(v_word)
+    
+    v_word_nonterminal = v_word + P.NotAny(t)
+    v_words_nonterminal = P.OneOrMore(v_word_nonterminal)
+
+    # FIXME - [d20 1d10] should be an error
+    v_content = P.Optional(v_words_nonterminal) + dice | v_words
+    v_phrase = Sup(o) + v_content + Sup(t)
+    return v_phrase
+
+unsorted_v_phrase = _bookendedVerb('[', ']')
+sorted_v_phrase = _bookendedVerb('{', '}')
+
+verb_phrase = sorted_v_phrase | unsorted_v_phrase
+
 _test_verb_phrases = [
 ("[]", P.ParseException),
 ("[star]", "['star']"),
-("[i am a star]", "['i', 'am', 'a', 'star']"),
+("[rock star]", "['rock', 'star']"),
 ("[woo 1d20+1]", "['woo', 1, 20, 1]"),
 ("[1d20+1]", "[1, 20, 1]"),
+("[1d20+1 1d20+1]", "['1d20+1', 1, 20, 1]"),
 ("{1d20+1}", "[1, 20, 1]"),
 ("{arrr matey 1d20+1}", "['arrr', 'matey', 1, 20, 1]"),
 ("{arrr matey}", "['arrr', 'matey']"),
 ("[i am a star}", P.ParseException),
 ]
 
-_test_interactions = [] # TODO
+
+# targets
+# targets
+vs = P.CaselessLiteral('vs') + P.Optional(L('.')) 
+character_list = P.delimitedList(character_name, ",")
+target_phrase = Sup(vs) + character_list
+
+_test_target_phrases = [
+("vs. a", "['a']"),
+("vs a", "['a']"),
+("vs. a, b", "['a', 'b']"),
+("vs a, b", "['a', 'b']"),
+("Vs a, b, c", "['a', 'b', 'c']"),
+("vs . ninja", P.ParseException),
+("vs foo, @", P.ParseException),
+("vsfoo", P.ParseException),
+]
+
+
+# bring it all together
+# bring it all together
+part_of_speech = verb_phrase | actor | target_phrase
+part_of_speech.setParseAction(R("part_of_speech"))
+
+
+
+# sentence
+# sentence
+# sentence
+sentence = command | part_of_speech
 
 _test_sentences = [
-("lalala", "[]"),
 (".aliases shara", "['aliases', 'shara']"),
 (".foobly doobly doo", "['foobly', 'doobly doo']"),
 (".gm", "['gm']"),
 (".combat", "['combat']"),
+("lalala", "[]"),
 ("*woop1", "['woop1']"),
 ("foo *woop2", "['woop2']"),
-("I [attack 1d6+1] vs grimlock1", "['attack', 1, 6, 1, 'grimlock1']"),
-("*grimlock1 [attack 1d2+10]s vs shara", 
+("*grimlock1 [attack 1d2+10]s the paladin. (vs shara)", 
         "['grimlock1', 'attack', 1, 2, 10, 'shara']"),
+("I [attack 1d6+1] vs grimlock1", "['attack', 1, 6, 1, 'grimlock1']"),
+("I [cast] a [fireball] vs grimlock1,grimlock2", 
+        "['cast', 'fireball', 'grimlock1', 'grimlock2']"),
 ("I [cast] a [fireball] vs grimlock1, grimlock2", 
         "['cast', 'fireball', 'grimlock1', 'grimlock2']"),
-("VellumTalk: n", "['n']"),
-("VellumTalk, n", "['n']"),
-("VellumTalk n", "['n']"),
+("The [machinegun] being fired vs. Shara by the *ninja goes rat-a-tat.",
+        "['machinegun', 'Shara', 'ninja']"),
+("TestBot, n", "['n']"),
+("testbot: n", "['n']"),
+("testbot n", "['n']"),
 ]
 
 
-def test_stuff(element, tests):
+
+
+
+def test_stuff(element, tests, scan=False):
     for input, expected in tests:
         try:
-            parsed = element.parseString(input)
+            if scan:
+                scanned = element.scanString(input)
+                import pdb; pdb.set_trace()
+                parsed = [s[0][0] for s in scanned]
+            else:
+                parsed = element.parseString(input)
             if isinstance(expected, basestring):
                 if str(parsed) != expected:
-                    print input, expected, str(parsed)
+                    print '\n', input, expected, str(parsed)
                 else:
-                    print ".",
+                    passed()
         except Exception, e:
             if isinstance(expected, basestring):
-                print "FAILED:", input, expected
+                print "\nFAILED:", input, expected
                 raise
             if not isinstance(e, expected):
                 print input, expected, str(parsed)
             else:
-                print ".",
+                passed()
+
+import itertools
+import sys
+passcount = itertools.count()
+passcount.next()
+
+def passed():
+    passcount.next()
+    sys.stdout.write('.')
 
 
 def test():
+    botname.setBotName("TestBot")
+    test_stuff(command, _test_commands)
     test_stuff(dice, _test_dice)
-    #dice.setDebug()
     test_stuff(verb_phrase, _test_verb_phrases)
-    test_stuff(interaction, _test_interactions)
-    test_stuff(sentence, _test_sentences)
+    test_stuff(target_phrase, _test_target_phrases)
+    test_stuff(sentence, _test_sentences, scan=1)
+    print passcount.next() - 1
 
 if __name__ == '__main__':
     test()
