@@ -42,7 +42,7 @@ def R(name):
     along with the tokens found
     """
     def reporter(s, loc, toks):
-        pass # print "%20s %-50s" % (name, toks)
+        print "%20s %-50s" % (name, toks)
     return reporter
 
 L = P.Literal
@@ -80,7 +80,6 @@ _test_commands = [(".hello", "['hello', '']"),
 character_name = P.Word(P.alphas, P.alphanums+"_")
 
 actor = Sup('*') + character_name 
-actor.setParseAction(R("actor"))
 
 
 # dice expressions
@@ -188,7 +187,6 @@ _test_target_phrases = [
 # bring it all together
 # bring it all together
 part_of_speech = verb_phrase | actor | target_phrase
-part_of_speech.setParseAction(R("part_of_speech"))
 
 
 
