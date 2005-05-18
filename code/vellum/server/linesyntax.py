@@ -83,12 +83,22 @@ actor = Sup('*') + character_name
 
 
 # dice expressions
+# general format:
+#
+#    number ::== {'0'-'9'}...
+#    filter ::= { 'h' | 'l' } number
+#    bonus ::=  { '+' | '-'} number
+#    repeat ::= 'x' number
+#    size ::== 'd' number
+#    random ::= [ number ] size [ filter ] [ bonus ] [ repeat ]
+#    nonrandom ::= number [ bonus ] [ repeat ]
+#    
 number = P.Word(P.nums)
 number.setParseAction(lambda s,p,t: map(int, t))
 
 dice_count = number.copy()
-dice_size = Sup(L('d')) + number
-dice_modifier = P.oneOf('+ -') + number
+dice_size = Sup(P.CaselessLiteral('d')) + number
+dice_bonus = P.oneOf('+ -') + number
 dice_filter = P.oneOf('h l', caseless=True) + number
 dice_repeat = Sup(P.CaselessLiteral('x')) + number
 
@@ -99,26 +109,27 @@ def combineModifier(sign, num):
 class FilterException(Exception):
     """Filter has more dice than the dice_count"""
 
-dice_modifier.setParseAction(lambda s, p, t: combineModifier(*t))
+dice_bonus.setParseAction(lambda s, p, t: combineModifier(*t))
 
-dice_optionals = (P.Optional(dice_filter) +
-                  P.Optional(dice_modifier) + 
-                  P.Optional(dice_repeat))
+dice_optionals = P.Optional(dice_bonus) + P.Optional(dice_repeat)
 
 nonrandom = dice_count + dice_optionals
-random = P.Optional(dice_count) + dice_size + dice_optionals
+random = (P.Optional(dice_count, default=1) + 
+          dice_size +
+          P.Optional(dice_filter) + 
+          dice_optionals)
 
 dice = random | nonrandom 
 
 _test_dice = [("5", "[5]"),
 ("5x3","[5, 3]"),
 ("5+1x3","[5, 1, 3]"),
-("d6x3","[6, 3]"),
+("d6x3","[1, 6, 3]"),
 ("1d20+1","[1, 20, 1]"),
 ("9d6l3-10x2","[9, 6, 'l', 3, -10, 2]"),
 ("9d6H3+10x2","[9, 6, 'h', 3, 10, 2]"),
 ("1d  6 X3","[1, 6, 3]"),
-("d 6 -2 x 3","[6, -2, 3]"),
+("d 6 -2 x 3","[1, 6, -2, 3]"),
 ("2d6-2x1","[2, 6, -2, 1]"),
 ("d6xz", P.ParseException),
 ("1d", P.ParseException),
