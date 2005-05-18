@@ -311,7 +311,7 @@ class VellumTalk(irc.IRCClient):
     def findSession(self, channel):
         """Return the channel that matches channel, or the channel
         that has channel (a nick) in its list of people
-        Return the defaultChannel, usually indicating that someone
+        Otherwise return the defaultSession, usually indicating that someone
         has /msg'd the bot and that person is not in a channel with the bot.
         """
         for session in self.sessions:
@@ -333,19 +333,6 @@ class VellumTalk(irc.IRCClient):
         if self.wtf < 4:
             print "Spam blocking tripped. WTF counter exceeded."
             self.wtf = self.wtf + 1
-
-    def findSession(self, channel):
-        """Return the channel that matches channel, or the channel
-        that has channel (a nick) in its list of people
-        Return the defaultChannel, usually indicating that someone
-        has /msg'd the bot and that person is not in a channel with the bot.
-        """
-        for session in self.sessions:
-            if channel == session.channel:
-                return session
-            if session.matchNick(channel):
-                return session
-        return self.defaultSession
 
     
     def msgSlowly(self, channel, lines):
