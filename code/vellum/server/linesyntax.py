@@ -17,11 +17,13 @@ Lines that are not commands may contain the following syntax:
 """
 
 try:
-    import psyco # TODO - see how much of a difference this makes
-    psyco.profile()
+    pass
+    # import psyco # TODO - see how much of a difference this makes
+    # psyco.profile()
 except ImportError:
     pass
 
+import sys
 import string
 
 import pyparsing as P
@@ -196,13 +198,18 @@ part_of_speech.setParseAction(R("part_of_speech"))
 sentence = command | part_of_speech
 
 _test_sentences = [
-(".aliases shara", "['aliases', 'shara']"),
-(".foobly doobly doo", "['foobly', 'doobly doo']"),
-(".gm", "['gm']"),
-(".combat", "['combat']"),
+(".gm", "['gm', '']"),
+(".combat", "['combat', '']"),
 ("lalala", "[]"),
+("TestBot, n", "['n', '']"),
+("testbot: n", "['n', '']"),
+("testbot n", "['n', '']"),
+("The [machinegun] being fired vs. Shara by the *ninja goes rat-a-tat.",
+        "['machinegun', 'Shara', 'ninja']"),
 ("*woop1", "['woop1']"),
 ("foo *woop2", "['woop2']"),
+(".aliases shara", "['aliases', ' shara']"),
+(".foobly doobly doo", "['foobly', ' doobly doo']"),
 ("*grimlock1 [attack 1d2+10]s the paladin. (vs shara)", 
         "['grimlock1', 'attack', 1, 2, 10, 'shara']"),
 ("I [attack 1d6+1] vs grimlock1", "['attack', 1, 6, 1, 'grimlock1']"),
@@ -210,24 +217,26 @@ _test_sentences = [
         "['cast', 'fireball', 'grimlock1', 'grimlock2']"),
 ("I [cast] a [fireball] vs grimlock1, grimlock2", 
         "['cast', 'fireball', 'grimlock1', 'grimlock2']"),
-("The [machinegun] being fired vs. Shara by the *ninja goes rat-a-tat.",
-        "['machinegun', 'Shara', 'ninja']"),
-("TestBot, n", "['n']"),
-("testbot: n", "['n']"),
-("testbot n", "['n']"),
+]
+
+_test_sentences_altbot = [
+("VellumTalk: combat", "['combat', '']"),
+("vELLUMTAlk aliases shara", "['aliases', ' shara']"),
 ]
 
 
 
 
 
-def test_stuff(element, tests, scan=False):
+def test_stuff(element, tests, scanning=False):
     for input, expected in tests:
         try:
-            if scan:
-                scanned = element.scanString(input)
-                import pdb; pdb.set_trace()
-                parsed = [s[0][0] for s in scanned]
+            parsed = []
+            if scanning:
+                scanned = list(element.scanString(input))
+                # import pdb; pdb.set_trace()
+                for s in scanned:
+                    parsed.extend(s[0])
             else:
                 parsed = element.parseString(input)
             if isinstance(expected, basestring):
@@ -245,7 +254,6 @@ def test_stuff(element, tests, scan=False):
                 passed()
 
 import itertools
-import sys
 passcount = itertools.count()
 passcount.next()
 
@@ -256,11 +264,16 @@ def passed():
 
 def test():
     botname.setBotName("TestBot")
+
     test_stuff(command, _test_commands)
     test_stuff(dice, _test_dice)
     test_stuff(verb_phrase, _test_verb_phrases)
     test_stuff(target_phrase, _test_target_phrases)
-    test_stuff(sentence, _test_sentences, scan=1)
+
+    test_stuff(sentence, _test_sentences, scanning=True)
+    botname.setBotName('VellumTalk')
+    test_stuff(sentence, _test_sentences_altbot, scanning=True)
+
     print passcount.next() - 1
 
 if __name__ == '__main__':
