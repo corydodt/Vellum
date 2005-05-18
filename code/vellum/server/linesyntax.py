@@ -60,10 +60,11 @@ hail = botname + P.Optional(L(":") | L(","))
 command = (P.StringStart() + 
            Sup(command_leader | hail) + 
            identifier + 
+           Sup(P.Optional(P.White())) +
            P.restOfLine)
 
 _test_commands = [(".hello", "['hello', '']"),
-(".foo bar", "['foo', ' bar']"),
+(".foo bar", "['foo', 'bar']"),
 (". foo", "['foo', '']"),
 ("..foo", P.ParseException),
 ("TestBot foo", "['foo', '']"),
@@ -217,8 +218,8 @@ _test_sentences = [
         "['machinegun', 'Shara', 'ninja']"),
 ("*woop1", "['woop1']"),
 ("foo *woop2", "['woop2']"),
-(".aliases shara", "['aliases', ' shara']"),
-(".foobly doobly doo", "['foobly', ' doobly doo']"),
+(".aliases shara", "['aliases', 'shara']"),
+(".foobly doobly doo", "['foobly', 'doobly doo']"),
 ("*grimlock1 [attack 1d2+10]s the paladin. (vs shara)", 
         "['grimlock1', 'attack', 1, 2, 10, 'shara']"),
 ("I [attack 1d6+1] vs grimlock1", "['attack', 1, 6, 1, 'grimlock1']"),
@@ -230,7 +231,7 @@ _test_sentences = [
 
 _test_sentences_altbot = [
 ("VellumTalk: combat", "['combat', '']"),
-("vELLUMTAlk aliases shara", "['aliases', ' shara']"),
+("vELLUMTAlk aliases shara", "['aliases', 'shara']"),
 ]
 
 
