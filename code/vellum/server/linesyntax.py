@@ -1,7 +1,5 @@
 r"""Define the syntax for parsing statements on IRC.
-Lines beginning with . are commands, unless the next significant character is
-a dot as well.
-Lines that are not commands may contain the following syntax:
+Lines may contain the following syntax:
     - A message that begins with the bot's name or begins with a dot
       is a structured command (beginning on the first token after the bot's
       name, if present), and it may take arguments.
@@ -11,7 +9,7 @@ Lines that are not commands may contain the following syntax:
     - A verb starts with zero or more verbnames, and ends with an optional dice
       expression.
     - A dice expression: all of the following are valid..
-        5    5x3    5+1x3    d6    3d6     9d6l3-1x2    d6+2
+        5    5x3    5+1x3    d6    3d6     d6+2     9d6l3-1x2
     - A targetting expression starts with "vs" or "vs." and is followed by a
       comma-separated list of character names
 """
@@ -27,11 +25,6 @@ import sys
 import string
 
 import pyparsing as P
-
-class BotName(P.CaselessLiteral):
-    """Token to caseless match the botname, whatever it happens to be now."""
-    def setBotName(self, matchString):
-        self.__init__(matchString)
 
 botname = P.Forward()
 
@@ -52,7 +45,7 @@ Sup = P.Suppress
 # commands
 # commands
 # commands
-identifier = P.Word(P.alphas+"_", P.alphanums+"_")
+identifier = P.Word(P.alphas+"_", P.alphanums+"_").setResultsName('identifier')
 command_leader = L(".")
 hail = botname + P.Optional(L(":") | L(","))
 
@@ -61,7 +54,7 @@ command = (P.StringStart() +
            Sup(command_leader | hail) + 
            identifier + 
            Sup(P.Optional(P.White())) +
-           P.restOfLine)
+           P.restOfLine).setResultsName('command')
 
 _test_commands = [(".hello", "['hello', '']"),
 (".foo bar", "['foo', 'bar']"),
@@ -78,7 +71,7 @@ _test_commands = [(".hello", "['hello', '']"),
 # interactions
 
 # actor
-character_name = P.Word(P.alphas, P.alphanums+"_")
+character_name = P.Word(P.alphas, P.alphanums+"_").setResultsName('character_name')
 
 actor = Sup('*') + character_name 
 
@@ -97,11 +90,12 @@ actor = Sup('*') + character_name
 number = P.Word(P.nums)
 number.setParseAction(lambda s,p,t: map(int, t))
 
-dice_count = number.copy()
-dice_size = Sup(P.CaselessLiteral('d')) + number
+dice_count = (number.copy()).setResultsName('dice_count')
+dice_size = Sup(P.CaselessLiteral('d')) + number.setResultsName('dice_size')
 dice_bonus = P.oneOf('+ -') + number
-dice_filter = P.oneOf('h l', caseless=True) + number
-dice_repeat = Sup(P.CaselessLiteral('x')) + number
+dice_filter = (P.oneOf('h l', caseless=True).setResultsName('dice_hilo') +
+               number.setResultsName('dice_filter'))
+dice_repeat = Sup(P.CaselessLiteral('x')) + number.setResultsName('dice_repeat')
 
 def combineModifier(sign, num):
     values = {'-':-1, '+':1}
@@ -111,16 +105,17 @@ class FilterException(Exception):
     """Filter has more dice than the dice_count"""
 
 dice_bonus.setParseAction(lambda s, p, t: combineModifier(*t))
+dice_bonus = dice_bonus.setResultsName('dice_bonus')
 
 dice_optionals = P.Optional(dice_bonus) + P.Optional(dice_repeat)
 
-nonrandom = dice_count + dice_optionals
+nonrandom = (dice_count + dice_optionals).setResultsName('nonrandom')
 random = (P.Optional(dice_count, default=1) + 
           dice_size +
           P.Optional(dice_filter) + 
-          dice_optionals)
+          dice_optionals).setResultsName('random')
 
-dice = random | nonrandom 
+dice = (random | nonrandom).setResultsName('dice')
 
 _test_dice = [("5", "[5]"),
 ("5x3","[5, 3]"),
@@ -182,7 +177,7 @@ _test_verb_phrases = [
 # targets
 vs = P.CaselessLiteral('vs') + P.Optional(L('.')) 
 character_list = P.delimitedList(character_name, ",")
-target_phrase = Sup(vs) + character_list
+target_phrase = Sup(vs) + character_list.setResultsName('targets')
 
 _test_target_phrases = [
 ("vs. a", "['a']"),
@@ -243,9 +238,7 @@ def test_stuff(element, tests, scanning=False):
         try:
             parsed = []
             if scanning:
-                scanned = list(element.scanString(input))
-                # import pdb; pdb.set_trace()
-                for s in scanned:
+                for s in element.scanString(input):
                     parsed.extend(s[0])
             else:
                 parsed = element.parseString(input)
