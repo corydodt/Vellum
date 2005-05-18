@@ -262,12 +262,11 @@ def test_stuff(element, tests, scanning=False):
             else:
                 passed()
 
-import itertools
-passcount = itertools.count()
-passcount.next()
+passcount = 0
 
 def passed():
-    passcount.next()
+    global passcount
+    passcount = passcount + 1
     sys.stdout.write('.')
 
 
@@ -283,7 +282,7 @@ def test():
     botname.setBotName('VellumTalk')
     test_stuff(sentence, _test_sentences_altbot, scanning=True)
 
-    print passcount.next() - 1
+    print passcount
 
 if __name__ == '__main__':
     test()
