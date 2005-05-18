@@ -33,7 +33,7 @@ class BotName(P.CaselessLiteral):
     def setBotName(self, matchString):
         self.__init__(matchString)
 
-botname = BotName('BOTNAME_NOT_SET')
+botname = P.Forward()
 
 
 
@@ -269,17 +269,19 @@ def passed():
     passcount = passcount + 1
     sys.stdout.write('.')
 
+def setBotName(newname):
+    botname << P.CaselessLiteral(newname)
+
 
 def test():
-    botname.setBotName("TestBot")
-
+    setBotName('TestBot')
     test_stuff(command, _test_commands)
     test_stuff(dice, _test_dice)
     test_stuff(verb_phrase, _test_verb_phrases)
     test_stuff(target_phrase, _test_target_phrases)
 
     test_stuff(sentence, _test_sentences, scanning=True)
-    botname.setBotName('VellumTalk')
+    setBotName('VellumTalk')
     test_stuff(sentence, _test_sentences_altbot, scanning=True)
 
     print passcount
