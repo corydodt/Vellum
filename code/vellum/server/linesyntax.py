@@ -26,9 +26,6 @@ import string
 
 import pyparsing as P
 
-botname = P.Forward()
-
-
 
 def R(name):
     """A testy function that just reports the name of the thing parsed
@@ -45,16 +42,23 @@ Sup = P.Suppress
 # commands
 # commands
 # commands
+botname = P.Forward()
+
+def setBotName(newname):
+    botname << P.CaselessLiteral(newname)
+
+
 identifier = P.Word(P.alphas+"_", P.alphanums+"_").setResultsName('identifier')
 command_leader = L(".")
 hail = botname + P.Optional(L(":") | L(","))
+command_args = P.restOfLine.copy().setResultsName('command_args')
 
 
 command = (P.StringStart() + 
            Sup(command_leader | hail) + 
            identifier + 
            Sup(P.Optional(P.White())) +
-           P.restOfLine).setResultsName('command')
+           command_args).setResultsName('command')
 
 _test_commands = [(".hello", "['hello', '']"),
 (".foo bar", "['foo', 'bar']"),
@@ -144,10 +148,10 @@ def _bookendedVerb(opener, terminator):
     wordchars = P.alphanums + string.punctuation.replace(terminator, '')
 
     v_word = P.Word(wordchars)
-    v_words = P.OneOrMore(v_word)
+    v_words = P.OneOrMore(v_word).setResultsName('verbs')
     
     v_word_nonterminal = v_word + P.NotAny(t)
-    v_words_nonterminal = P.OneOrMore(v_word_nonterminal)
+    v_words_nonterminal = P.OneOrMore(v_word_nonterminal).setResultsName('verbs')
 
     # FIXME - [d20 1d10] should be an error
     v_content = P.Optional(v_words_nonterminal) + dice | v_words
@@ -229,9 +233,11 @@ _test_sentences_altbot = [
 ("vELLUMTAlk aliases shara", "['aliases', 'shara']"),
 ]
 
-
-
-
+def scan(s):
+    ret = []
+    for item in sentence.scanString(s):
+        ret.append(item[0])
+    return ret
 
 def test_stuff(element, tests, scanning=False):
     for input, expected in tests:
@@ -262,9 +268,6 @@ def passed():
     global passcount
     passcount = passcount + 1
     sys.stdout.write('.')
-
-def setBotName(newname):
-    botname << P.CaselessLiteral(newname)
 
 
 def test():
