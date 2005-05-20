@@ -113,11 +113,11 @@ dice_bonus = dice_bonus.setResultsName('dice_bonus')
 
 dice_optionals = P.Optional(dice_bonus) + P.Optional(dice_repeat)
 
-nonrandom = (dice_count + dice_optionals).setResultsName('nonrandom')
+nonrandom = dice_count + dice_optionals
 random = (P.Optional(dice_count, default=1) + 
           dice_size +
           P.Optional(dice_filter) + 
-          dice_optionals).setResultsName('random')
+          dice_optionals)
 
 dice = (random | nonrandom).setResultsName('dice')
 
@@ -162,6 +162,7 @@ unsorted_v_phrase = _bookendedVerb('[', ']')
 sorted_v_phrase = _bookendedVerb('{', '}')
 
 verb_phrase = sorted_v_phrase | unsorted_v_phrase
+verb_phrase = verb_phrase.setResultsName('verb_phrase')
 
 _test_verb_phrases = [
 ("[]", P.ParseException),
@@ -179,32 +180,27 @@ _test_verb_phrases = [
 
 # targets
 # targets
-vs = P.CaselessLiteral('vs') + P.Optional(L('.')) 
-character_list = P.delimitedList(character_name, ",")
-target_phrase = Sup(vs) + character_list.setResultsName('targets')
+target_leader = L('@')
+target = Sup(target_leader) + character_name.setResultsName('target')
 
-_test_target_phrases = [
-("vs. a", "['a']"),
-("vs a", "['a']"),
-("vs. a, b", "['a', 'b']"),
-("vs a, b", "['a', 'b']"),
-("Vs a, b, c", "['a', 'b', 'c']"),
-("vs . ninja", P.ParseException),
-("vs foo, @", P.ParseException),
-("vsfoo", P.ParseException),
+_test_targets = [
+("@a", "['a']"),
+("@ a", "['a']"),
+("@@", P.ParseException),
+("@123", P.ParseException),
 ]
 
 
 # bring it all together
 # bring it all together
-part_of_speech = verb_phrase | actor | target_phrase
-
+part_of_speech = verb_phrase | actor | target
+part_of_speech = part_of_speech.setResultsName('part_of_speech')
 
 
 # sentence
 # sentence
 # sentence
-sentence = command | part_of_speech
+sentence = command | part_of_speech 
 
 _test_sentences = [
 (".gm", "['gm', '']"),
@@ -213,18 +209,18 @@ _test_sentences = [
 ("TestBot, n", "['n', '']"),
 ("testbot: n", "['n', '']"),
 ("testbot n", "['n', '']"),
-("The [machinegun] being fired vs. Shara by the *ninja goes rat-a-tat.",
+("The [machinegun] being fired at @Shara by the *ninja goes rat-a-tat.",
         "['machinegun', 'Shara', 'ninja']"),
 ("*woop1", "['woop1']"),
 ("foo *woop2", "['woop2']"),
 (".aliases shara", "['aliases', 'shara']"),
 (".foobly doobly doo", "['foobly', 'doobly doo']"),
-("*grimlock1 [attack 1d2+10]s the paladin. (vs shara)", 
+("*grimlock1 [attack 1d2+10]s the paladin. (@shara)", 
         "['grimlock1', 'attack', 1, 2, 10, 'shara']"),
-("I [attack 1d6+1] vs grimlock1", "['attack', 1, 6, 1, 'grimlock1']"),
-("I [cast] a [fireball] vs grimlock1,grimlock2", 
+("I [attack 1d6+1] @grimlock1", "['attack', 1, 6, 1, 'grimlock1']"),
+("I [cast] a [fireball] @grimlock1 and @grimlock2", 
         "['cast', 'fireball', 'grimlock1', 'grimlock2']"),
-("I [cast] a [fireball] vs grimlock1, grimlock2", 
+("I [cast] a [fireball] @grimlock1 and@grimlock2", 
         "['cast', 'fireball', 'grimlock1', 'grimlock2']"),
 ]
 
@@ -234,9 +230,16 @@ _test_sentences_altbot = [
 ]
 
 def scan(s):
-    ret = []
-    for item in sentence.scanString(s):
-        ret.append(item[0])
+    ret = {}
+    for item, _, _ in sentence.scanString(s):
+        if item.command:
+            ret['command'] = item
+        elif item.verb_phrase:
+            ret.setdefault('verbs', []).append(item)
+        elif item.actor:
+            ret['actor'] = item
+        elif item.target:
+            ret.setdefault('targets', []).append(item)
     return ret
 
 def test_stuff(element, tests, scanning=False):
@@ -275,7 +278,7 @@ def test():
     test_stuff(command, _test_commands)
     test_stuff(dice, _test_dice)
     test_stuff(verb_phrase, _test_verb_phrases)
-    test_stuff(target_phrase, _test_target_phrases)
+    test_stuff(target, _test_targets)
 
     test_stuff(sentence, _test_sentences, scanning=True)
     setBotName('VellumTalk')
