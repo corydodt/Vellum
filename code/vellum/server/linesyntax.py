@@ -5,11 +5,11 @@ Lines may contain the following syntax:
       name, if present), and it may take arguments.
     - A single word beginning with a letter and prefixed by a * anywhere in
       the line is the name of an NPC or a PC.
-    - An expression inside brackets [] or braces {} is a verb.
+    - An expression inside brackets [] is a verb.
     - A verb starts with zero or more verbnames, and ends with an optional dice
       expression.
     - A dice expression: all of the following are valid..
-        5    5x3    5+1x3    d6    3d6     d6+2     9d6l3-1x2
+        5    5x3    5+1x3    d6    3d6     d6+2     9d6l3-1x2    3d6x6sort
     - A targetting expression starts with "vs" or "vs." and is followed by a
       comma-separated list of character names
 """
@@ -36,6 +36,7 @@ def R(name):
     return reporter
 
 L = P.Literal
+CL = P.CaselessLiteral
 Sup = P.Suppress
 
 
@@ -45,7 +46,7 @@ Sup = P.Suppress
 botname = P.Forward()
 
 def setBotName(newname):
-    botname << P.CaselessLiteral(newname)
+    botname << CL(newname)
 
 
 identifier = P.Word(P.alphas+"_", P.alphanums+"_").setResultsName('identifier')
@@ -77,7 +78,7 @@ _test_commands = [(".hello", "['hello', '']"),
 # actor
 character_name = P.Word(P.alphas, P.alphanums+"_").setResultsName('character_name')
 
-actor = Sup('*') + character_name 
+actor = (Sup('*') + character_name).setResultsName('actor')
 
 
 # dice expressions
@@ -95,11 +96,14 @@ number = P.Word(P.nums)
 number.setParseAction(lambda s,p,t: map(int, t))
 
 dice_count = (number.copy()).setResultsName('dice_count')
-dice_size = Sup(P.CaselessLiteral('d')) + number.setResultsName('dice_size')
+dice_size = Sup(CL('d')) + number.setResultsName('dice_size')
 dice_bonus = P.oneOf('+ -') + number
 dice_filter = (P.oneOf('h l', caseless=True).setResultsName('dice_hilo') +
                number.setResultsName('dice_filter'))
-dice_repeat = Sup(P.CaselessLiteral('x')) + number.setResultsName('dice_repeat')
+dice_sorted = CL('sort')
+dice_repeat = (Sup(CL('x')) + 
+               number.setResultsName('dice_repeat') + 
+               P.Optional(dice_sorted.setResultsName('dice_sorted')))
 
 def combineModifier(sign, num):
     values = {'-':-1, '+':1}
@@ -131,6 +135,8 @@ _test_dice = [("5", "[5]"),
 ("1d  6 X3","[1, 6, 3]"),
 ("d 6 -2 x 3","[1, 6, -2, 3]"),
 ("2d6-2x1","[2, 6, -2, 1]"),
+("2d6-2x2sort","[2, 6, -2, 2, 'sort']"),
+("2d6sort", P.ParseException),
 ("d6xz", P.ParseException),
 ("1d", P.ParseException),
 ("1d6l3l3", P.ParseException),
@@ -142,26 +148,20 @@ _test_dice = [("5", "[5]"),
 
 # verb phrases
 # verb phrases
-def _bookendedVerb(opener, terminator):
-    o = L(opener)
-    t = L(terminator)
-    wordchars = P.alphanums + string.punctuation.replace(terminator, '')
+o = L('[')
+t = L(']')
+wordchars = P.alphanums + string.punctuation.replace(']', '')
 
-    v_word = P.Word(wordchars)
-    v_words = P.OneOrMore(v_word).setResultsName('verbs')
-    
-    v_word_nonterminal = v_word + P.NotAny(t)
-    v_words_nonterminal = P.OneOrMore(v_word_nonterminal).setResultsName('verbs')
+v_word = P.Word(wordchars)
+v_words = P.OneOrMore(v_word).setResultsName('verbs')
 
-    # FIXME - [d20 1d10] should be an error
-    v_content = P.Optional(v_words_nonterminal) + dice | v_words
-    v_phrase = Sup(o) + v_content + Sup(t)
-    return v_phrase
+v_word_nonterminal = v_word + P.NotAny(t)
+v_words_nonterminal = P.OneOrMore(v_word_nonterminal).setResultsName('verbs')
 
-unsorted_v_phrase = _bookendedVerb('[', ']')
-sorted_v_phrase = _bookendedVerb('{', '}')
+# FIXME - [d20 1d10] should be an error
+v_content = P.Optional(v_words_nonterminal) + dice | v_words
+verb_phrase = Sup(o) + v_content + Sup(t)
 
-verb_phrase = sorted_v_phrase | unsorted_v_phrase
 verb_phrase = verb_phrase.setResultsName('verb_phrase')
 
 _test_verb_phrases = [
@@ -171,17 +171,15 @@ _test_verb_phrases = [
 ("[woo 1d20+1]", "['woo', 1, 20, 1]"),
 ("[1d20+1]", "[1, 20, 1]"),
 ("[1d20+1 1d20+1]", "['1d20+1', 1, 20, 1]"),
-("{1d20+1}", "[1, 20, 1]"),
-("{arrr matey 1d20+1}", "['arrr', 'matey', 1, 20, 1]"),
-("{arrr matey}", "['arrr', 'matey']"),
-("[i am a star}", P.ParseException),
+("[arrr matey 1d20+1x7sort]", "['arrr', 'matey', 1, 20, 1, 7, 'sort']"),
+("[i am a star", P.ParseException),
 ]
 
 
 # targets
 # targets
 target_leader = L('@')
-target = Sup(target_leader) + character_name.setResultsName('target')
+target = (Sup(target_leader) + character_name).setResultsName('target')
 
 _test_targets = [
 ("@a", "['a']"),
@@ -193,14 +191,11 @@ _test_targets = [
 
 # bring it all together
 # bring it all together
-part_of_speech = verb_phrase | actor | target
-part_of_speech = part_of_speech.setResultsName('part_of_speech')
-
 
 # sentence
 # sentence
 # sentence
-sentence = command | part_of_speech 
+sentence = command | verb_phrase | actor | target
 
 _test_sentences = [
 (".gm", "['gm', '']"),
@@ -210,18 +205,19 @@ _test_sentences = [
 ("testbot: n", "['n', '']"),
 ("testbot n", "['n', '']"),
 ("The [machinegun] being fired at @Shara by the *ninja goes rat-a-tat.",
-        "['machinegun', 'Shara', 'ninja']"),
-("*woop1", "['woop1']"),
-("foo *woop2", "['woop2']"),
+        "['ninja', 'machinegun', 'Shara']"),
+("*woop1", "[]"), # verb phrases are required
+("[foo] *woop2", "['woop2', 'foo']"),
 (".aliases shara", "['aliases', 'shara']"),
 (".foobly doobly doo", "['foobly', 'doobly doo']"),
 ("*grimlock1 [attack 1d2+10]s the paladin. (@shara)", 
         "['grimlock1', 'attack', 1, 2, 10, 'shara']"),
-("I [attack 1d6+1] @grimlock1", "['attack', 1, 6, 1, 'grimlock1']"),
+("I [attack 1d6+1] @grimlock1", "['None', 'attack', 1, 6, 1, 'grimlock1']"),
+("I [attack 1d6+1x2sort] @grimlock1", "['None', 'attack', 1, 6, 1, 2, 'sort', 'grimlock1']"),
 ("I [cast] a [fireball] @grimlock1 and @grimlock2", 
-        "['cast', 'fireball', 'grimlock1', 'grimlock2']"),
+        "['None', 'cast', 'fireball', 'grimlock1', 'grimlock2']"),
 ("I [cast] a [fireball] @grimlock1 and@grimlock2", 
-        "['cast', 'fireball', 'grimlock1', 'grimlock2']"),
+        "['None', 'cast', 'fireball', 'grimlock1', 'grimlock2']"),
 ]
 
 _test_sentences_altbot = [
@@ -229,28 +225,72 @@ _test_sentences_altbot = [
 ("vELLUMTAlk aliases shara", "['aliases', 'shara']"),
 ]
 
-def scan(s):
-    ret = {}
+# convert scanned sentences into a normalized form and then parse them
+verb_phrases = P.OneOrMore(verb_phrase).setResultsName('verb_phrases')
+targets = P.OneOrMore(target).setResultsName('targets')
+normalized_sentence = (command | 
+                       P.Optional(actor) + verb_phrases + P.Optional(targets) | 
+                       Sup(P.Empty()))
+
+def parseSentence(s):
+    actor = None
+    verb_phrases = []
+    targets = []
     for item, _, _ in sentence.scanString(s):
         if item.command:
-            ret['command'] = item
-        elif item.verb_phrase:
-            ret.setdefault('verbs', []).append(item)
+            return item
         elif item.actor:
-            ret['actor'] = item
+            actor = item.actor.character_name
+        elif item.verb_phrase:
+            verb_phrases.append(item.verb_phrase)
         elif item.target:
-            ret.setdefault('targets', []).append(item)
-    return ret
+            targets.append(item.target.character_name)
 
-def test_stuff(element, tests, scanning=False):
+    normalized = formatNormalized(actor, verb_phrases, targets)
+    return normalized_sentence.parseString(normalized)
+
+def formatNormalized(actor, verb_phrases, targets):
+    """Return a string with only the parts of speech, so a parseString
+    ParseResults object can be return instead of a scanString result.
+    """
+    _fm_verb_phrases = []
+    for vp in verb_phrases:
+        verb_list = ' '.join(vp.verbs)
+        _dice_expr = []
+        if vp.dice:
+            if vp.dice.dice_count:
+                _dice_expr.append(str(vp.dice.dice_count))
+            if vp.dice.dice_size:
+                _dice_expr.append('d' + str(vp.dice.dice_size))
+            if vp.dice.dice_hilo:
+                _dice_expr.append(str(vp.dice.dice_hilo[0]))
+            if vp.dice.dice_filter:
+                _dice_expr.append(str(vp.dice.dice_filter))
+            if vp.dice.dice_bonus:
+                _dice_expr.append('%+d' % (vp.dice.dice_bonus,))
+            if vp.dice.dice_repeat:
+                _dice_expr.append('x' + str(vp.dice.dice_repeat))
+            if vp.dice.dice_sorted:
+                _dice_expr.append('sort')
+        dice_expr = ''.join(_dice_expr)
+
+        verb_body = ' '.join((verb_list, dice_expr))
+        _fm_verb_phrases.append('[%s]' % (verb_body,))
+    fm_verb_phrases = ' '.join(_fm_verb_phrases)
+
+    _fm_targets = []
+    for targ in targets:
+        _fm_targets.append('@%s' % (targ,))
+    fm_targets = ' '.join(_fm_targets)
+
+    return '*%s %s %s' % (actor, fm_verb_phrases, fm_targets)
+
+
+
+def test_stuff(method, tests):
     for input, expected in tests:
         try:
-            parsed = []
-            if scanning:
-                for s in element.scanString(input):
-                    parsed.extend(s[0])
-            else:
-                parsed = element.parseString(input)
+            parsed = method(input)
             if isinstance(expected, basestring):
                 if str(parsed) != expected:
                     print '\n', input, expected, str(parsed)
@@ -275,14 +315,14 @@ def passed():
 
 def test():
     setBotName('TestBot')
-    test_stuff(command, _test_commands)
-    test_stuff(dice, _test_dice)
-    test_stuff(verb_phrase, _test_verb_phrases)
-    test_stuff(target, _test_targets)
+    test_stuff(command.parseString, _test_commands)
+    test_stuff(dice.parseString, _test_dice)
+    test_stuff(verb_phrase.parseString, _test_verb_phrases)
+    test_stuff(target.parseString, _test_targets)
 
-    test_stuff(sentence, _test_sentences, scanning=True)
+    test_stuff(parseSentence, _test_sentences)
     setBotName('VellumTalk')
-    test_stuff(sentence, _test_sentences_altbot, scanning=True)
+    test_stuff(parseSentence, _test_sentences_altbot)
 
     print passcount
 
