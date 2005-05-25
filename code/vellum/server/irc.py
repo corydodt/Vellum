@@ -193,9 +193,9 @@ class Session:
                                               target)
                     if formatted is not None:
                         strings.append(formatted)
-        text = '\n'.join(strings)
-        
-        return Response(text, msg, *recipients)
+        if strings:
+            text = '\n'.join(strings)
+            return Response(text, msg, *recipients)
                 
 
 
@@ -480,7 +480,8 @@ class VellumTalkFactory(protocol.ClientFactory):
 
 class ResponseTest:
     """Notation for testing a response to a command."""
-    def __init__(self, factory, channel, sent, *recipients):
+    def __init__(self, factory, user, channel, sent, *recipients):
+        self.user = user
         self.factory = factory
         self.channel = channel
         self.sent = sent
@@ -502,7 +503,7 @@ class ResponseTest:
                 pass
             else:
                 print
-                print "(Expected: ''.)"
+                print "(Expected: '')"
                 print actual
                 return
         else:
@@ -529,12 +530,12 @@ class ResponseTest:
         self.recipients.remove((target, expected))
 
 class ResponseTestFactory:
-    def __init__(self, pipe, user):
+    def __init__(self, pipe):
         self.pipe = pipe
         self.pipe_pos = 0
-        self.user = user
-    def next(self, channel, target, *recipients):
+    def next(self, user, channel, target, *recipients):
         return ResponseTest(self,
+                            user,
                             channel, 
                             target, 
                             *recipients)
@@ -547,44 +548,50 @@ def succeed():
 
 from twisted.words.test.test_irc import StringIOWithoutClosing
 pipe = StringIOWithoutClosing()
-factory = ResponseTestFactory(pipe, 'MFen')
-R = factory.next
+factory = ResponseTestFactory(pipe)
+GeeEm = (lambda channel, target, *recipients: 
+            factory.next('GeeEm', channel, target, *recipients))
+Player = (lambda channel, target, *recipients: 
+            factory.next('Player', channel, target, *recipients))
 
 testcommands = [
-R('VellumTalk', 'hello',),
-R('VellumTalk', 'VellumTalk: hello', ('MFen', r'Hello MFen\.')),
-R('VellumTalk', 'Vellumtalk: hello there', ('MFen', r'Hello MFen\.')),
-R('VellumTalk', '.hello', ('MFen', r'Hello MFen\.')),
-R('#testing', 'hello',),
-R('#testing', 'VellumTalk: hello', ('#testing', r'Hello MFen\.')),
-R('#testing', '.hello', ('#testing', r'Hello MFen\.')),
-R('VellumTalk', '.inits', ('MFen', r'Initiative list: \(none\)')),
-R('VellumTalk', '.combat', ('MFen', r'\*\* Beginning combat \*\*')),
-R('#testing', '[init 20]', ('#testing', r'MFen, you rolled: init 20 = \[20\]')),
-R('VellumTalk', '.n', ('MFen', r'\+\+ New round \+\+')),
-R('VellumTalk', '.n', ('MFen', r'MFen \(init 20\) is ready to act \. \. \.')),
-R('VellumTalk', '.p', ('MFen', r'\+\+ New round \+\+')),
-R('VellumTalk', '.p', ('MFen', r'MFen \(init 20\) is ready to act \. \. \.')),
-R('VellumTalk', '.inits', ('MFen', r'Initiative list: MFen/20, NEW ROUND/9999')),
-#  'VellumTalk', 'help', ('MFen', r'\s+hello: Greet\.')), FIXME
-R('VellumTalk', '.aliases', ('MFen', r'Aliases for MFen:   init=20')),
-R('VellumTalk', '.aliases MFen', ('MFen', r'Aliases for MFen:   init=20')),
-R('VellumTalk', '.unalias foobar', ('MFen', r'\*\* No alias "foobar" for MFen')),
-R('#testing',  'hello [argh 20] [foobar 30]', ('#testing', r'MFen, you rolled: argh 20 = \[20\]')),
-R('VellumTalk', '.unalias init', ('MFen', r'MFen, removed your alias for init')),
-R('VellumTalk', '.aliases', ('MFen', r'Aliases for MFen:   argh=20, foobar=30')),
-R('VellumTalk', '.gm', ('MFen', r'MFen is now a GM and will observe private messages for session #testing')),
-# TODO - observed tests
+GeeEm('VellumTalk', 'hello',),
+GeeEm('VellumTalk', 'VellumTalk: hello', ('GeeEm', r'Hello GeeEm\.')),
+GeeEm('VellumTalk', 'Vellumtalk: hello there', ('GeeEm', r'Hello GeeEm\.')),
+GeeEm('VellumTalk', '.hello', ('GeeEm', r'Hello GeeEm\.')),
+GeeEm('#testing', 'hello',),
+GeeEm('#testing', 'VellumTalk: hello', ('#testing', r'Hello GeeEm\.')),
+GeeEm('#testing', '.hello', ('#testing', r'Hello GeeEm\.')),
+GeeEm('VellumTalk', '.inits', ('GeeEm', r'Initiative list: \(none\)')),
+GeeEm('VellumTalk', '.combat', ('GeeEm', r'\*\* Beginning combat \*\*')),
+GeeEm('#testing', '[init 20]', ('#testing', r'GeeEm, you rolled: init 20 = \[20\]')),
+GeeEm('VellumTalk', '.n', ('GeeEm', r'\+\+ New round \+\+')),
+GeeEm('VellumTalk', '.n', ('GeeEm', r'GeeEm \(init 20\) is ready to act \. \. \.')),
+GeeEm('VellumTalk', '.p', ('GeeEm', r'\+\+ New round \+\+')),
+GeeEm('VellumTalk', '.p', ('GeeEm', r'GeeEm \(init 20\) is ready to act \. \. \.')),
+GeeEm('VellumTalk', '.inits', ('GeeEm', r'Initiative list: GeeEm/20, NEW ROUND/9999')),
+#  'VellumTalk', 'help', ('GeeEm', r'\s+hello: Greet\.')), FIXME
+GeeEm('VellumTalk', '.aliases', ('GeeEm', r'Aliases for GeeEm:   init=20')),
+GeeEm('VellumTalk', '.aliases GeeEm', ('GeeEm', r'Aliases for GeeEm:   init=20')),
+GeeEm('VellumTalk', '.unalias foobar', ('GeeEm', r'\*\* No alias "foobar" for GeeEm')),
+GeeEm('#testing',  'hello [argh 20] [foobar 30]', ('#testing', r'GeeEm, you rolled: argh 20 = \[20\]')),
+GeeEm('VellumTalk', '.unalias init', ('GeeEm', r'GeeEm, removed your alias for init')),
+GeeEm('VellumTalk', '.aliases', ('GeeEm', r'Aliases for GeeEm:   argh=20, foobar=30')),
+GeeEm('VellumTalk', '.gm', ('GeeEm', r'GeeEm is now a GM and will observe private messages for session #testing')),
+Player('VellumTalk', '[stabtastic 20]', 
+   ('GeeEm', r'Player, you rolled: stabtastic 20 = \[20\] \(<Player>  \[stabtastic 20\]\)'),
+   ('Player', r'Player, you rolled: stabtastic 20 = \[20\] \(observed\)')
+   )
 ]
 
 testhijack = [
-R('VellumTalk', '*grimlock1 does a [smackdown 1000]', ('MFen', 'grimlock1, you rolled: smackdown 1000 = \[1000\]')),
-R('#testing', '*grimlock1 does a [bitchslap 1000]', ('#testing', 'grimlock1, you rolled: bitchslap 1000 = \[1000\]')),
-R('VellumTalk', '*grimlock1 does a [smackdown]', ('MFen', 'grimlock1, you rolled: smackdown = \[1000\]')),
-R('VellumTalk', 'I do a [smackdown]'),
-R('VellumTalk', '.aliases grimlock1', ('MFen', 'Aliases for grimlock1:   bitchslap=1000, smackdown=1000')),
-R('VellumTalk', '.unalias grimlock1 smackdown', ('MFen', 'grimlock1, removed your alias for smackdown')),
-R('VellumTalk', '.aliases grimlock1', ('MFen', 'Aliases for grimlock1:   bitchslap=1000')),
+GeeEm('VellumTalk', '*grimlock1 does a [smackdown 1000]', ('GeeEm', 'grimlock1, you rolled: smackdown 1000 = \[1000\]')),
+GeeEm('#testing', '*grimlock1 does a [bitchslap 1000]', ('#testing', 'grimlock1, you rolled: bitchslap 1000 = \[1000\]')),
+GeeEm('VellumTalk', '*grimlock1 does a [smackdown]', ('GeeEm', 'grimlock1, you rolled: smackdown = \[1000\]')),
+GeeEm('VellumTalk', 'I do a [smackdown]'),
+GeeEm('VellumTalk', '.aliases grimlock1', ('GeeEm', 'Aliases for grimlock1:   bitchslap=1000, smackdown=1000')),
+GeeEm('VellumTalk', '.unalias grimlock1 smackdown', ('GeeEm', 'grimlock1, removed your alias for smackdown')),
+GeeEm('VellumTalk', '.aliases grimlock1', ('GeeEm', 'Aliases for grimlock1:   bitchslap=1000')),
 ]
 
 # TODO - move d20-specific tests, e.g. init and other alias hooks?
@@ -605,11 +612,11 @@ def test():
         pos = 0  # use this to remember where we have to seek to after each test
 
         for r in testcommands:
-            vt.privmsg(factory.user, r.channel, r.sent)
+            vt.privmsg(r.user, r.channel, r.sent)
             if r.check():
                 succeed()
         for r in testhijack:
-            vt.privmsg(factory.user, r.channel, r.sent)
+            vt.privmsg(r.user, r.channel, r.sent)
             if r.check():
                 succeed()
     finally:
