@@ -319,7 +319,7 @@ class VellumTalk(irc.IRCClient):
             self.wtf = self.wtf + 1
             self.msg("wtf?")
         if self.wtf < 4:
-            print "Spam blocking tripped. WTF counter exceeded."
+            log.msg("Spam blocking tripped. WTF counter exceeded.")
             self.wtf = self.wtf + 1
 
     
@@ -478,111 +478,127 @@ class VellumTalkFactory(protocol.ClientFactory):
         reactor.stop()
 
 
+class ResponseTest:
+    """Notation for testing a response to a command."""
+    def __init__(self, factory, channel, target, sent, expected):
+        self.factory = factory
+        self.channel = channel
+        self.target = target
+        self.sent = sent
+        self.expected = expected
+        self.last_pos = 0
 
+    def check(self):
+        pipe = self.factory.pipe
+        pipe.seek(self.factory.pipe_pos)
+        actual = pipe.read().strip()
+        self.factory.pipe_pos = pipe.tell()
+        if self.expected is None:
+            if actual == '':
+                pass
+            else:
+                print
+                print ' '*10 + ' '*len(self.target) + str(self.expected)
+                print actual
+                return
+        else:
+            for _line in actual.splitlines():
+                pattern = 'PRIVMSG %s :%s' % (re.escape(self.target), 
+                                              self.expected)
+                if re.match(pattern, _line):
+                    break
+            else:
+                print
+                print ' '*10 + ' '*len(self.target) + self.expected
+                print actual
+                return
+        return 1
+
+class ResponseTestFactory:
+    def __init__(self, pipe, user):
+        self.pipe = pipe
+        self.pipe_pos = 0
+        self.user = user
+    def next(self, channel, target, sent, expected):
+        return ResponseTest(self,
+                            channel, 
+                            target, 
+                            sent, 
+                            expected)
+
+passed = 0
+def succeed():
+    global passed
+    passed = passed + 1
+    sys.stdout.write('.')
+
+from twisted.words.test.test_irc import StringIOWithoutClosing
+pipe = StringIOWithoutClosing()
+factory = ResponseTestFactory(pipe, 'MFen')
+R = factory.next
 
 testcommands = [
-('MFen', 'VellumTalk', 'MFen', 'hello', None),
-('MFen', 'VellumTalk', 'MFen', 'VellumTalk: hello', r'Hello MFen\.'),
-('MFen', 'VellumTalk', 'MFen', 'Vellumtalk: hello there', r'Hello MFen\.'),
-('MFen', 'VellumTalk', 'MFen', '.hello', r'Hello MFen\.'),
-('MFen', '#testing', '#testing', 'hello', None),
-('MFen', '#testing', '#testing', 'VellumTalk: hello', r'Hello MFen\.'),
-('MFen', '#testing', '#testing', '.hello', r'Hello MFen\.'),
-('MFen', 'VellumTalk', 'MFen', '.inits', r'Initiative list: \(none\)'),
-('MFen', 'VellumTalk', 'MFen', '.combat', r'\*\* Beginning combat \*\*'),
-('MFen', '#testing', '#testing', '[init 20]', 
-        r'MFen, you rolled: init 20 = \[20\]'),
-('MFen', 'VellumTalk', 'MFen', '.n', r'\+\+ New round \+\+'),
-('MFen', 'VellumTalk', 'MFen', '.n', 
-        r'MFen \(init 20\) is ready to act \. \. \.'),
-('MFen', 'VellumTalk', 'MFen', '.p', r'\+\+ New round \+\+'),
-('MFen', 'VellumTalk', 'MFen', '.p', 
-        r'MFen \(init 20\) is ready to act \. \. \.'),
-('MFen', 'VellumTalk', 'MFen', '.inits', 
-        r'Initiative list: MFen/20, NEW ROUND/9999'),
-# ('MFen', 'VellumTalk', 'MFen', 'help', r'\s+hello: Greet\.'), FIXME
-('MFen', 'VellumTalk', 'MFen', '.aliases', 
-        r'Aliases for MFen:   init=20'),
-('MFen', 'VellumTalk', 'MFen', '.aliases MFen', 
-        r'Aliases for MFen:   init=20'),
-('MFen', 'VellumTalk', 'MFen', '.unalias foobar', 
-        r'\*\* No alias "foobar" for MFen'),
-('MFen', '#testing',  '#testing', 'hello [argh 20] [foobar 30]',
-        r'MFen, you rolled: argh 20 = \[20\]'),
-('MFen', 'VellumTalk', 'MFen', '.unalias init', 
-        r'MFen, removed your alias for init'),
-('MFen', 'VellumTalk', 'MFen', '.aliases', 
-        r'Aliases for MFen:   argh=20, foobar=30'),
+R('VellumTalk', 'MFen', 'hello', None),
+R('VellumTalk', 'MFen', 'VellumTalk: hello', r'Hello MFen\.'),
+R('VellumTalk', 'MFen', 'Vellumtalk: hello there', r'Hello MFen\.'),
+R('VellumTalk', 'MFen', '.hello', r'Hello MFen\.'),
+R('#testing', '#testing', 'hello', None),
+R('#testing', '#testing', 'VellumTalk: hello', r'Hello MFen\.'),
+R('#testing', '#testing', '.hello', r'Hello MFen\.'),
+R('VellumTalk', 'MFen', '.inits', r'Initiative list: \(none\)'),
+R('VellumTalk', 'MFen', '.combat', r'\*\* Beginning combat \*\*'),
+R('#testing', '#testing', '[init 20]', r'MFen, you rolled: init 20 = \[20\]'),
+R('VellumTalk', 'MFen', '.n', r'\+\+ New round \+\+'),
+R('VellumTalk', 'MFen', '.n', r'MFen \(init 20\) is ready to act \. \. \.'),
+R('VellumTalk', 'MFen', '.p', r'\+\+ New round \+\+'),
+R('VellumTalk', 'MFen', '.p', r'MFen \(init 20\) is ready to act \. \. \.'),
+R('VellumTalk', 'MFen', '.inits', r'Initiative list: MFen/20, NEW ROUND/9999'),
+#  'VellumTalk', 'MFen', 'help', r'\s+hello: Greet\.'), FIXME
+R('VellumTalk', 'MFen', '.aliases', r'Aliases for MFen:   init=20'),
+R('VellumTalk', 'MFen', '.aliases MFen', r'Aliases for MFen:   init=20'),
+R('VellumTalk', 'MFen', '.unalias foobar', r'\*\* No alias "foobar" for MFen'),
+R('#testing',  '#testing', 'hello [argh 20] [foobar 30]', r'MFen, you rolled: argh 20 = \[20\]'),
+R('VellumTalk', 'MFen', '.unalias init', r'MFen, removed your alias for init'),
+R('VellumTalk', 'MFen', '.aliases', r'Aliases for MFen:   argh=20, foobar=30'),
 ]
 testhijack = [
-('MFen', 'VellumTalk', 'MFen', '*grimlock1 does a [smackdown 1000]', 
-        'grimlock1, you rolled: smackdown 1000 = \[1000\]'),
-('MFen', '#testing', '#testing', '*grimlock1 does a [bitchslap 1000]', 
-        'grimlock1, you rolled: bitchslap 1000 = \[1000\]'),
-('MFen', 'VellumTalk', 'MFen', '*grimlock1 does a [smackdown]', 
-        'grimlock1, you rolled: smackdown = \[1000\]'),
-('MFen', 'VellumTalk', 'MFen', 'I do a [smackdown]', 
-        ''),
-('MFen', 'VellumTalk', 'MFen', '.aliases grimlock1',
-        'Aliases for grimlock1:   bitchslap=1000, smackdown=1000'),
-('MFen', 'VellumTalk', 'MFen', '.unalias grimlock1 smackdown',
-        'grimlock1, removed your alias for smackdown'),
-('MFen', 'VellumTalk', 'MFen', '.aliases grimlock1',
-        'Aliases for grimlock1:   bitchslap=1000'),
+R('VellumTalk', 'MFen', '*grimlock1 does a [smackdown 1000]', 'grimlock1, you rolled: smackdown 1000 = \[1000\]'),
+R('#testing', '#testing', '*grimlock1 does a [bitchslap 1000]', 'grimlock1, you rolled: bitchslap 1000 = \[1000\]'),
+R('VellumTalk', 'MFen', '*grimlock1 does a [smackdown]', 'grimlock1, you rolled: smackdown = \[1000\]'),
+R('VellumTalk', 'MFen', 'I do a [smackdown]', ''),
+R('VellumTalk', 'MFen', '.aliases grimlock1', 'Aliases for grimlock1:   bitchslap=1000, smackdown=1000'),
+R('VellumTalk', 'MFen', '.unalias grimlock1 smackdown', 'grimlock1, removed your alias for smackdown'),
+R('VellumTalk', 'MFen', '.aliases grimlock1', 'Aliases for grimlock1:   bitchslap=1000'),
 # TODO.. .gm observer tests
 ]
 
 # TODO - move d20-specific tests, e.g. init and other alias hooks?
 
 def test():
-    from twisted.words.test.test_irc import StringIOWithoutClosing
     # save off and clear alias.aliases, since it gets persisted # FIXME
     orig_aliases = alias.aliases
     alias.aliases = {}
     try:
-        f = StringIOWithoutClosing()
-        transport = protocol.FileWrapper(f)
+        transport = protocol.FileWrapper(pipe)
         vt = VellumTalk()
         vt.performLogin = 0
         vt.joined("#testing")
         vt.defaultSession = Session('#testing')
         vt.makeConnection(transport)
-        pos = ([0],)
         linesyntax.setBotName('VellumTalk')
 
-        def check(nick, channel, target, expected):
-            _pos = pos[0] # ugh, python
-            f.seek(_pos.pop(0))
-            actual = f.read().strip()
-            _pos.append(f.tell())
-            if expected is None:
-                if actual == '':
-                    pass
-                else:
-                    print
-                    print ' '*10 + ' '*len(target) + expected
-                    print actual
-                    return
-            else:
-                for _line in actual.splitlines():
-                    pattern = 'PRIVMSG %s :%s' % (re.escape(target), expected)
-                    if re.match(pattern, _line):
-                        break
-                else:
-                    print
-                    print ' '*10 + ' '*len(target) + expected
-                    print actual
-                    return
-            sys.stdout.write('.')
+        pos = 0  # use this to remember where we have to seek to after each test
 
-
-        for nick, channel, target, sent, received in testcommands:
-            vt.privmsg(nick, channel, sent)
-            check(nick, channel, target, received)
-        for nick, channel, target, sent, received in testhijack:
-            vt.privmsg(nick, channel, sent)
-            check(nick, channel, target, received)
+        for r in testcommands:
+            vt.privmsg(factory.user, r.channel, r.sent)
+            if r.check():
+                succeed()
+        for r in testhijack:
+            vt.privmsg(factory.user, r.channel, r.sent)
+            if r.check():
+                succeed()
     finally:
         # restore original aliases when done, so save works
         alias.aliases = orig_aliases
+        print passed
 
