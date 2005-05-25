@@ -14,7 +14,7 @@ from twisted.internet import reactor, protocol, task
 from twisted.python import log
 
 
-from vellum.server import encounter, alias
+from vellum.server import encounter, alias, linesyntax
 from vellum.server.fs import fs
 
 class UnknownHailError(Exception):
@@ -40,18 +40,6 @@ class Session:
     def respondTo_DEFAULT(self, user, args):
         raise UnknownHailError()
 
-    def respondTo_DICE(self, user, exp):
-        """[d1ce] expressions
-        Understands all the expressions in dice.py
-        Also understands aliases, for example:
-        <bob> [battleaxe 1d20+3] => rolls 1d20+3, and remembers that bob's
-            alias [battleaxe] is 1d20+3
-        When defining an alias, the dice expression must not contain spaces
-        """
-        result = alias.resolve(user, exp)
-        if result is not None:
-            response = '%s, you rolled: %s' % (user, result)
-            return response
 
 
     def respondTo_gm(self, user, _):
@@ -159,7 +147,7 @@ class Session:
             member = getattr(self, att)
             if (att.startswith('respondTo_') 
                 and callable(member)
-                and att[10:].upper() != att[10:]):  # DICE and DEFAULT reserved.
+                and att[10:].upper() != att[10:]):  # CAPITALIZED are reserved.
                 _commands.append('%s: %s' % (att[10:], member.__doc__))
 
         _d = {'commands': '\n    '.join(_commands), }
@@ -179,23 +167,35 @@ class Session:
 
 
 
-    def handlePrivateDice(self, user, msg):
-        return self.doDice(user, msg, user, *self.observers)
+    def privateInteraction(self, user, msg, parsed):
+        return self.doInteraction(user, msg, parsed, user, *self.observers)
 
-    def handleDice(self, user, msg):
-        return self.doDice(user, msg, self.channel)
+    def interaction(self, user, msg, parsed):
+        return self.doInteraction(user, msg, parsed, self.channel)
 
-    def doDice(self, user, msg, *targets):
-        # FIXME - whoa, this is really broken
-        dice_expressions = re.findall(r'\[.+?\]|{.+?}', msg)
+    def doInteraction(self, user, msg, parsed, *recipients):
+        """Use actor's stats to apply each action to all targets"""
+        if parsed.actor:
+            actor = parsed.actor.character_name
+        else:
+            actor = user
 
-        # collect responses for each dice expression..
         strings = []
-        for exp in dice_expressions:
-            strings.append(self.respondTo_DICE(user, exp))
+        for vp in parsed.verb_phrases:
+            if len(parsed.targets) == 0:
+                formatted = alias.resolve(actor, tuple(vp.verbs), vp.dice)
+                if formatted is not None:
+                    strings.append(formatted)
+            else:
+                for item in parsed.targets:
+                    target = item.target
+                    formatted = alias.resolve(actor, tuple(vp.verbs), vp.dice,
+                                              target)
+                    if formatted is not None:
+                        strings.append(formatted)
         text = '\n'.join(strings)
         
-        return Response(text, msg, *targets)
+        return Response(text, msg, *recipients)
                 
 
 
@@ -207,34 +207,22 @@ class Session:
     def privateCommand(self, user, command):
         return self.doCommand(user, command, user, *self.observers)
 
-    def doCommand(self, user, command, *targets):
-        m = self.getCommandMethod(command)
-        # try harder to find dice expressions when there's no command
-        if m == self.respondTo_DEFAULT:
-            if re.search(r'\[.+?\]|{.+?}', command) is not None:
-                text = self.handleDice(user, command)
-                return Response(text, *targets)
+    def doCommand(self, user, command, *recipients):
+        m = self.getCommandMethod(command.command_identifier)
 
         context = command
 
         try:
-            text = m(user, command)
-            return Response(text, context, *targets)
+            text = m(user, command.command_args)
+            return Response(text, context, *recipients)
         except UnknownHailError, e:
-            return Response("wtf?", context, *targets)
+            return Response("wtf?", context, *recipients)
         except Exception, e:
             log.msg(''.join(traceback.format_exception(*sys.exc_info())))
             text = '** Sorry, %s: %s' % (user, str(e)), 
-            return Response(text, context, *targets)
+            return Response(text, context, *recipients)
         
-    def getCommandMethod(self, command):
-        command_word = 'DEFAULT'
-        args = None
-        if command:
-            _splits = command.split(None, 1)
-            command_word = _splits.pop(0)
-            if len(_splits) > 0:
-                args = _splits[0]
+    def getCommandMethod(self, command_word):
         return getattr(self, 'respondTo_%s' % (command_word,), 
                        self.respondTo_DEFAULT)
 
@@ -335,12 +323,14 @@ class VellumTalk(irc.IRCClient):
             self.wtf = self.wtf + 1
 
     
-    def msgSlowly(self, channel, lines):
-        """Send multiple lines to the channel with 700ms delays in the middle"""
+    def msgSlowly(self, channel, lines, delay=700):
+        """Send multiple lines to the channel with delays in the middle
+        delay is given in ms
+        """
         send = lambda line: self.msg(channel, line)
         send(lines[0])
         for n, line in enumerate(lines[1:]):
-            reactor.callLater(n*(0.7), send, line)
+            reactor.callLater(n*(delay/1000.0), send, line)
 
     def sendResponse(self, response):
         if response is None:
@@ -371,6 +361,7 @@ class VellumTalk(irc.IRCClient):
         # create a session to respond to private messages from nicks
         # not in any channel I'm in
         self.defaultSession = Session('')
+        linesyntax.setBotName(self.nickname)
         # join my default channel
         self.join(self.factory.channel)
 
@@ -446,39 +437,25 @@ class VellumTalk(irc.IRCClient):
 
         session = self.findSession(channel)
 
-        # if the line begins with *foo, then I am talking as foo, and
-        # foo should be considered the user
-        # FIXME - where should this code be moved?
-        if msg.startswith('*'):
-            first = msg.split()[0]
-            name = first[1:]
-            if len(name) > 0:
-                user = name
-
-        # if the bot is being hailed, do stuff
-        _re = r'^(%s:) |^(\.)' % (self.nickname,)
-        _hail = re.compile(_re, re.I)
-        match = _hail.search(msg)
-
-        if match is not None:
-            command = msg[match.end():]
+        parsed = linesyntax.parseSentence(msg)
+        if parsed.command:
             if channel == user:
-                response = session.privateCommand(user, command)
+                response = session.privateCommand(user, parsed.command)
             else:
-                response = session.command(user, command)
+                response = session.command(user, parsed.command)
+            self.sendResponse(response)
+        elif parsed.verb_phrases:
+            if channel == user:
+                response = session.privateInteraction(user, msg, parsed)
+            else:
+                response = session.interaction(user, msg, parsed)
+            self.sendResponse(response)
         else:
-            # dice are handled if the bot is not being hailed
-            if channel == user:
-                response = session.handlePrivateDice(user, msg)
-            else:
-                response = session.handleDice(user, msg)
-
-        self.sendResponse(response)
+            pass
 
     # though it looks weird, actions will behave the same way as privmsgs.
     # for example, /me .hello will behave like "VellumTalk: hello" or ".hello"
     action = privmsg
-
 
 class VellumTalkFactory(protocol.ClientFactory):
     """A factory for VellumTalks.
@@ -500,72 +477,59 @@ class VellumTalkFactory(protocol.ClientFactory):
         print "connection failed:", reason
         reactor.stop()
 
+
+
+
 testcommands = [
-('MFen', 'VellumTalk', 'MFen', 'hello', r'Hello MFen\.'),
+('MFen', 'VellumTalk', 'MFen', 'hello', None),
 ('MFen', 'VellumTalk', 'MFen', 'VellumTalk: hello', r'Hello MFen\.'),
-('MFen', 'VellumTalk', 'MFen', 'VellumTalk: hello there', r'Hello MFen\.'),
+('MFen', 'VellumTalk', 'MFen', 'Vellumtalk: hello there', r'Hello MFen\.'),
 ('MFen', 'VellumTalk', 'MFen', '.hello', r'Hello MFen\.'),
-('MFen', '#vellum', '#vellum', 'hello', None),
-('MFen', '#vellum', '#vellum', 'VellumTalk: hello', r'Hello MFen\.'),
-('MFen', '#vellum', '#vellum', '.hello', r'Hello MFen\.'),
-('MFen', 'VellumTalk', 'MFen', 'inits', r'Initiative list: \(none\)'),
-('MFen', 'VellumTalk', 'MFen', 'combat', r'\*\* Beginning combat \*\*'),
-('MFen', '#vellum', '#vellum', '[init 20]', 
+('MFen', '#testing', '#testing', 'hello', None),
+('MFen', '#testing', '#testing', 'VellumTalk: hello', r'Hello MFen\.'),
+('MFen', '#testing', '#testing', '.hello', r'Hello MFen\.'),
+('MFen', 'VellumTalk', 'MFen', '.inits', r'Initiative list: \(none\)'),
+('MFen', 'VellumTalk', 'MFen', '.combat', r'\*\* Beginning combat \*\*'),
+('MFen', '#testing', '#testing', '[init 20]', 
         r'MFen, you rolled: init 20 = \[20\]'),
-('MFen', 'VellumTalk', 'MFen', 'n', r'\+\+ New round \+\+'),
-('MFen', 'VellumTalk', 'MFen', 'n', 
+('MFen', 'VellumTalk', 'MFen', '.n', r'\+\+ New round \+\+'),
+('MFen', 'VellumTalk', 'MFen', '.n', 
         r'MFen \(init 20\) is ready to act \. \. \.'),
-('MFen', 'VellumTalk', 'MFen', 'p', r'\+\+ New round \+\+'),
-('MFen', 'VellumTalk', 'MFen', 'p', 
+('MFen', 'VellumTalk', 'MFen', '.p', r'\+\+ New round \+\+'),
+('MFen', 'VellumTalk', 'MFen', '.p', 
         r'MFen \(init 20\) is ready to act \. \. \.'),
-('MFen', 'VellumTalk', 'MFen', 'inits', 
+('MFen', 'VellumTalk', 'MFen', '.inits', 
         r'Initiative list: MFen/20, NEW ROUND/9999'),
 # ('MFen', 'VellumTalk', 'MFen', 'help', r'\s+hello: Greet\.'), FIXME
-('MFen', 'VellumTalk', 'MFen', 'aliases', 
+('MFen', 'VellumTalk', 'MFen', '.aliases', 
         r'Aliases for MFen:   init=20'),
-('MFen', 'VellumTalk', 'MFen', 'aliases MFen', 
+('MFen', 'VellumTalk', 'MFen', '.aliases MFen', 
         r'Aliases for MFen:   init=20'),
-('MFen', 'VellumTalk', 'MFen', 'unalias foobar', 
+('MFen', 'VellumTalk', 'MFen', '.unalias foobar', 
         r'\*\* No alias "foobar" for MFen'),
-('MFen', 'VellumTalk', 'MFen', 'unalias init', 
+('MFen', '#testing',  '#testing', 'hello [argh 20] [foobar 30]',
+        r'MFen, you rolled: argh 20 = \[20\]'),
+('MFen', 'VellumTalk', 'MFen', '.unalias init', 
         r'MFen, removed your alias for init'),
-('MFen', 'VellumTalk', 'MFen', 'aliases', 
-        r'Aliases for MFen:   \(none\)'),
-]
-testdice = [
-('MFen', '#vellum', '#vellum', 'I smackdown with [1d20+2]', 
-        r'MFen, you rolled: 1d20\+2 = \[\S+\]'),
-('MFen', '#vellum', '#vellum', 'I [smackdown 100]', 
-        'MFen, you rolled: smackdown 100 = \[100\]'),
-# the next 2 test the same thing.. that both inline expressions
-# will get evaluated
-('MFen', '#vellum', '#vellum', 'I [smackdown] [1]', 
- r'MFen, you rolled: 1 = \[1\]'),
-('MFen', '#vellum', '#vellum', 'I [smackdown] [1]', 
- r'MFen, you rolled: smackdown = \[100\]'),
-
-('MFen', 'VellumTalk', 'MFen', 'I [smackdown]', 
- r'MFen, you rolled: smackdown = \[100\]'),
-
-# the next test is lame, but it'll have to do
-('MFen', 'VellumTalk', 'MFen', '{100x2}',
-        r'MFen, you rolled: 100x2 = {100, 100} \(sorted\)'),
+('MFen', 'VellumTalk', 'MFen', '.aliases', 
+        r'Aliases for MFen:   argh=20, foobar=30'),
 ]
 testhijack = [
 ('MFen', 'VellumTalk', 'MFen', '*grimlock1 does a [smackdown 1000]', 
         'grimlock1, you rolled: smackdown 1000 = \[1000\]'),
-('MFen', '#vellum', '#vellum', '*grimlock1 does a [bitchslap 1000]', 
+('MFen', '#testing', '#testing', '*grimlock1 does a [bitchslap 1000]', 
         'grimlock1, you rolled: bitchslap 1000 = \[1000\]'),
 ('MFen', 'VellumTalk', 'MFen', '*grimlock1 does a [smackdown]', 
         'grimlock1, you rolled: smackdown = \[1000\]'),
 ('MFen', 'VellumTalk', 'MFen', 'I do a [smackdown]', 
-        'MFen, you rolled: smackdown = \[100\]'),
-('MFen', 'VellumTalk', 'MFen', 'aliases grimlock1',
+        ''),
+('MFen', 'VellumTalk', 'MFen', '.aliases grimlock1',
         'Aliases for grimlock1:   bitchslap=1000, smackdown=1000'),
-('MFen', 'VellumTalk', 'MFen', 'unalias grimlock1 smackdown',
+('MFen', 'VellumTalk', 'MFen', '.unalias grimlock1 smackdown',
         'grimlock1, removed your alias for smackdown'),
-('MFen', 'VellumTalk', 'MFen', 'aliases grimlock1',
+('MFen', 'VellumTalk', 'MFen', '.aliases grimlock1',
         'Aliases for grimlock1:   bitchslap=1000'),
+# TODO.. .gm observer tests
 ]
 
 # TODO - move d20-specific tests, e.g. init and other alias hooks?
@@ -584,6 +548,7 @@ def test():
         vt.defaultSession = Session('#testing')
         vt.makeConnection(transport)
         pos = ([0],)
+        linesyntax.setBotName('VellumTalk')
 
         def check(nick, channel, target, expected):
             _pos = pos[0] # ugh, python
@@ -608,16 +573,11 @@ def test():
                     print ' '*10 + ' '*len(target) + expected
                     print actual
                     return
-            print '+++'
+            sys.stdout.write('.')
 
 
         for nick, channel, target, sent, received in testcommands:
             vt.privmsg(nick, channel, sent)
-            check(nick, channel, target, received)
-        for nick, channel, target, sent, received in testdice:
-            vt.privmsg(nick, channel, sent)
-            check(nick, channel, target, received)
-            vt.action(nick, channel, sent)
             check(nick, channel, target, received)
         for nick, channel, target, sent, received in testhijack:
             vt.privmsg(nick, channel, sent)

@@ -1,8 +1,10 @@
 import sys
 import random
-import sre
 
-def roll(die, mod=0):
+from vellum.server import linesyntax
+import pyparsing
+
+def rollDie(die, mod=0):
     return random.choice(range(1, die+1)) + mod
 
 def parseRange(odds):
@@ -34,138 +36,103 @@ def most(lst, count, direction=1):
 
 least = lambda l, c: most(l, c, -1)
 
-class Roller:
-    def __init__(self):
-        self.repeat = self.count = self.dice = self.modifier = 0
-        self.filter = None
-        self.scanner = sre.Scanner([
-                (r'\s+', self.got_nothin),
-                (r'd\s*[0-9]+', self.got_dice),
-                (r'[0-9]+', self.got_count),
-                (r'[lLhH]\s*[0-9]+', self.got_filter),
-                (r'(\+|\-)\s*[0-9]+', self.got_modifier),
-                (r'[Xx]\s*[0-9]+', self.got_repeat),
-                (r'.*', self.got_unknown),
-                ])
+def parse(st):
+    parsed = linesyntax.dice_string.parseString(st)
+    rolled = roll(parsed)
+    return list(rolled)
 
-    def got_unknown(self, scanner, token):
-        last = self.last
-        self.reset()
-        raise RuntimeError("Syntax error: %s" % (last,))
-    def got_nothin(self, scanner, token): pass
-    def got_dice(self, scanner, token):
-        self.dice = int(token[1:])
-    def got_count(self, scanner, token):
-        self.count = int(token)
-    def got_filter(self, scanner, token):
-        key = token[0]
-        num = int(token[1:])
-        if self.filter is not None:
-            s = "Syntax error: Multiple filters specified in %s"
-            self.reset()
-            raise RuntimeError(s % (token,))
-        if num > self.count:
-            s = "Syntax error: Keeping more dice than you are rolling in %s"
-            self.reset()
-            raise RuntimeError(s % (token,))
-        if key in 'lL':
-            self.filter = lambda l: least(l, num)
-        elif key in 'hH':
-            self.filter = lambda l: most(l, num)
-    def got_modifier(self, scanner, token):
-        self.modifier = int(token)
-    def got_repeat(self, scanner, token):
-        self.repeat = int(token[1:])
-    def roll(self, st):
-        self.last = st
-        self.scanner.scan(st)
-        return list(self.finish())
-    def reset(self):
-        self.count = self.repeat = self.dice = self.modifier = 0
-        self.last = ''
-        self.filter = None
+def roll(parsed):
+    # set these to defaults in the finish step, not in the init, 
+    # so the parser instance can be reused
+    identity = lambda l: l
+    dice_filter = identity
+    if parsed.dice_count:
+        dice_count = parsed.dice_count
+    else:
+        dice_count = 1
+    if parsed.dice_filter:
+        _dice_filter_num = int(parsed.dice_filter)
+        if _dice_filter_num > dice_count:
+            _m = "Hi/Lo filter uses more dice than are being rolled"
+            raise RuntimeError(_m)
 
-    def finish(self):
-        # set these to defaults in the finish step, not in the init, 
-        # so the parser instance can be reused
-        identity = lambda l: l
-        _autocount = 0
-        if self.count == 0:
-            self.count = 1
-            _autocount = 1   # remember that count was set automatically
-        if self.repeat == 0:
-            self.repeat = 1
-        if self.filter == None:
-            self.filter = identity
-        if self.dice == 0:
-            # an int by itself is just an int.
-            if (self.count > 0 
-                and self.filter is identity 
-                and _autocount == 0 # tell blank count from count = 1 for real
-                ):
-                for n in xrange(self.repeat):
-                    yield self.count + self.modifier
-                self.reset()
-                return
-            self.reset()
-            raise RuntimeError("Syntax error: No die size was given")
-        for n in xrange(self.repeat):
-            tot = sum(self.filter(
-                            [roll(self.dice, 0) for n in xrange(self.count)]
-                                  ))
-            tot = tot + self.modifier
-            yield tot
-        self.reset()
+        hilo = str(parsed.dice_hilo[0])
+        if hilo.lower() == 'h':
+            dice_filter = lambda l: most(l, _dice_filter_num)
+        elif hilo.lower() == 'l':
+            dice_filter = lambda l: least(l, _dice_filter_num)
+    if parsed.dice_repeat:
+        dice_repeat = parsed.dice_repeat
+    else:
+        dice_repeat = 1
+    if parsed.dice_bonus:
+        dice_bonus = parsed.dice_bonus
+    else:
+        dice_bonus = 0
+    if parsed.dice_size == '':
+        # an int by itself is just an int.
+        if not parsed.dice_size:
+            for n in xrange(dice_repeat):
+                yield parsed.dice_count + dice_bonus
+            return
+        raise RuntimeError("Syntax error: No die size was given")
+    for n in xrange(dice_repeat):
+        dierolls = []
+        for n in xrange(dice_count):
+            dierolls.append(rollDie(parsed.dice_size, 0))
+        tot = sum(dice_filter(dierolls))
+        tot = tot + dice_bonus
+        yield tot
 
 
 def test():
-    r = Roller()
     for dice in ['d6xz',  # repeat not a number
                  '1d', # left out die size 
                  '1d6l3l3', '1d6h3l3',  # can't specify more than one filter
                  '1d6h+1', # can't leave the die count out of the filter
                  '1d6h2+1', # can't keep more dice than you started with
                  '', # empty should be an error
-                 #'1d6+5 1d1' # FIXME, last one doesn't fail correctly
+                 '1d6+5 1d1', # multiple expressions
                  ]:
         try:
-            r.roll(dice)
-        except RuntimeError, e:
+            parse(dice)
+        except (pyparsing.ParseException, RuntimeError), e:
             print e
         else:
             assert 0, "%s did not cause an error, and should've" % (dice,)
-    print r.roll('5')
-    print r.roll('5x3')
-    print r.roll('5+1x3')
-    print r.roll('d6x3')
-    print r.roll('9d6l3-10x2')
-    print r.roll('9d6h3+10x2')
-    print r.roll('1d  6 x3')
-    print r.roll('d 6 -2 x 3')
-    print r.roll('2d6-2x1')
+    print parse('5')
+    print parse('5x3')
+    print parse('5+1x3')
+    print parse('d6x3')
+    print parse('9d6l3-10x2')
+    print parse('9d6H3+10x2')
+    print parse('1d  6 x3')
+    print parse('d 6 -2 x 3')
+    print parse('2d6-2x1')
     for n in xrange(1000):
-        assert r.roll('5')[0] == 5
-        assert r.roll('5x3')[2] == 5
-        assert r.roll('5+1x3')[2] == 6
-        assert 1 <= r.roll('d6')[0] <= 6
-        assert 3 <= r.roll('3d6')[0] <= 18
-        assert 2 <= r.roll('9d6l3-1x2')[0] <= 17
-        assert 4 <= r.roll('9d6h3+1x2')[0] <= 19
-        assert 1 <= r.roll('1d  6')[0] <= 6
-        assert 3 <= r.roll('d6+2')[0] <= 8
-        assert -1 <= r.roll('d 6 -2')[0] <= 4
-        assert 4 <= r.roll('2d6+ 2')[0] <= 14
-        assert 0 <= r.roll('2d6-2')[0] <= 10
+        assert parse('5')[0] == 5
+        assert parse('5x3')[2] == 5
+        assert parse('5+1x3')[2] == 6
+        assert 1 <= parse('d6')[0] <= 6
+        assert 3 <= parse('3d6')[0] <= 18
+        assert 1 <= parse('1d  6')[0] <= 6
+        assert 3 <= parse('d6+2')[0] <= 8
+        assert -1 <= parse('d 6 -2')[0] <= 4
+        assert 4 <= parse('2d6+ 2')[0] <= 14
+        assert 0 <= parse('2d6-2')[0] <= 10
+        assert 4 <= parse('9d6h3+1x2')[0] <= 19
+        assert 2 <= parse('9d6L3-1x2')[0] <= 17
     print 'passed all tests'
 
 def run(argv=None):
+    import linesyntax
     if argv is None:
         argv = sys.argv
-    r = Roller()
     while 1:
         try:
-            rolled = r.roll(raw_input("Roll: "))
-            if len(rolled) > 1:
+            st = raw_input("Roll: ")
+            rolled = parse(st)
+            if len(list(rolled)) > 1:
                 print "Unsorted--", rolled
                 rolled.sort()
                 rolled.reverse()

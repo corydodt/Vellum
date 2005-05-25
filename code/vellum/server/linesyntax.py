@@ -51,20 +51,22 @@ def setBotName(newname):
 
 identifier = P.Word(P.alphas+"_", P.alphanums+"_").setResultsName('identifier')
 command_leader = L(".")
-hail = botname + P.Optional(L(":") | L(","))
-command_args = P.restOfLine.copy().setResultsName('command_args')
+hail = (botname + P.oneOf(": ,")) | (botname + P.White())
+command_args = P.restOfLine.setResultsName('command_args')
 
 
 command = (P.StringStart() + 
            Sup(command_leader | hail) + 
-           identifier + 
+           identifier.setResultsName('command_identifier') + 
            Sup(P.Optional(P.White())) +
-           command_args).setResultsName('command')
+           command_args.setResultsName('command_args')).setResultsName('command')
 
 _test_commands = [(".hello", "['hello', '']"),
 (".foo bar", "['foo', 'bar']"),
 (". foo", "['foo', '']"),
 ("..foo", P.ParseException),
+("TestBot:foo", "['foo', '']"),
+("tesTBot,foo", "['foo', '']"),
 ("TestBot foo", "['foo', '']"),
 ("TestBot: foo", "['foo', '']"),
 ("tesTBot, foo", "['foo', '']"),
@@ -95,24 +97,24 @@ actor = (Sup('*') + character_name).setResultsName('actor')
 number = P.Word(P.nums)
 number.setParseAction(lambda s,p,t: map(int, t))
 
-dice_count = (number.copy()).setResultsName('dice_count')
+dice_count = number.setResultsName('dice_count')
 dice_size = Sup(CL('d')) + number.setResultsName('dice_size')
-dice_bonus = P.oneOf('+ -') + number
+dice_bonus = P.oneOf('+ -') + number.setResultsName('dice_bonus')
 dice_filter = (P.oneOf('h l', caseless=True).setResultsName('dice_hilo') +
                number.setResultsName('dice_filter'))
-dice_sorted = CL('sort')
+dice_sorted = CL('sort').setResultsName('dice_sorted')
 dice_repeat = (Sup(CL('x')) + 
                number.setResultsName('dice_repeat') + 
-               P.Optional(dice_sorted.setResultsName('dice_sorted')))
+               P.Optional(dice_sorted))
 
-def combineModifier(sign, num):
+def combineBonus(sign, num):
     values = {'-':-1, '+':1}
     return num * values[sign]
 
 class FilterException(Exception):
     """Filter has more dice than the dice_count"""
 
-dice_bonus.setParseAction(lambda s, p, t: combineModifier(*t))
+dice_bonus.setParseAction(lambda s, p, t: combineBonus(*t))
 dice_bonus = dice_bonus.setResultsName('dice_bonus')
 
 dice_optionals = P.Optional(dice_bonus) + P.Optional(dice_repeat)
@@ -124,6 +126,7 @@ random = (P.Optional(dice_count, default=1) +
           dice_optionals)
 
 dice = (random | nonrandom).setResultsName('dice')
+dice_string = dice + P.StringEnd()
 
 _test_dice = [("5", "[5]"),
 ("5x3","[5, 3]"),
@@ -142,7 +145,6 @@ _test_dice = [("5", "[5]"),
 ("1d6l3l3", P.ParseException),
 ("1d6h3l3", P.ParseException),
 ("d6h+1", P.ParseException),
-("1d6h2+1", FilterException),
 ]
 
 
@@ -161,7 +163,6 @@ v_words_nonterminal = P.OneOrMore(v_word_nonterminal).setResultsName('verbs')
 # FIXME - [d20 1d10] should be an error
 v_content = P.Optional(v_words_nonterminal) + dice | v_words
 verb_phrase = Sup(o) + v_content + Sup(t)
-
 verb_phrase = verb_phrase.setResultsName('verb_phrase')
 
 _test_verb_phrases = [
@@ -205,19 +206,19 @@ _test_sentences = [
 ("testbot: n", "['n', '']"),
 ("testbot n", "['n', '']"),
 ("The [machinegun] being fired at @Shara by the *ninja goes rat-a-tat.",
-        "['ninja', 'machinegun', 'Shara']"),
+        "['ninja', ['machinegun'], 'Shara']"),
 ("*woop1", "[]"), # verb phrases are required
-("[foo] *woop2", "['woop2', 'foo']"),
+("[foo] *woop2", "['woop2', ['foo']]"),
 (".aliases shara", "['aliases', 'shara']"),
 (".foobly doobly doo", "['foobly', 'doobly doo']"),
 ("*grimlock1 [attack 1d2+10]s the paladin. (@shara)", 
-        "['grimlock1', 'attack', 1, 2, 10, 'shara']"),
-("I [attack 1d6+1] @grimlock1", "['None', 'attack', 1, 6, 1, 'grimlock1']"),
-("I [attack 1d6+1x2sort] @grimlock1", "['None', 'attack', 1, 6, 1, 2, 'sort', 'grimlock1']"),
+        "['grimlock1', ['attack', 1, 2, 10], 'shara']"),
+("I [attack 1d6+1] @grimlock1", "[['attack', 1, 6, 1], 'grimlock1']"),
+("I [attack 1d6+1x2sort] @grimlock1", "[['attack', 1, 6, 1, 2, 'sort'], 'grimlock1']"),
 ("I [cast] a [fireball] @grimlock1 and @grimlock2", 
-        "['None', 'cast', 'fireball', 'grimlock1', 'grimlock2']"),
+        "[['cast'], ['fireball'], 'grimlock1', 'grimlock2']"),
 ("I [cast] a [fireball] @grimlock1 and@grimlock2", 
-        "['None', 'cast', 'fireball', 'grimlock1', 'grimlock2']"),
+        "[['cast'], ['fireball'], 'grimlock1', 'grimlock2']"),
 ]
 
 _test_sentences_altbot = [
@@ -226,7 +227,7 @@ _test_sentences_altbot = [
 ]
 
 # convert scanned sentences into a normalized form and then parse them
-verb_phrases = P.OneOrMore(verb_phrase).setResultsName('verb_phrases')
+verb_phrases = P.OneOrMore(P.Group(verb_phrase)).setResultsName('verb_phrases')
 targets = P.OneOrMore(target).setResultsName('targets')
 normalized_sentence = (command | 
                        P.Optional(actor) + verb_phrases + P.Optional(targets) | 
@@ -247,7 +248,8 @@ def parseSentence(s):
             targets.append(item.target.character_name)
 
     normalized = formatNormalized(actor, verb_phrases, targets)
-    return normalized_sentence.parseString(normalized)
+    parsed = normalized_sentence.parseString(normalized)
+    return parsed
 
 def formatNormalized(actor, verb_phrases, targets):
     """Return a string with only the parts of speech, so a parseString
@@ -256,23 +258,10 @@ def formatNormalized(actor, verb_phrases, targets):
     _fm_verb_phrases = []
     for vp in verb_phrases:
         verb_list = ' '.join(vp.verbs)
-        _dice_expr = []
         if vp.dice:
-            if vp.dice.dice_count:
-                _dice_expr.append(str(vp.dice.dice_count))
-            if vp.dice.dice_size:
-                _dice_expr.append('d' + str(vp.dice.dice_size))
-            if vp.dice.dice_hilo:
-                _dice_expr.append(str(vp.dice.dice_hilo[0]))
-            if vp.dice.dice_filter:
-                _dice_expr.append(str(vp.dice.dice_filter))
-            if vp.dice.dice_bonus:
-                _dice_expr.append('%+d' % (vp.dice.dice_bonus,))
-            if vp.dice.dice_repeat:
-                _dice_expr.append('x' + str(vp.dice.dice_repeat))
-            if vp.dice.dice_sorted:
-                _dice_expr.append('sort')
-        dice_expr = ''.join(_dice_expr)
+            dice_expr = reverseFormatDice(vp.dice)
+        else:
+            dice_expr = ''
 
         verb_body = ' '.join((verb_list, dice_expr))
         _fm_verb_phrases.append('[%s]' % (verb_body,))
@@ -283,7 +272,32 @@ def formatNormalized(actor, verb_phrases, targets):
         _fm_targets.append('@%s' % (targ,))
     fm_targets = ' '.join(_fm_targets)
 
-    return '*%s %s %s' % (actor, fm_verb_phrases, fm_targets)
+    if actor is not None:
+        _actor = '*%s ' % (actor,)
+    else:
+        _actor = ''
+
+
+    return '%s%s %s' % (_actor, fm_verb_phrases, fm_targets)
+
+def reverseFormatDice(parsed_dice):
+    """Take a parsed dice expression and return the string form"""
+    _dice_expr = []
+    if parsed_dice.dice_count:
+        _dice_expr.append(str(parsed_dice.dice_count))
+    if parsed_dice.dice_size:
+        _dice_expr.append('d' + str(parsed_dice.dice_size))
+    if parsed_dice.dice_hilo:
+        _dice_expr.append(str(parsed_dice.dice_hilo[0]))
+    if parsed_dice.dice_filter:
+        _dice_expr.append(str(parsed_dice.dice_filter))
+    if parsed_dice.dice_bonus:
+        _dice_expr.append('%+d' % (parsed_dice.dice_bonus,))
+    if parsed_dice.dice_repeat:
+        _dice_expr.append('x' + str(parsed_dice.dice_repeat))
+    if parsed_dice.dice_sorted:
+        _dice_expr.append('sort')
+    return ''.join(_dice_expr)
 
 
 
@@ -296,6 +310,8 @@ def test_stuff(method, tests):
                     print '\n', input, expected, str(parsed)
                 else:
                     passed()
+            else:
+                print "\nFAILED:", input, 'Wanted', expected, 'Got', parsed
         except Exception, e:
             if isinstance(expected, basestring):
                 print "\nFAILED:", input, expected
@@ -316,7 +332,7 @@ def passed():
 def test():
     setBotName('TestBot')
     test_stuff(command.parseString, _test_commands)
-    test_stuff(dice.parseString, _test_dice)
+    test_stuff(dice_string.parseString, _test_dice)
     test_stuff(verb_phrase.parseString, _test_verb_phrases)
     test_stuff(target.parseString, _test_targets)
 
