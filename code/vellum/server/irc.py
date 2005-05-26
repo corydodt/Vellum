@@ -156,7 +156,7 @@ class Session:
         return response
 
     def doInitiative(self, user, result):
-        self.initiatives.append((result[0], user))
+        self.initiatives.append((result[0].sum(), user))
         self.initiatives.sort()
         self.initiatives.reverse()
 

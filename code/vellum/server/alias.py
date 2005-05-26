@@ -96,6 +96,11 @@ def resolve(actor, words, parsed_dice=None, target=None):
     else:
         return formatAlias(actor, words, rolled, parsed_dice)
 
+def callAliasHooks(words, user, rolled):
+    hooks = alias_hooks.get(words, [])
+    for hook in hooks:
+        hook(user, rolled)
+
 def getResult(actor, words, parsed_dice=None, target=None):
     """Return a list of dice results"""
     assert target is None # TODO
@@ -121,11 +126,6 @@ def getResult(actor, words, parsed_dice=None, target=None):
     callAliasHooks(words, actor, rolled)
     return rolled
 
-def callAliasHooks(words, user, rolled):
-    hooks = alias_hooks.get(words, [])
-    for hook in hooks:
-        hook(user, rolled)
-
 def test_getResult():
     global aliases
     orig_aliases = aliases
@@ -134,21 +134,21 @@ def test_getResult():
         # junk
         assert getResult('anything', 'foo') is None
         _exp = linesyntax.dice.parseString('1d1')
-        assert getResult('anything', 'foo', _exp)  == [1]
+        assert getResult('anything', 'foo', _exp)[0].sum() == 1
         assert getResult('anything', 'bar') is None
         _exp = linesyntax.dice.parseString('500')
-        assert getResult('anything', 'bar', _exp) == [500]
-        assert getResult('anything', 'bar') == [500]
-        assert getResult('anything', 'foo') == [1]
+        assert getResult('anything', 'bar', _exp)[0].sum() == 500
+        assert getResult('anything', 'bar')[0].sum() == 500
+        assert getResult('anything', 'foo')[0].sum() == 1
         _exp = linesyntax.dice.parseString('5')
-        assert getResult('anything', 'foo', _exp) == [5]
-        assert getResult('anything', 'foo') == [5]
+        assert getResult('anything', 'foo', _exp)[0].sum() == 5
+        assert getResult('anything', 'foo')[0].sum() == 5
     finally:
         aliases = orig_aliases
 
 
 
-def formatAlias(actor, verbs, result, parsed_dice, target=None):
+def formatAlias(actor, verbs, results, parsed_dice, target=None):
     assert target is None
     sorted = 0 
     verbs = list(verbs)
@@ -157,9 +157,9 @@ def formatAlias(actor, verbs, result, parsed_dice, target=None):
     else:
         verbs.append(linesyntax.reverseFormatDice(parsed_dice))
         if parsed_dice.dice_sorted:
-            result.sort()
+            results.sort()
             sorted = 1
-    rolls = '[%s]' % (', '.join(map(str, result)))
+    rolls = '[%s]' % (', '.join([r.format() for r in results]))
     if sorted:
         rolls = rolls + ' (sorted)'
     return '%s, you rolled: %s = %s' % (actor, ' '.join(verbs), rolls)
@@ -172,22 +172,30 @@ def test_formatAlias():
     parsed_dice = linesyntax.dice_string.parseString('1d20x3')
     parsed_dice2 = linesyntax.dice_string.parseString('1d20x3sort')
     parsed_dice3 = ''
-    result = [10, 15, 5]
-    fmtd = formatAlias(a, v1, result[:], parsed_dice)
+    parsed_dice4 = linesyntax.dice_string.parseString('3d6+2')
+
+    R = lambda n: dice.DiceResult([n], 0)
+    results = [R(10), R(15), R(5)]
+    results2 = [dice.DiceResult([3,4,5], 2)]
+
+    fmtd = formatAlias(a, v1, results[:], parsed_dice)
     assert (fmtd == 'foobie bletch, you rolled: foo bar 1d20x3 = [10, 15, 5]'),\
             fmtd
 
-    fmtd = formatAlias(a, v2, result[:], parsed_dice) 
+    fmtd = formatAlias(a, v2, results[:], parsed_dice) 
     assert (fmtd == 'foobie bletch, you rolled: 1d20x3 = [10, 15, 5]'), \
             fmtd
-    fmtd = formatAlias(a, v3, result[:], parsed_dice) 
+    fmtd = formatAlias(a, v3, results[:], parsed_dice) 
     assert (fmtd == 'foobie bletch, you rolled: foo 1d20x3 = [10, 15, 5]'), \
             fmtd
-    fmtd = formatAlias(a, v3, result[:], parsed_dice3) 
+    fmtd = formatAlias(a, v3, results[:], parsed_dice3) 
     assert (fmtd == 'foobie bletch, you rolled: foo = [10, 15, 5]'), \
             fmtd
-    fmtd = formatAlias(a, v2, result[:], parsed_dice2) 
+    fmtd = formatAlias(a, v2, results[:], parsed_dice2) 
     assert (fmtd == 'foobie bletch, you rolled: 1d20x3sort = [5, 10, 15] (sorted)'), \
+            fmtd
+    fmtd = formatAlias(a, v2, results2[:], parsed_dice4) 
+    assert (fmtd == 'foobie bletch, you rolled: 3d6+2 = [3+4+5+2 = 14]'), \
             fmtd
 
 

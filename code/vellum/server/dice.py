@@ -27,15 +27,6 @@ def choosePercentile(percentiles):
     raise RuntimeError, "None of %s were selected" % (percentiles,)
 
 
-def most(lst, count, direction=1):
-    """Return the greatest <count> items in lst"""
-    lst.sort()
-    if direction == 1:
-        lst.reverse()
-    return lst[:count]
-
-least = lambda l, c: most(l, c, -1)
-
 def parse(st):
     parsed = linesyntax.dice_string.parseString(st)
     rolled = roll(parsed)
@@ -44,23 +35,21 @@ def parse(st):
 def roll(parsed):
     # set these to defaults in the finish step, not in the init, 
     # so the parser instance can be reused
-    identity = lambda l: l
-    dice_filter = identity
     if parsed.dice_count:
         dice_count = parsed.dice_count
     else:
         dice_count = 1
     if parsed.dice_filter:
-        _dice_filter_num = int(parsed.dice_filter)
-        if _dice_filter_num > dice_count:
+        dice_filter_count = int(parsed.dice_filter)
+        if dice_filter_count > dice_count:
             _m = "Hi/Lo filter uses more dice than are being rolled"
             raise RuntimeError(_m)
 
         hilo = str(parsed.dice_hilo[0])
-        if hilo.lower() == 'h':
-            dice_filter = lambda l: most(l, _dice_filter_num)
-        elif hilo.lower() == 'l':
-            dice_filter = lambda l: least(l, _dice_filter_num)
+    else:
+        dice_filter_count = 0
+        hilo = None
+
     if parsed.dice_repeat:
         dice_repeat = parsed.dice_repeat
     else:
@@ -73,16 +62,64 @@ def roll(parsed):
         # an int by itself is just an int.
         if not parsed.dice_size:
             for n in xrange(dice_repeat):
-                yield parsed.dice_count + dice_bonus
+                yield DiceResult([parsed.dice_count], dice_bonus)
             return
         raise RuntimeError("Syntax error: No die size was given")
     for n in xrange(dice_repeat):
         dierolls = []
         for n in xrange(dice_count):
             dierolls.append(rollDie(parsed.dice_size, 0))
-        tot = sum(dice_filter(dierolls))
-        tot = tot + dice_bonus
-        yield tot
+        result = DiceResult(dierolls, dice_bonus, hilo, dice_filter_count)
+        yield result
+
+class DiceResult:
+    """Representation of all the values rolled by a dice expression."""
+    def __init__(self, dierolls, bonus, filterdirection=None, filtercount=0):
+        self.dierolls = dierolls
+        self.bonus = bonus
+        self.filterdirection = filterdirection
+        self.filtercount = filtercount
+
+    def __repr__(self):
+        return 'DiceResult(=%s)' % self.sum()
+
+    def format(self):
+        """Print the sum of the individual (filtered) dice and bonus"""
+        dierolls = self.filtered()[:]
+        if self.bonus:
+            dierolls.append(self.bonus)
+
+        if len(dierolls) > 1:
+            formatted_sum = '+'.join(map(str, dierolls))
+            return '%s = %s' % (formatted_sum, self.sum())
+        else:
+            return str(self.sum())
+
+    def filtered(self):
+        if self.filterdirection is None:
+            filter = lambda: self.dierolls
+        elif self.filterdirection in 'hH':
+            filter = self.most
+        elif self.filterdirection in 'lL':
+            filter = self.least
+        return filter()
+
+    def sum(self):
+        return sum(self.filtered()) + self.bonus
+
+    def __cmp__(self, other):
+        return cmp(self.sum(), other.sum())
+
+    def most(self, direction=1):
+        """Return the greatest <count> items in lst"""
+        lst = self.dierolls[:]
+        lst.sort()
+        if direction == 1:
+            lst.reverse()
+        return lst[:self.filtercount]
+
+    def least(self):
+        return self.most(0)
 
 
 def test():
@@ -110,18 +147,18 @@ def test():
     print parse('d 6 -2 x 3')
     print parse('2d6-2x1')
     for n in xrange(1000):
-        assert parse('5')[0] == 5
-        assert parse('5x3')[2] == 5
-        assert parse('5+1x3')[2] == 6
-        assert 1 <= parse('d6')[0] <= 6
-        assert 3 <= parse('3d6')[0] <= 18
-        assert 1 <= parse('1d  6')[0] <= 6
-        assert 3 <= parse('d6+2')[0] <= 8
-        assert -1 <= parse('d 6 -2')[0] <= 4
-        assert 4 <= parse('2d6+ 2')[0] <= 14
-        assert 0 <= parse('2d6-2')[0] <= 10
-        assert 4 <= parse('9d6h3+1x2')[0] <= 19
-        assert 2 <= parse('9d6L3-1x2')[0] <= 17
+        assert parse('5')[0].sum() == 5
+        assert parse('5x3')[2].sum() == 5
+        assert parse('5+1x3')[2].sum() == 6
+        assert 1 <= parse('d6')[0].sum() <= 6
+        assert 3 <= parse('3d6')[0].sum() <= 18
+        assert 1 <= parse('1d  6')[0].sum() <= 6
+        assert 3 <= parse('d6+2')[0].sum() <= 8
+        assert -1 <= parse('d 6 -2')[0].sum() <= 4
+        assert 4 <= parse('2d6+ 2')[0].sum() <= 14
+        assert 0 <= parse('2d6-2')[0].sum() <= 10
+        assert 4 <= parse('9d6h3+1x2')[0].sum() <= 19
+        assert 2 <= parse('9d6L3-1x2')[0].sum() <= 17
     print 'passed all tests'
 
 def run(argv=None):
