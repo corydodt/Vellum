@@ -570,18 +570,13 @@ GeeEm('VellumTalk', '.n', ('GeeEm', r'GeeEm \(init 20\) is ready to act \. \. \.
 GeeEm('VellumTalk', '.p', ('GeeEm', r'\+\+ New round \+\+')),
 GeeEm('VellumTalk', '.p', ('GeeEm', r'GeeEm \(init 20\) is ready to act \. \. \.')),
 GeeEm('VellumTalk', '.inits', ('GeeEm', r'Initiative list: GeeEm/20, NEW ROUND/9999')),
-#  'VellumTalk', 'help', ('GeeEm', r'\s+hello: Greet\.')), FIXME
+# GeeEm('VellumTalk', 'help', ('GeeEm', r'\s+hello: Greet\.')), FIXME
 GeeEm('VellumTalk', '.aliases', ('GeeEm', r'Aliases for GeeEm:   init=20')),
 GeeEm('VellumTalk', '.aliases GeeEm', ('GeeEm', r'Aliases for GeeEm:   init=20')),
 GeeEm('VellumTalk', '.unalias foobar', ('GeeEm', r'\*\* No alias "foobar" for GeeEm')),
 GeeEm('#testing',  'hello [argh 20] [foobar 30]', ('#testing', r'GeeEm, you rolled: argh 20 = \[20\]')),
 GeeEm('VellumTalk', '.unalias init', ('GeeEm', r'GeeEm, removed your alias for init')),
 GeeEm('VellumTalk', '.aliases', ('GeeEm', r'Aliases for GeeEm:   argh=20, foobar=30')),
-GeeEm('VellumTalk', '.gm', ('GeeEm', r'GeeEm is now a GM and will observe private messages for session #testing')),
-Player('VellumTalk', '[stabtastic 20]', 
-   ('GeeEm', r'Player, you rolled: stabtastic 20 = \[20\] \(<Player>  \[stabtastic 20\]\)'),
-   ('Player', r'Player, you rolled: stabtastic 20 = \[20\] \(observed\)')
-   )
 ]
 
 testhijack = [
@@ -594,6 +589,19 @@ GeeEm('VellumTalk', '.unalias grimlock1 smackdown', ('GeeEm', 'grimlock1, remove
 GeeEm('VellumTalk', '.aliases grimlock1', ('GeeEm', 'Aliases for grimlock1:   bitchslap=1000')),
 ]
 
+testobserved = [
+GeeEm('VellumTalk', '.gm', ('GeeEm', r'GeeEm is now a GM and will observe private messages for session #testing')),
+Player('VellumTalk', '[stabtastic 20]', 
+   ('GeeEm', r'Player, you rolled: stabtastic 20 = \[20\] \(<Player>  \[stabtastic 20\]\)'),
+   ('Player', r'Player, you rolled: stabtastic 20 = \[20\] \(observed\)')
+   )
+]
+
+testobserved2 = [
+Player('VellumTalk', '[stabtastic 20]', 
+   ('Player', r'Player, you rolled: stabtastic 20 = \[20\]$')
+   )
+]
 # TODO - move d20-specific tests, e.g. init and other alias hooks?
 
 def test():
@@ -609,18 +617,22 @@ def test():
         vt.makeConnection(transport)
         linesyntax.setBotName('VellumTalk')
 
-        pos = 0  # use this to remember where we have to seek to after each test
+        testOneSet(testcommands, vt)
+        testOneSet(testhijack, vt)
+        testOneSet(testobserved, vt)
 
-        for r in testcommands:
-            vt.privmsg(r.user, r.channel, r.sent)
-            if r.check():
-                succeed()
-        for r in testhijack:
-            vt.privmsg(r.user, r.channel, r.sent)
-            if r.check():
-                succeed()
+        vt.userLeft('GeeEm', '#testing')
+        testOneSet(testobserved2, vt)
     finally:
         # restore original aliases when done, so save works
         alias.aliases = orig_aliases
+        global passed
         print passed
+        passed = 0
+
+def testOneSet(test_list, vt):
+    for r in test_list:
+        vt.privmsg(r.user, r.channel, r.sent)
+        if r.check():
+            succeed()
 
