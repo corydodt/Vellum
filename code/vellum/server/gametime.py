@@ -67,7 +67,7 @@ class Clock:
         format = format_name.copy()
         format.setParseAction(self.resolveTimeString)
 
-        print format.transformString(formatstring)
+        return format.transformString(formatstring)
 
 
     def synchronize(self, formatname, offset):
@@ -134,53 +134,60 @@ class Cycle(Unit):
 
 
 
+def test():
+    second = Unit("second", 1)
+    round = Unit("round", second * 6)
+    minute = Unit("minute", second*60)
+    hour = Unit("hour", minute*60)
+    day = Unit("day", hour*24)
+    daylight = Cycle("periods of day", "daylight", 
+                     [hour*3,       hour*3,    hour*6,    hour*1, hour*4,
+                      hour*2,    hour*5],
+                     ["late at night", "predawn", "in the morning", "around noon", 
+                      "in the afternoon", "in the evening", "at night"])
+    week = Cycle("week", "weekday", 
+                 [day*1]*7, 
+                 ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
+                  "Friday", "Saturday"])
+    months = Cycle("months", "month", 
+                   [day*31, day*28, day*31, day*30, day*31, day*30, day*31, day*31, 
+                    day*30, day*31, day*30, day*31],
+                   ["January", "February", "March", "April", "May", "June", "July", 
+                    "August", "September", "October", "November", "December"])
+    lunarcycle = Cycle("lunar period", "phase", 
+                       [day*1, day*6, day*1, day*6, day*1, day*6, day*1, day*6],
+                       ["new", "waxing crescent", "first quarter", "waxing gibbous",
+                        "full", "waning gibbous", "last quarter", "waning cresent"
+                        ])
+    year = Unit("year", day*365)
 
 
-second = Unit("second", 1)
-round = Unit("round", second * 6)
-minute = Unit("minute", second*60)
-hour = Unit("hour", minute*60)
-day = Unit("day", hour*24)
-daylight = Cycle("periods of day", "daylight", 
-                 [hour*3,       hour*3,    hour*6,    hour*1, hour*4,
-                  hour*2,    hour*5],
-                 ["late at night", "predawn", "in the morning", "around noon", 
-                  "in the afternoon", "in the evening", "at night"])
-week = Cycle("week", "weekday", 
-             [day*1]*7, 
-             ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
-              "Friday", "Saturday"])
-months = Cycle("months", "month", 
-               [day*31, day*28, day*31, day*30, day*31, day*30, day*31, day*31, 
-                day*30, day*31, day*30, day*31],
-               ["January", "February", "March", "April", "May", "June", "July", 
-                "August", "September", "October", "November", "December"])
-lunarcycle = Cycle("lunar period", "phase", 
-                   [day*1, day*6, day*1, day*6, day*1, day*6, day*1, day*6],
-                   ["new", "waxing crescent", "first quarter", "waxing gibbous",
-                    "full", "waning gibbous", "last quarter", "waning cresent"
-                    ])
-year = Unit("year", day*365)
+    clock = Clock()
+    clock.set(year*2005 + day*149 + hour*12)
+    clock += hour*4
+    clock = clock - hour*4
+    clock = clock + hour*5
 
 
-clock = Clock()
-clock.set(year*2005 + day*149 + hour*12)
-clock += hour*4
-clock = clock - hour*4
-clock = clock + hour*5
+    clock.setFormatter('year', lambda c: c/year)
+    clock.setFormatter('month', lambda c: months.describe(c.time))
+    clock.setFormatter('hour', lambda c: c%day/hour)
+    clock.setFormatter('daylight', lambda c: daylight.describe(c.time))
+    clock.setFormatter('weekday', lambda c: week.describe(c.time))
+    clock.synchronize('weekday', day*3)
+    clock.setFormatter('monthday', lambda c: c%months/day+1)
+    clock.setFormatter('moon', lambda c: lunarcycle.describe(c.time))
 
+    s = clock.format("Year $year, $month $monthday, Hour $hour, $daylight.  It is $weekday.")
+    assert s == 'Year 2005, May 30, Hour 17, in the evening.  It is Monday.', s
+    clock += hour*40
+    s = clock.format("Year $year, $month $monthday, Hour $hour. The moon tonight is $moon.")
+    assert s == 'Year 2005, June 1, Hour 9. The moon tonight is new.', s
 
-clock.setFormatter('year', lambda c: c/year)
-clock.setFormatter('month', lambda c: months.describe(c.time))
-clock.setFormatter('hour', lambda c: c%day/hour)
-clock.setFormatter('daylight', lambda c: daylight.describe(c.time))
-clock.setFormatter('weekday', lambda c: week.describe(c.time))
-clock.synchronize('weekday', day*3)
-clock.setFormatter('monthday', lambda c: c%months/day+1)
-clock.setFormatter('moon', lambda c: lunarcycle.describe(c.time))
+    clock += day * 14
+    s = clock.format("Year $year, $month $monthday, Hour $hour.  It is $weekday.  The moon tonight is $moon.")
+    assert s == 'Year 2005, June 15, Hour 9.  It is Wednesday.  The moon tonight is full.', s
+    print 'tests passed.'
 
-clock.format("Year $year, $month $monthday, Hour $hour, $daylight.  It is $weekday.")
-clock += hour*40
-clock.format("Year $year, $month $monthday, Hour $hour. The moon tonight is $moon.")
-clock += day * 14
-clock.format("Year $year, $month $monthday, Hour $hour.  It is $weekday.  The moon tonight is $moon.")
+if __name__ == '__main__':
+    test()
