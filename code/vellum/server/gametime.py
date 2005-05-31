@@ -156,8 +156,9 @@ def test():
                     "August", "September", "October", "November", "December"])
     lunarcycle = Cycle("lunar period", "phase", 
                        [day*1, day*6, day*1, day*6, day*1, day*6, day*1, day*6],
-                       ["new", "waxing crescent", "first quarter", "waxing gibbous",
-                        "full", "waning gibbous", "last quarter", "waning cresent"
+                       ["new", "waxing crescent", "first quarter", 
+                        "waxing gibbous", "full", "waning gibbous", 
+                        "last quarter", "waning crescent"
                         ])
     year = Unit("year", day*365)
 
@@ -177,16 +178,19 @@ def test():
     clock.synchronize('weekday', day*3)
     clock.setFormatter('monthday', lambda c: c%months/day+1)
     clock.setFormatter('moon', lambda c: lunarcycle.describe(c.time))
+    clock.synchronize('moon', day*22)
 
     s = clock.format("Year $year, $month $monthday, Hour $hour, $daylight.  It is $weekday.")
     assert s == 'Year 2005, May 30, Hour 17, in the evening.  It is Monday.', s
     clock += hour*40
+
     s = clock.format("Year $year, $month $monthday, Hour $hour. The moon tonight is $moon.")
-    assert s == 'Year 2005, June 1, Hour 9. The moon tonight is new.', s
+    assert s == 'Year 2005, June 1, Hour 9. The moon tonight is waning crescent.', s
 
     clock += day * 14
     s = clock.format("Year $year, $month $monthday, Hour $hour.  It is $weekday.  The moon tonight is $moon.")
-    assert s == 'Year 2005, June 15, Hour 9.  It is Wednesday.  The moon tonight is full.', s
+    assert s == 'Year 2005, June 15, Hour 9.  It is Wednesday.  The moon tonight is waxing gibbous.', s
+
     print 'tests passed.'
 
 if __name__ == '__main__':
