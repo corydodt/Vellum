@@ -14,7 +14,7 @@ from twisted.internet import reactor, protocol, task
 from twisted.python import log
 
 
-from vellum.server import encounter, alias, linesyntax
+from vellum.server import encounter, alias, linesyntax, gametime
 from vellum.server.fs import fs
 
 class UnknownHailError(Exception):
@@ -29,6 +29,7 @@ class Session:
                            # when nicks are removed or added
         alias.registerAliasHook(('init',), self.doInitiative)
         self.observers = Set()
+        self.clock = gametime.Clock()
 
     # def _loadParty(self):
     #    """Load characters in the party/ dir"""
