@@ -27,14 +27,6 @@ import string
 import pyparsing as P
 
 
-def R(name):
-    """A testy function that just reports the name of the thing parsed
-    along with the tokens found
-    """
-    def reporter(s, loc, toks):
-        print "%20s %-50s" % (name, toks)
-    return reporter
-
 L = P.Literal
 CL = P.CaselessLiteral
 Sup = P.Suppress
@@ -147,6 +139,9 @@ _test_dice = [("5", "[5]"),
 ("d6h+1", P.ParseException),
 ]
 
+# temporary modifier
+# temporary modifier
+temp_modifier = dice_bonus.setResultsName('temp_modifier')
 
 # verb phrases
 # verb phrases
@@ -161,7 +156,7 @@ v_word_nonterminal = v_word + P.NotAny(t)
 v_words_nonterminal = P.OneOrMore(v_word_nonterminal).setResultsName('verbs')
 
 # FIXME - [d20 1d10] should be an error
-v_content = P.Optional(v_words_nonterminal) + dice | v_words
+v_content = P.Optional(v_words_nonterminal) + (temp_modifier | dice) | v_words
 verb_phrase = Sup(o) + v_content + Sup(t)
 verb_phrase = verb_phrase.setResultsName('verb_phrase')
 
@@ -170,6 +165,8 @@ _test_verb_phrases = [
 ("[star]", "['star']"),
 ("[rock star]", "['rock', 'star']"),
 ("[woo 1d20+1]", "['woo', 1, 20, 1]"),
+("[woo +2]", "['woo', 2]"),
+("[woo -2]", "['woo', -2]"),
 ("[1d20+1]", "[1, 20, 1]"),
 ("[1d20+1 1d20+1]", "['1d20+1', 1, 20, 1]"),
 ("[arrr matey 1d20+1x7sort]", "['arrr', 'matey', 1, 20, 1, 7, 'sort']"),
@@ -214,6 +211,8 @@ _test_sentences = [
 ("*grimlock1 [attack 1d2+10]s the paladin. (@shara)", 
         "['grimlock1', ['attack', 1, 2, 10], 'shara']"),
 ("I [attack 1d6+1] @grimlock1", "[['attack', 1, 6, 1], 'grimlock1']"),
+("I [attack -1] @grimlock1", "[['attack', -1], 'grimlock1']"), # temp mod
+("I [attack +1] @grimlock1", "[['attack', 1], 'grimlock1']"), # temp mod
 ("I [attack 1d6+1x2sort] @grimlock1", "[['attack', 1, 6, 1, 2, 'sort'], 'grimlock1']"),
 ("I [cast] a [fireball] @grimlock1 and @grimlock2", 
         "[['cast'], ['fireball'], 'grimlock1', 'grimlock2']"),
@@ -260,6 +259,8 @@ def formatNormalized(actor, verb_phrases, targets):
         verb_list = ' '.join(vp.verbs)
         if vp.dice:
             dice_expr = reverseFormatDice(vp.dice)
+        elif vp.temp_modifier:
+            dice_expr = '%-d' % (vp.temp_modifier,)
         else:
             dice_expr = ''
 
@@ -301,13 +302,13 @@ def reverseFormatDice(parsed_dice):
 
 
 
-def test_stuff(method, tests):
+def testStuff(method, tests):
     for input, expected in tests:
         try:
             parsed = method(input)
             if isinstance(expected, basestring):
                 if str(parsed) != expected:
-                    print '\n', input, expected, str(parsed)
+                    print '\n', input, 'Wanted', expected, 'Got', str(parsed)
                 else:
                     passed()
             else:
@@ -331,14 +332,14 @@ def passed():
 
 def test():
     setBotName('TestBot')
-    test_stuff(command.parseString, _test_commands)
-    test_stuff(dice_string.parseString, _test_dice)
-    test_stuff(verb_phrase.parseString, _test_verb_phrases)
-    test_stuff(target.parseString, _test_targets)
+    testStuff(command.parseString, _test_commands)
+    testStuff(dice_string.parseString, _test_dice)
+    testStuff(verb_phrase.parseString, _test_verb_phrases)
+    testStuff(target.parseString, _test_targets)
 
-    test_stuff(parseSentence, _test_sentences)
+    testStuff(parseSentence, _test_sentences)
     setBotName('VellumTalk')
-    test_stuff(parseSentence, _test_sentences_altbot)
+    testStuff(parseSentence, _test_sentences_altbot)
 
     print passcount
 
