@@ -184,13 +184,19 @@ class Session:
         strings = []
         for vp in parsed.verb_phrases:
             if len(parsed.targets) == 0:
-                formatted = alias.resolve(actor, tuple(vp.verbs), vp.dice)
+                formatted = alias.resolve(actor, 
+                                          tuple(vp.verbs), 
+                                          vp.dice,
+                                          vp.temp_modifier)
                 if formatted is not None:
                     strings.append(formatted)
             else:
                 for item in parsed.targets:
                     target = item.target
-                    formatted = alias.resolve(actor, tuple(vp.verbs), vp.dice,
+                    formatted = alias.resolve(actor, 
+                                              tuple(vp.verbs), 
+                                              vp.dice,
+                                              vp.temp_modifier,
                                               target)
                     if formatted is not None:
                         strings.append(formatted)
@@ -565,33 +571,51 @@ GeeEm('#testing', 'VellumTalk: hello', ('#testing', r'Hello GeeEm\.')),
 GeeEm('#testing', '.hello', ('#testing', r'Hello GeeEm\.')),
 GeeEm('VellumTalk', '.inits', ('GeeEm', r'Initiative list: \(none\)')),
 GeeEm('VellumTalk', '.combat', ('GeeEm', r'\*\* Beginning combat \*\*')),
-GeeEm('#testing', '[init 20]', ('#testing', r'GeeEm, you rolled: init 20 = \[20\]')),
+GeeEm('#testing', '[init 20]', 
+      ('#testing', r'GeeEm, you rolled: init 20 = \[20\]')),
 GeeEm('VellumTalk', '.n', ('GeeEm', r'\+\+ New round \+\+')),
-GeeEm('VellumTalk', '.n', ('GeeEm', r'GeeEm \(init 20\) is ready to act \. \. \.')),
+GeeEm('VellumTalk', '.n', 
+      ('GeeEm', r'GeeEm \(init 20\) is ready to act \. \. \.')),
 GeeEm('VellumTalk', '.p', ('GeeEm', r'\+\+ New round \+\+')),
-GeeEm('VellumTalk', '.p', ('GeeEm', r'GeeEm \(init 20\) is ready to act \. \. \.')),
-GeeEm('VellumTalk', '.inits', ('GeeEm', r'Initiative list: GeeEm/20, NEW ROUND/9999')),
-# GeeEm('VellumTalk', 'help', ('GeeEm', r'\s+hello: Greet\.')), FIXME
+GeeEm('VellumTalk', '.p', 
+      ('GeeEm', r'GeeEm \(init 20\) is ready to act \. \. \.')),
+GeeEm('VellumTalk', '.inits', 
+      ('GeeEm', r'Initiative list: GeeEm/20, NEW ROUND/9999')),
+# GeeEm('VellumTalk', '.help', ('GeeEm', r'\s+hello: Greet\.')), FIXME
 GeeEm('VellumTalk', '.aliases', ('GeeEm', r'Aliases for GeeEm:   init=20')),
-GeeEm('VellumTalk', '.aliases GeeEm', ('GeeEm', r'Aliases for GeeEm:   init=20')),
-GeeEm('VellumTalk', '.unalias foobar', ('GeeEm', r'\*\* No alias "foobar" for GeeEm')),
-GeeEm('#testing',  'hello [argh 20] [foobar 30]', ('#testing', r'GeeEm, you rolled: argh 20 = \[20\]')),
-GeeEm('VellumTalk', '.unalias init', ('GeeEm', r'GeeEm, removed your alias for init')),
-GeeEm('VellumTalk', '.aliases', ('GeeEm', r'Aliases for GeeEm:   argh=20, foobar=30')),
+GeeEm('VellumTalk', '.aliases GeeEm', 
+      ('GeeEm', r'Aliases for GeeEm:   init=20')),
+GeeEm('VellumTalk', '.unalias foobar', 
+      ('GeeEm', r'\*\* No alias "foobar" for GeeEm')),
+GeeEm('#testing',  'hello [argh 20] [foobar 30]', 
+      ('#testing', r'GeeEm, you rolled: argh 20 = \[20\]')),
+GeeEm('#testing',  '[argh +1]', 
+      ('#testing', r'GeeEm, you rolled: argh \+1 = \[20\+1 = 21\]')),
+GeeEm('VellumTalk', '.unalias init', 
+      ('GeeEm', r'GeeEm, removed your alias for init')),
+GeeEm('VellumTalk', '.aliases', 
+      ('GeeEm', r'Aliases for GeeEm:   argh=20, foobar=30')),
 ]
 
 testhijack = [
-GeeEm('VellumTalk', '*grimlock1 does a [smackdown 1000]', ('GeeEm', 'grimlock1, you rolled: smackdown 1000 = \[1000\]')),
-GeeEm('#testing', '*grimlock1 does a [bitchslap 1000]', ('#testing', 'grimlock1, you rolled: bitchslap 1000 = \[1000\]')),
-GeeEm('VellumTalk', '*grimlock1 does a [smackdown]', ('GeeEm', 'grimlock1, you rolled: smackdown = \[1000\]')),
+GeeEm('VellumTalk', '*grimlock1 does a [smackdown 1000]', 
+      ('GeeEm', 'grimlock1, you rolled: smackdown 1000 = \[1000\]')),
+GeeEm('#testing', '*grimlock1 does a [bitchslap 1000]', 
+      ('#testing', 'grimlock1, you rolled: bitchslap 1000 = \[1000\]')),
+GeeEm('VellumTalk', '*grimlock1 does a [smackdown]', 
+      ('GeeEm', 'grimlock1, you rolled: smackdown = \[1000\]')),
 GeeEm('VellumTalk', 'I do a [smackdown]'),
-GeeEm('VellumTalk', '.aliases grimlock1', ('GeeEm', 'Aliases for grimlock1:   bitchslap=1000, smackdown=1000')),
-GeeEm('VellumTalk', '.unalias grimlock1 smackdown', ('GeeEm', 'grimlock1, removed your alias for smackdown')),
-GeeEm('VellumTalk', '.aliases grimlock1', ('GeeEm', 'Aliases for grimlock1:   bitchslap=1000')),
+GeeEm('VellumTalk', '.aliases grimlock1', 
+      ('GeeEm', 'Aliases for grimlock1:   bitchslap=1000, smackdown=1000')),
+GeeEm('VellumTalk', '.unalias grimlock1 smackdown', 
+      ('GeeEm', 'grimlock1, removed your alias for smackdown')),
+GeeEm('VellumTalk', '.aliases grimlock1', 
+      ('GeeEm', 'Aliases for grimlock1:   bitchslap=1000')),
 ]
 
 testobserved = [
-GeeEm('VellumTalk', '.gm', ('GeeEm', r'GeeEm is now a GM and will observe private messages for session #testing')),
+GeeEm('VellumTalk', '.gm', 
+      ('GeeEm', r'GeeEm is now a GM and will observe private messages for session #testing')),
 Player('VellumTalk', '[stabtastic 20]', 
    ('GeeEm', r'Player, you rolled: stabtastic 20 = \[20\] \(<Player>  \[stabtastic 20\]\)'),
    ('Player', r'Player, you rolled: stabtastic 20 = \[20\] \(observed\)')
@@ -637,3 +661,5 @@ def testOneSet(test_list, vt):
         if r.check():
             succeed()
 
+if __name__ == '__main__':
+    test()

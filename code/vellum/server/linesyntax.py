@@ -260,7 +260,7 @@ def formatNormalized(actor, verb_phrases, targets):
         if vp.dice:
             dice_expr = reverseFormatDice(vp.dice)
         elif vp.temp_modifier:
-            dice_expr = '%-d' % (vp.temp_modifier,)
+            dice_expr = '%+d' % (vp.temp_modifier,)
         else:
             dice_expr = ''
 

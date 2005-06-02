@@ -32,7 +32,7 @@ def parse(st):
     rolled = roll(parsed)
     return list(rolled)
 
-def roll(parsed):
+def roll(parsed, temp_modifier=0):
     # set these to defaults in the finish step, not in the init, 
     # so the parser instance can be reused
     if parsed.dice_count:
@@ -62,21 +62,35 @@ def roll(parsed):
         # an int by itself is just an int.
         if not parsed.dice_size:
             for n in xrange(dice_repeat):
-                yield DiceResult([parsed.dice_count], dice_bonus)
+                yield DiceResult([parsed.dice_count], dice_bonus, temp_modifier)
             return
         raise RuntimeError("Syntax error: No die size was given")
     for n in xrange(dice_repeat):
         dierolls = []
         for n in xrange(dice_count):
             dierolls.append(rollDie(parsed.dice_size, 0))
-        result = DiceResult(dierolls, dice_bonus, hilo, dice_filter_count)
+        result = DiceResult(dierolls, 
+                            dice_bonus, 
+                            temp_modifier,
+                            hilo, 
+                            dice_filter_count)
         yield result
+
+def test_roll():
+    assert roll(linesyntax.dice.parseString('5'), -1).next().sum() == 4
+    assert roll(linesyntax.dice.parseString('5d1'), 1).next().sum() == 6
 
 class DiceResult:
     """Representation of all the values rolled by a dice expression."""
-    def __init__(self, dierolls, bonus, filterdirection=None, filtercount=0):
+    def __init__(self, dierolls, bonus, temp_modifier=0, filterdirection=None, 
+                 filtercount=0):
         self.dierolls = dierolls
         self.bonus = bonus
+        if temp_modifier:
+            self.temp_modifier = temp_modifier
+        else:
+            self.temp_modifier = 0
+           
         self.filterdirection = filterdirection
         self.filtercount = filtercount
 
@@ -88,6 +102,8 @@ class DiceResult:
         dierolls = self.filtered()[:]
         if self.bonus:
             dierolls.append(self.bonus)
+        if self.temp_modifier:
+            dierolls.append(self.temp_modifier)
 
         if len(dierolls) > 1:
             formatted_sum = '+'.join(map(str, dierolls))
@@ -105,7 +121,7 @@ class DiceResult:
         return filter()
 
     def sum(self):
-        return sum(self.filtered()) + self.bonus
+        return sum(self.filtered()) + self.bonus + self.temp_modifier
 
     def __cmp__(self, other):
         return cmp(self.sum(), other.sum())
@@ -123,6 +139,7 @@ class DiceResult:
 
 
 def test():
+    test_roll()
     for dice in ['d6xz',  # repeat not a number
                  '1d', # left out die size 
                  '1d6l3l3', '1d6h3l3',  # can't specify more than one filter
