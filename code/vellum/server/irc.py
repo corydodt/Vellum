@@ -2,11 +2,8 @@
 Vellum's face.  The bot that answers actions in the channel.
 """
 # system imports
-import time, sys
+import sys
 import re
-import traceback
-import glob
-from sets import Set
 
 # twisted imports
 from twisted.words.protocols import irc
@@ -14,253 +11,9 @@ from twisted.internet import reactor, protocol, task
 from twisted.python import log
 
 
-from vellum.server import encounter, alias, linesyntax, gametime
+from vellum.server import linesyntax, gametime, d20session, alias
 from vellum.server.fs import fs
 
-class UnknownHailError(Exception):
-    pass
-
-class Session:
-    def __init__(self, channel):
-        self.channel = channel
-        # TODO - move this into d20-specific code somewhere
-        self.initiatives = []
-        self.nicks = Set() # TODO - add a wrapper function for fixing bindings
-                           # when nicks are removed or added
-        alias.registerAliasHook(('init',), self.doInitiative)
-        self.observers = Set()
-        self.clock = gametime.Clock()
-
-    # def _loadParty(self):
-    #    """Load characters in the party/ dir"""
-    #    for filename in glob.glob(fs.party('*.yml')):
-    #        char = encounter.Character(filename=fs.party(filename))
-    #        self.party.addCharacter(char)
-
-    # responses to being hailed by a user
-    def respondTo_DEFAULT(self, user, args):
-        raise UnknownHailError()
-
-
-
-    def respondTo_gm(self, user, _):
-        self.observers.add(user)
-        return ('%s is now a GM and will observe private '
-                'messages for session %s' % (user, self.channel,))
-
-    
-    def respondTo_hello(self, user, _):
-        """Greet."""
-        return 'Hello %s.' % (user,)
-
-    def respondTo_aliases(self, user, character):
-        """Show aliases for a character or for myself"""
-        if character is None or character.strip() == '':
-            character = user
-        formatted = alias.shortFormatAliases(character)
-        return 'Aliases for %s:   %s' % (character, formatted)
-
-    def respondTo_unalias(self, user, remove):
-        """Remove an alias from a character: unalias [character] <alias>"""
-        words = remove.split(None, 1)
-        if len(words) > 1:
-            key = words[1]
-            character = words[0]
-        else:
-            key = words[0]
-            character = user
-
-        removed = alias.removeAlias(key, character)
-        if removed is not None:
-            return "%s, removed your alias for %s" % (character, key)
-        else:
-            return "** No alias \"%s\" for %s" % (key, character)
-
-    def respondTo_n(self, user, _):
-        """Next initiative"""
-        next = self.initiatives.pop(0)
-        self.initiatives.append(next)
-        if next[1] is None:
-            return '++ New round ++'
-            # TODO - update timed events here (don't update on prev init)
-        else:
-            return '%s (init %s) is ready to act . . .' % (next[1], next[0],)
-
-    def respondTo_p(self, user, _):
-        """Previous initiative"""
-        last, prev = self.initiatives.pop(-1), self.initiatives.pop(-1)
-        self.initiatives.append(prev)
-        self.initiatives.insert(0, last)
-        if prev[1] is None:
-            return '++ New round ++'
-        else:
-            return '%s (init %s) is ready to act . . .' % (prev[1], prev[0],)
-
-    def respondTo_inits(self, user, _):
-        """List inits, starting with the currently active character, in order"""
-        # the "current" initiative is always at the end of the list
-        if len(self.initiatives) > 0:
-            current = self.initiatives[-1]
-            inits = ['%s/%s' % (current[1], current[0])]
-            for init in self.initiatives[:-1]:
-                if init[1] is None:
-                    name = 'NEW ROUND'
-                else:
-                    name = init[1]
-                inits.append('%s/%s' % (name, init[0]))
-            return 'Initiative list: ' + ', '.join(inits)
-        else:
-            return 'Initiative list: (none)'
-
-    def respondTo_combat(self, user, _):
-        """Start combat by resetting initiatives"""
-        self.initiatives = [(9999, None)]
-        return '** Beginning combat **'
-
-    def respondTo_party(self, user, _):
-        if len(self.party.bodies) == 0:
-            return '%s, nobody is in the party.' % (user,)
-        for char in self.party.bodies:
-            FIXME
-            return '%(name)s: %(classes)s' % char.summarize()
-
-    def respondTo_iam(self, user, charname):
-        """Take control of a character by name."""
-        try:
-            player = self.club.findExact(user)
-        except ValueError:
-            player = encounter.Player(user)
-            self.club.registerPlayer(player)
-        char = self.encounter.find(charname, first=1)
-        player.own(char)
-        return "%s now owns %s." % (player.getName(), char.getName())
-
-    def respondTo_remove(self, user, charname):
-        """Remove a character from an encounter by name."""
-        char = self.party.dismiss(charname)
-        return "%s is no longer in the party." % (char.getName(),)
-
-    def respondTo_help(self, user, _):
-        """This drivel."""
-        _commands = []
-        commands = []
-        for att in dir(self):
-            member = getattr(self, att)
-            if (att.startswith('respondTo_') 
-                and callable(member)
-                and att[10:].upper() != att[10:]):  # CAPITALIZED are reserved.
-                _commands.append('%s: %s' % (att[10:], member.__doc__))
-
-        _d = {'commands': '\n    '.join(_commands), }
-
-        response = file(fs.help).read() % _d
-        return response
-
-    def doInitiative(self, user, result):
-        self.initiatives.append((result[0].sum(), user))
-        self.initiatives.sort()
-        self.initiatives.reverse()
-
-    def matchNick(self, nick):
-        """True if nick is part of this session."""
-        return nick in self.nicks
-
-
-
-
-    def privateInteraction(self, user, msg, parsed):
-        return self.doInteraction(user, msg, parsed, user, *self.observers)
-
-    def interaction(self, user, msg, parsed):
-        return self.doInteraction(user, msg, parsed, self.channel)
-
-    def doInteraction(self, user, msg, parsed, *recipients):
-        """Use actor's stats to apply each action to all targets"""
-        if parsed.actor:
-            actor = parsed.actor.character_name
-        else:
-            actor = user
-
-        strings = []
-        for vp in parsed.verb_phrases:
-            if len(parsed.targets) == 0:
-                formatted = alias.resolve(actor, 
-                                          tuple(vp.verbs), 
-                                          vp.dice,
-                                          vp.temp_modifier)
-                if formatted is not None:
-                    strings.append(formatted)
-            else:
-                for item in parsed.targets:
-                    target = item.target
-                    formatted = alias.resolve(actor, 
-                                              tuple(vp.verbs), 
-                                              vp.dice,
-                                              vp.temp_modifier,
-                                              target)
-                    if formatted is not None:
-                        strings.append(formatted)
-        if strings:
-            text = '\n'.join(strings)
-            return Response(text, msg, *recipients)
-                
-
-
-
-    def command(self, user, command):
-        """Choose a method based on the command word, and pass args if any"""
-        return self.doCommand(user, command, self.channel)
-        
-    def privateCommand(self, user, command):
-        return self.doCommand(user, command, user, *self.observers)
-
-    def doCommand(self, user, command, *recipients):
-        m = self.getCommandMethod(command.command_identifier)
-
-        context = command
-
-        try:
-            text = m(user, command.command_args)
-            return Response(text, context, *recipients)
-        except UnknownHailError, e:
-            return Response("wtf?", context, *recipients)
-        except Exception, e:
-            log.msg(''.join(traceback.format_exception(*sys.exc_info())))
-            text = '** Sorry, %s: %s' % (user, str(e)), 
-            return Response(text, context, *recipients)
-        
-    def getCommandMethod(self, command_word):
-        return getattr(self, 'respondTo_%s' % (command_word,), 
-                       self.respondTo_DEFAULT)
-
-    def addNick(self, *nicks):
-        self.nicks |= Set(nicks)
-        return self.reportNicks('Added %s' % (str(nicks),))
-
-    def removeNick(self, *nicks):
-        self.nicks ^= Set(nicks)
-        # also update self.observers
-        self.observers ^= Set(nicks)
-        return self.reportNicks('Removed %s' % (str(nicks),))
-
-    def reportNicks(self, why):
-        nicks = ', '.join(self.nicks)
-        return None # FIXME
-        return Response("Nicks in this session: %s" % (nicks,), 
-                        why,
-                        self.channel)
-
-    def rename(self, old, new):
-        self.nicks -= Set((old,))
-        self.nicks |= Set((new,))
-        # also update self.observers
-        self.observers -= Set((old,))
-        self.observers |= Set((new,))
-        if old in self.observers:
-            self.observers.remove(old)
-            self.observers.append(new)
-        # TODO - rename old's aliases so they work for new
-        return self.reportNicks('%s renamed to %s' % (old, new))
 
 
 class Response:
@@ -287,7 +40,7 @@ class Response:
 
 
 class VellumTalk(irc.IRCClient):
-    """An irc boy that handles D&D game sessions.
+    """An IRC bot that handles D&D game sessions.
     (Currently contains d20-specific assumption about initiative.)
     """
     
@@ -301,7 +54,7 @@ class VellumTalk(irc.IRCClient):
         self.defaultSession = None
         # TODO - analyze, do i *really* need responding?
         self.responding = 0 # don't start responding until i'm in a channel
-        # irc.IRCClient.__init__(self, *args, **kwargs)
+        # no irc.IRCClient.__init__ to call
 
     def findSession(self, channel):
         """Return the channel that matches channel, or the channel
@@ -367,7 +120,7 @@ class VellumTalk(irc.IRCClient):
         """Called when bot has succesfully signed on to server."""
         # create a session to respond to private messages from nicks
         # not in any channel I'm in
-        self.defaultSession = Session('')
+        self.defaultSession = d20session.D20Session('')
         linesyntax.setBotName(self.nickname)
         # join my default channel
         self.join(self.factory.channel)
@@ -379,7 +132,7 @@ class VellumTalk(irc.IRCClient):
         # find or make a session
         session = self.findSession(channel)
         if session is self.defaultSession: # i.e., not found
-            session = Session(channel)
+            session = d20session.D20Session(channel)
             self.sessions.append(session)
 
         self.responding = 1
@@ -475,6 +228,8 @@ class VellumTalkFactory(protocol.ClientFactory):
 
     def __init__(self, channel):
         self.channel = channel
+        # no protocol.ClientFactory.__init__ to call
+
 
     def clientConnectionLost(self, connector, reason):
         """If we get disconnected, reconnect to server."""
@@ -638,7 +393,7 @@ def test():
         vt = VellumTalk()
         vt.performLogin = 0
         vt.joined("#testing")
-        vt.defaultSession = Session('#testing')
+        vt.defaultSession = d20session.D20Session('#testing')
         vt.makeConnection(transport)
         linesyntax.setBotName('VellumTalk')
 
