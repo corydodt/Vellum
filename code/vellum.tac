@@ -14,8 +14,10 @@ webroot = static.File('.')
 
 application = service.Application('SeeFantasy')
 
-ircsvc = internet.TCPClient('irc.freenode.net', 6667, 
-                            VellumTalkFactory('#vellum'))
+irchost = 'irc.freenode.net'
+start_channel = '#vellum'
+ircsvc = internet.TCPClient(irchost, 6667, 
+                            VellumTalkFactory(start_channel))
 
 pbsvc = internet.TCPServer(PBPORT, pb.PBServerFactory(Gameness()))
 

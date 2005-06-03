@@ -11,4 +11,8 @@ class Filesystem:
 
     def __call__(self, *paths):
         return os.path.join(self.path, *paths)
+ 
+    def new(self, *paths, **kwargs):
+        mkdir = kwargs.get('mkdir', 0)
+        return Filesystem(os.path.join(self.path, *paths), mkdir=mkdir)
 
