@@ -185,7 +185,7 @@ def run(argv=None):
     while 1:
         try:
             st = raw_input("Roll: ")
-            rolled = parse(st)
+            rolled = [r.sum() for r in parse(st)]
             if len(list(rolled)) > 1:
                 print "Unsorted--", rolled
                 rolled.sort()
