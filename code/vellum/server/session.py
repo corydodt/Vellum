@@ -140,13 +140,17 @@ class Session:
 
 
     def privateInteraction(self, user, msg, parsed):
-        return self.doInteraction(user, msg, parsed, user, *self.observers)
+        # if user is one of self.observers, we don't want to send another
+        # reply.  make a set of the two bundles to filter out dupes.
+        recipients = Set([user] + list(self.observers))
+        return self.doInteraction(user, msg, parsed, *recipients)
 
     def interaction(self, user, msg, parsed):
         return self.doInteraction(user, msg, parsed, self.channel)
 
     def doInteraction(self, user, msg, parsed, *recipients):
         """Use actor's stats to apply each action to all targets"""
+        assert recipients, "interaction with no recipients"
         if parsed.actor:
             actor = parsed.actor.character_name
         else:

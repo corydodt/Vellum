@@ -15,30 +15,6 @@ from vellum.server import linesyntax, gametime, d20session, alias
 from vellum.server.fs import fs
 
 
-
-class Response:
-    """A response vector with the channels the response should be sent to"""
-    def __init__(self, text, context, channel, *channels):
-        self.text = text
-        self.context = context
-        self.channel = channel
-        self.more_channels = channels
-
-    def getMessages(self):
-        """Generate messages to each channel"""
-        if len(self.more_channels) > 0:
-            text = self.text + ' (observed)'
-            more_text = '%s (<%s>  %s)' % (self.text, 
-                                           self.channel,
-                                           self.context)
-        else:
-            text = self.text
-
-        yield (self.channel, text)
-        for ch in self.more_channels:
-            yield (ch, more_text)
-
-
 class VellumTalk(irc.IRCClient):
     """An IRC bot that handles D&D game sessions.
     (Currently contains d20-specific assumption about initiative.)
@@ -377,7 +353,13 @@ Player('VellumTalk', '[stabtastic 20]',
    )
 ]
 
-testobserved2 = [
+testobserverchange = [
+GeeEm("VellumTalk", '[stabtastic 20]',
+        ('GeeEm', r'GeeEm, you rolled: stabtastic 20 = \[20\]$'),
+      )
+]
+
+testunobserved = [
 Player('VellumTalk', '[stabtastic 20]', 
    ('Player', r'Player, you rolled: stabtastic 20 = \[20\]$')
    )
@@ -401,8 +383,10 @@ def test():
         testOneSet(testhijack, vt)
         testOneSet(testobserved, vt)
 
+        vt.userRenamed('Player', 'Superman')
+        testOneSet(testobserverchange, vt)
         vt.userLeft('GeeEm', '#testing')
-        testOneSet(testobserved2, vt)
+        testOneSet(testunobserved, vt)
     finally:
         # restore original aliases when done, so save works
         alias.aliases = orig_aliases
