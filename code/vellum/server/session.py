@@ -225,11 +225,9 @@ class Session:
         self.nicks -= Set((old,))
         self.nicks |= Set((new,))
         # also update self.observers
-        self.observers -= Set((old,))
-        self.observers |= Set((new,))
         if old in self.observers:
-            self.observers.remove(old)
-            self.observers.append(new)
+            self.observers -= Set((old,))
+            self.observers |= Set((new,))
         # TODO - rename old's aliases so they work for new
         return self.reportNicks('%s renamed to %s' % (old, new))
 
