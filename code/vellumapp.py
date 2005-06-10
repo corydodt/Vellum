@@ -1,4 +1,8 @@
 #!python
+import warnings
+warnings.filterwarnings('ignore')
+
+
 import sys, os
 # this must happen first because reactors are magikal
 from twisted.internet import gtk2reactor

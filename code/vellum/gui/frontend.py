@@ -31,33 +31,13 @@ except:
     def CreateFileDialog(*args, **kwargs):
         """TODO - use gtk one"""
 
-if sys.platform == 'win32':
-    os.environ['SDL_VIDEODRIVER'] = 'windib'
-
-def hwnd(window):
-    if sys.platform == 'win32':
-        return window.handle
-    else:
-        return window.xid
-
-def sdlHack(widget, *args):
-    """Slap a pygame (SDL) window inside a widget"""
-    handle = hwnd(widget.window)
-    # size = widget.size_request()
-    # print size
-    os.environ['SDL_WINDOWID'] = hex(handle)
-    global pygame
-    import pygame # do NOT do this before setting SDL_WINDOWID
-    pygame.display.init()
-    #pygame.display.set_mode(size)
-    pygame.display.set_mode((200,200))
-
-# end goddamn ugly gtk and pygame hacks
-# end goddamn ugly gtk and pygame hacks
-# end goddamn ugly gtk and pygame hacks
+# end goddamn ugly gtk hack
+# end goddamn ugly gtk hack
+# end goddamn ugly gtk hack
 
 import gtk
-from gtk import glade
+from gtk import glade, gdk
+import gnomecanvas
 
 from twisted.python import log
 from twisted.internet import task, reactor
@@ -100,54 +80,69 @@ class FrontEnd:
         self.glade = glade.XML(fs.gladefile)
         self.glade.signal_autoconnect(self)
 
-        drawing = self.gw_drawingarea1
-        drawing.connect('map-event', sdlHack)
+        # create a gnomecanvas
+        self.canvas = gnomecanvas.Canvas() # FIXME: aa=True breaks text render
+        self.canvas.show()
+        self.gw_viewport1.add(self.canvas)
 
-        # coordinate and scale for displaying the model
+        # allocate the slate background
+        self.bg = gdk.pixbuf_new_from_file(fs.background)
+        # canvas normally attempts to place widgets centered in the canvas,
+        # which is suck.
+        self.canvas.set_center_scroll_region(False)
+
+        self.tiles = [] # FIXME - there has to be a nicer way to do this
+
+        # these used to remember the last view of the model between sessions
         self.scale = 1.0
         self.corner = (0,0)
 
-        # start updating pygame after map-event has occurred
-        reactor.callLater(0.1, self.mainScreenTurnOn)
-
-        # force size_allocate hook to get called, and draw on the display
-        da_w = self.gw_drawingarea1.get_allocation().width
-        da_h = self.gw_drawingarea1.get_allocation().height
-        reactor.callLater(0.15, lambda : 
-                self.on_drawingarea1_size_allocate(self.gw_drawingarea1,
-                        gtk.gdk.Rectangle(0,0,da_w,da_h)
-                                                   ))
-
         self.model = None
 
-    def mainScreenTurnOn(self):
-        """Start updating PyGame, and draw the background image"""
-        self.bg = pygame.image.load(fs.background)
-        self.redraw = task.LoopingCall(pygame.display.update)
-        self.redraw.start(0.04)
+        # FIXME - calling in size-allocate works (background is drawn)
+        # allowing expose-event to call it does nothing (no background)
+        self.canvas.connect('size-allocate', self.on_canvas_expose_event)
 
 
     def on_Tester_destroy(self, widget):
         log.msg("Goodbye.")
         self.deferred.callback(None)
 
-    def on_drawingarea1_size_allocate(self, widget, rectangle):
-        rect = (rectangle.width, rectangle.height)
-        self.main = pygame.display.set_mode(rect, pygame.DOUBLEBUF)
-        # count how many times to repeat in each direction
-        tile_w = self.bg.get_width()
-        tile_h = self.bg.get_height()
-        num_x = rectangle.width / tile_w + 1
-        num_y = rectangle.height / tile_h + 1
+    def on_canvas_expose_event(self, w, ev):
+        """Draw the default background"""
         # tile the texture
+        root = self.canvas.root()
         if self.model is None:
+            # FIXME - slow, hogs memory, doesn't allocate "down" when window
+            # is grown and then shrunk, so scrollbars remain
+            tile_w = self.bg.get_width()
+            tile_h = self.bg.get_height()
+
+            view_w = self.gw_scrolledwindow1.get_hadjustment().page_size
+            view_h = self.gw_scrolledwindow1.get_vadjustment().page_size
+
+
+            num_x = (view_w / tile_w) + 1
+            num_y = (view_h / tile_h) + 1
+
+            # destroy the old tiles (FIXME)
+            [w.destroy() for w in self.tiles]
+            self.tiles = []
+            
             for x in range(num_x):
                 for y in range(num_y):
-                    self.main.blit(self.bg, (x*tile_w, y*tile_h))
+                    w = root.add("GnomeCanvasPixbuf",
+                             x=x*tile_w, 
+                             y=y*tile_h,
+                             pixbuf=self.bg)
+                    self.tiles.append(w) # remember tiles for later
+                                         # destruction (FIXME)
+            # force the canvas to the size of the window
+            self.canvas.set_size_request(view_w, view_h)
         else:
-            self.main.blit(self.model.background, (0,0))
-            for icon in self.model.icons:
-                self.main.blit(icon.image, icon.xy)
+            if self.tiles:
+                [w.destroy() for w in self.tiles]
+                self.tiles = []
 
     def on_connect_button_clicked(self, widget):
         text = self.gw_server.get_child().get_text()
@@ -169,15 +164,27 @@ class FrontEnd:
     def displayModel(self):
         mapinfo = self._getMapInfo()
         log.msg('displaying map %s' % (mapinfo['name'],))
-        self.model = Model(pygame.image.load(fs.downloads(mapinfo['name'])))
-        self.main.blit(self.model.background, (0,0))
+        background = gdk.pixbuf_new_from_file(fs.downloads(mapinfo['name']))
+        self.model = Model(background)
+        root = self.canvas.root()
+        root.add("GnomeCanvasPixbuf", pixbuf=background)
+        self.canvas.set_size_request(background.get_width(),
+                                     background.get_height()
+                                     )
+                 
         for n, character in enumerate(self._getCharacterInfo()):
-            icon_image = pygame.image.load(fs.downloads(character['name']))
+            icon_image = gdk.pixbuf_new_from_file(
+                                fs.downloads(character['name'])
+                                                  )
             icon = Icon()
             self.model.icons.append(icon)
             icon.image = icon_image
             icon.xy = n*80, n*80
-            self.main.blit(icon.image, icon.xy)
+            self.canvas.root().add("GnomeCanvasPixbuf", 
+                                   pixbuf=icon.image,
+                                   x=icon.xy[0],
+                                   y=icon.xy[1],
+                                   )
         # self.addCharacter
         # self.addItem
         # self.addText
