@@ -82,16 +82,25 @@ class FrontEnd:
 
         # create a gnomecanvas
         self.canvas = gnomecanvas.Canvas() # FIXME: aa=True breaks text render
-        self.canvas.show()
         self.gw_viewport1.add(self.canvas)
 
         # allocate the slate background
         self.bg = gdk.pixbuf_new_from_file(fs.background)
+        # create a pixmap to put a tile into
+        _pixmap = gdk.Pixmap(self.canvas.window, 
+                             self.bg.get_width(),
+                             self.bg.get_height())
+        gc = _pixmap.new_gc()
+        _pixmap.draw_pixbuf(gc, self.bg, 0, 0, 0, 0)
+        gc.set_fill(1)
+        gc.set_tile(_pixmap)
+        self.canvas.connect_after('draw-background',
+                self.on_canvas_draw_background, gc)
+
         # canvas normally attempts to place widgets centered in the canvas,
         # which is suck.
         self.canvas.set_center_scroll_region(False)
-
-        self.tiles = [] # FIXME - there has to be a nicer way to do this
+        self.canvas.show()
 
         # these used to remember the last view of the model between sessions
         self.scale = 1.0
@@ -99,50 +108,19 @@ class FrontEnd:
 
         self.model = None
 
-        # FIXME - calling in size-allocate works (background is drawn)
-        # allowing expose-event to call it does nothing (no background)
-        self.canvas.connect('size-allocate', self.on_canvas_expose_event)
+
+
+    def on_canvas_draw_background(self, canvas, pixmap, x, y, ww, hh, gc):
+        """Draw the default background using draw_rectangle.
+        """
+        # fixme - newly exposed areas tile incorrectly
+        pixmap.draw_rectangle(gc, True, 0, 0, ww, hh)
+
 
 
     def on_Tester_destroy(self, widget):
         log.msg("Goodbye.")
         self.deferred.callback(None)
-
-    def on_canvas_expose_event(self, w, ev):
-        """Draw the default background"""
-        # tile the texture
-        root = self.canvas.root()
-        if self.model is None:
-            # FIXME - slow, hogs memory, doesn't allocate "down" when window
-            # is grown and then shrunk, so scrollbars remain
-            tile_w = self.bg.get_width()
-            tile_h = self.bg.get_height()
-
-            view_w = self.gw_scrolledwindow1.get_hadjustment().page_size
-            view_h = self.gw_scrolledwindow1.get_vadjustment().page_size
-
-
-            num_x = (view_w / tile_w) + 1
-            num_y = (view_h / tile_h) + 1
-
-            # destroy the old tiles (FIXME)
-            [w.destroy() for w in self.tiles]
-            self.tiles = []
-            
-            for x in range(num_x):
-                for y in range(num_y):
-                    w = root.add("GnomeCanvasPixbuf",
-                             x=x*tile_w, 
-                             y=y*tile_h,
-                             pixbuf=self.bg)
-                    self.tiles.append(w) # remember tiles for later
-                                         # destruction (FIXME)
-            # force the canvas to the size of the window
-            self.canvas.set_size_request(view_w, view_h)
-        else:
-            if self.tiles:
-                [w.destroy() for w in self.tiles]
-                self.tiles = []
 
     def on_connect_button_clicked(self, widget):
         text = self.gw_server.get_child().get_text()
@@ -185,6 +163,7 @@ class FrontEnd:
                                    x=icon.xy[0],
                                    y=icon.xy[1],
                                    )
+            self.canvas.show()
         # self.addCharacter
         # self.addItem
         # self.addText
