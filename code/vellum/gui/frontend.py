@@ -80,27 +80,20 @@ class FrontEnd:
         self.glade = glade.XML(fs.gladefile)
         self.glade.signal_autoconnect(self)
 
-        # create a gnomecanvas
-        self.canvas = gnomecanvas.Canvas() # FIXME: aa=True breaks text render
-        self.gw_viewport1.add(self.canvas)
-
         # allocate the slate background
         self.bg = gdk.pixbuf_new_from_file(fs.background)
         # create a pixmap to put a tile into
-        _pixmap = gdk.Pixmap(self.canvas.window, 
+        _pixmap = gdk.Pixmap(self.gw_viewport1.window, 
                              self.bg.get_width(),
                              self.bg.get_height())
         gc = _pixmap.new_gc()
         _pixmap.draw_pixbuf(gc, self.bg, 0, 0, 0, 0)
-        gc.set_fill(1)
-        gc.set_tile(_pixmap)
-        self.canvas.connect_after('draw-background',
-                self.on_canvas_draw_background, gc)
+        # a kludge to make gw_viewport1 generate a new style object:
+        self.gw_viewport1.modify_bg(gtk.STATE_NORMAL, gdk.Color(0))
+        # now modify the new style object
+        self.gw_viewport1.style.bg_pixmap[gtk.STATE_NORMAL] = _pixmap
 
-        # canvas normally attempts to place widgets centered in the canvas,
-        # which is suck.
-        self.canvas.set_center_scroll_region(False)
-        self.canvas.show()
+        self.canvas = None
 
         # these used to remember the last view of the model between sessions
         self.scale = 1.0
@@ -108,13 +101,6 @@ class FrontEnd:
 
         self.model = None
 
-
-
-    def on_canvas_draw_background(self, canvas, pixmap, x, y, ww, hh, gc):
-        """Draw the default background using draw_rectangle.
-        """
-        # fixme - newly exposed areas tile incorrectly
-        pixmap.draw_rectangle(gc, True, 0, 0, ww, hh)
 
 
 
@@ -140,14 +126,23 @@ class FrontEnd:
                 yield fi
 
     def displayModel(self):
+        if self.canvas is None:
+            self.canvas = gnomecanvas.Canvas()
+            # make canvas draw widgets in the NW corner...
+            self.canvas.set_center_scroll_region(False)
+            self.gw_viewport1.add(self.canvas)
+            self.canvas.show()
+
+        # TODO - clear canvas for a new map
+
         mapinfo = self._getMapInfo()
         log.msg('displaying map %s' % (mapinfo['name'],))
-        background = gdk.pixbuf_new_from_file(fs.downloads(mapinfo['name']))
-        self.model = Model(background)
+        self.bg = gdk.pixbuf_new_from_file(fs.downloads(mapinfo['name']))
+        self.model = Model(self.bg)
         root = self.canvas.root()
-        root.add("GnomeCanvasPixbuf", pixbuf=background)
-        self.canvas.set_size_request(background.get_width(),
-                                     background.get_height()
+        root.add("GnomeCanvasPixbuf", pixbuf=self.bg)
+        self.canvas.set_size_request(self.bg.get_width(),
+                                     self.bg.get_height()
                                      )
                  
         for n, character in enumerate(self._getCharacterInfo()):
@@ -163,7 +158,6 @@ class FrontEnd:
                                    x=icon.xy[0],
                                    y=icon.xy[1],
                                    )
-            self.canvas.show()
         # self.addCharacter
         # self.addItem
         # self.addText
