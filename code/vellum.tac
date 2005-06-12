@@ -16,14 +16,17 @@ application = service.Application('SeeFantasy')
 
 irchost = 'irc.freenode.net'
 start_channel = '#vellum'
-# ircsvc = internet.TCPClient(irchost, 6667, 
-#                            VellumTalkFactory(start_channel))
 
 pbsvc = internet.TCPServer(PBPORT, pb.PBServerFactory(Gameness()))
 
 httpsvc = internet.TCPServer(HTTPPORT, appserver.NevowSite(webroot))
 
-# ircsvc.setServiceParent(application)
+irc = 1  # edit to disable irc for testing
+if irc:
+    ircsvc = internet.TCPClient(irchost, 6667, 
+                                VellumTalkFactory(start_channel))
+    ircsvc.setServiceParent(application)
+
 pbsvc.setServiceParent(application)
 httpsvc.setServiceParent(application)
 
