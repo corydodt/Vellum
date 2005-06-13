@@ -64,6 +64,82 @@ class Model:
         self.background = background
         self.icons = []
 
+class Operation:
+    """A stateful activity involving the mouse and the user.
+    An operation has:
+    (- access buttons
+     - access menu items
+        These need to be toggled simultaneously when an operation is turned on
+        or off.)
+    - access keys
+    - a rectangular area
+    """
+    def __init__(self, gui):
+        self.echo_controls = [] # controls that need to be updated when on or
+                                # off
+        self.begin_x = None
+        self.begin_y = None
+        self.end_x = None
+        self.end_y = None
+
+        self.gui = gui
+
+    def beginAt(self, x, y):
+        self.begin_x = x
+        self.begin_y = y
+        self.begin()
+    def begin(self):
+        assert None, "begin must be implemented in a subclass"
+
+    def updateAt(self, x, y):
+        self.update(x, y)
+    def update(self, x, y):
+        pass
+
+    def endAt(self, x, y):
+        self.end_x = x
+        self.end_y = y
+        self.finish()
+    finish = begin
+
+class Drag(Operation):
+    def begin(self):
+        pass
+    def finish(self):
+        pass
+    def update(self, x, y):
+        viewport = self.gui.gw_viewport1
+        ha = viewport.get_hadjustment()
+        va = viewport.get_vadjustment()
+
+        # FIXME - drag could be much faster, but it gets jittery
+        x_moved = self.begin_x - x
+        y_moved = self.begin_y - y
+        
+        alloc = viewport.get_allocation()
+
+        if x_moved:
+            if ha.lower <= (ha.value + x_moved + alloc.width) <= ha.upper:
+                ha.set_value(ha.value + x_moved)
+            elif ha.value + x_moved + alloc.width > ha.upper:
+                ha.set_value(ha.upper - alloc.width)
+            elif ha.lower < ha.value + x_moved + alloc.width:
+                ha.set_value(ha.lower)
+
+        if y_moved:
+            if va.lower <= (va.value + y_moved + alloc.height) <= va.upper:
+                va.set_value(va.value + y_moved)
+            elif va.value + y_moved + alloc.height > va.upper:
+                va.set_value(va.upper - alloc.height)
+            elif va.lower < va.value + y_moved + alloc.height:
+                va.set_value(va.lower)
+
+class Paint(Operation):
+    pass
+
+class Zoom(Operation):
+    pass
+
 
 class FrontEnd:
     def __getattr__(self, name):
@@ -100,7 +176,29 @@ class FrontEnd:
         self.corner = (0,0)
 
         self.model = None
+        self.tool_active = None
+        self.active_operation = None
 
+        # stateful operations that have mouse interactivity
+        self.operations = {
+            'drag_on': Drag,
+            'paint_on': Paint,
+            'zoom_on': Zoom,
+            }
+
+
+    def on_toolbar_toggled(self, widget):
+        """Toggle off any button which is clicked while on.
+        Otherwise there's always one button that's "on".
+        """
+        if widget.get_active():
+            # TODO - cancel current operation
+            self.tool_active = widget.name
+            for child in self.gw_toolbar1.get_children():
+                if child is not widget:
+                    child.set_active(False)
+        else:
+            self.tool_active = None
 
 
 
@@ -125,6 +223,29 @@ class FrontEnd:
             if fi['type'] == 'character':
                 yield fi
 
+    def beginOperation(self, opname, x, y):
+        op = self.active_operation = self.operations[opname](self)
+        op.beginAt(x,y)
+
+    def updateOperation(self, opname, x, y):
+        self.active_operation.updateAt(x, y)
+
+    def finishOperation(self, opname, x, y):
+        self.active_operation.endAt(x, y)
+        self.active_operation = None
+
+    def on_canvas_button_press_event(self, widget, ev):
+        if self.tool_active:
+            self.beginOperation(self.tool_active, ev.x, ev.y)
+
+    def on_canvas_button_release_event(self, widget, ev):
+        if self.active_operation:
+            self.finishOperation(self.tool_active, ev.x, ev.y)
+
+    def on_canvas_motion_notify_event(self, widget, ev):
+        if self.active_operation:
+            self.updateOperation(self.tool_active, ev.x, ev.y)
+
     def displayModel(self):
         if self.canvas is None:
             self.canvas = gnomecanvas.Canvas()
@@ -132,6 +253,13 @@ class FrontEnd:
             self.canvas.set_center_scroll_region(False)
             self.gw_viewport1.add(self.canvas)
             self.canvas.show()
+
+            self.canvas.connect('button-press-event',
+                    self.on_canvas_button_press_event)
+            self.canvas.connect('button-release-event',
+                    self.on_canvas_button_release_event)
+            self.canvas.connect('motion-notify-event',
+                    self.on_canvas_motion_notify_event)
 
         # TODO - clear canvas for a new map
 
@@ -144,6 +272,7 @@ class FrontEnd:
         self.canvas.set_size_request(self.bg.get_width(),
                                      self.bg.get_height()
                                      )
+        print self.canvas.get_size_request()
                  
         for n, character in enumerate(self._getCharacterInfo()):
             icon_image = gdk.pixbuf_new_from_file(
@@ -152,12 +281,13 @@ class FrontEnd:
             icon = Icon()
             self.model.icons.append(icon)
             icon.image = icon_image
-            icon.xy = n*80, n*80
-            self.canvas.root().add("GnomeCanvasPixbuf", 
-                                   pixbuf=icon.image,
-                                   x=icon.xy[0],
-                                   y=icon.xy[1],
-                                   )
+            if character['corner'] is not None:
+                icon.xy = character['corner']
+                self.canvas.root().add("GnomeCanvasPixbuf", 
+                                       pixbuf=icon.image,
+                                       x=icon.xy[0],
+                                       y=icon.xy[1],
+                                       )
         # self.addCharacter
         # self.addItem
         # self.addText
