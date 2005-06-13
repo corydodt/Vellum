@@ -24,3 +24,10 @@ files:
         md5: ee9d888024cf8456402eb3883995398a
         corner: [50, 50]
         scale: 1.0
+    -
+        name: Crom Grumdalsen
+        uri: images/crom.png
+        type: character
+        md5: dc4084622657491f1b8a91587a9e895e
+        corner: ~
+        scale: 1.0
