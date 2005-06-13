@@ -84,12 +84,22 @@ class Operation:
 
         self.gui = gui
 
+    def beginState(self):
+        """Impl. in subclasses to do things when the button is pushed,
+        including changing the cursor
+        """
+    def endState(self):
+        """Impl. in subclasses to do things when the button is turned off,
+        including changing the cursor
+        """
+
+
     def beginAt(self, x, y):
         self.begin_x = x
         self.begin_y = y
         self.begin()
     def begin(self):
-        assert None, "begin must be implemented in a subclass"
+        pass
 
     def updateAt(self, x, y):
         self.update(x, y)
@@ -100,19 +110,27 @@ class Operation:
         self.end_x = x
         self.end_y = y
         self.finish()
-    finish = begin
-
-class Drag(Operation):
-    def begin(self):
-        pass
     def finish(self):
         pass
+
+class Pan(Operation):
+    cursor = gdk.Cursor(gdk.DOT)
+    begin_cursor = gdk.Cursor(gdk.CIRCLE)
+    def beginState(self):
+        self.gui.canvas.window.set_cursor(self.cursor)
+    def endState(self):
+        self.gui.canvas.window.set_cursor(None)
+    def begin(self):
+        self.gui.canvas.window.set_cursor(self.begin_cursor)
+    def finish(self):
+        self.gui.canvas.window.set_cursor(self.cursor)
+
     def update(self, x, y):
         viewport = self.gui.gw_viewport1
         ha = viewport.get_hadjustment()
         va = viewport.get_vadjustment()
 
-        # FIXME - drag could be much faster, but it gets jittery
+        # FIXME - Pan could be much faster, but it gets jittery
         x_moved = self.begin_x - x
         y_moved = self.begin_y - y
         
@@ -134,11 +152,17 @@ class Drag(Operation):
             elif va.lower < va.value + y_moved + alloc.height:
                 va.set_value(va.lower)
 
+
 class Paint(Operation):
     pass
 
+
 class Zoom(Operation):
-    pass
+    cursor = gdk.Cursor(gdk.TARGET)
+    def beginState(self):
+        self.gui.canvas.window.set_cursor(self.cursor)
+    def endState(self):
+        self.gui.canvas.window.set_cursor(None)
 
 
 class FrontEnd:
@@ -181,10 +205,12 @@ class FrontEnd:
 
         # stateful operations that have mouse interactivity
         self.operations = {
-            'drag_on': Drag,
+            'pan_on': Pan,
             'paint_on': Paint,
             'zoom_on': Zoom,
             }
+
+        self._mousedown = 0
 
 
     def on_toolbar_toggled(self, widget):
@@ -192,13 +218,24 @@ class FrontEnd:
         Otherwise there's always one button that's "on".
         """
         if widget.get_active():
-            # TODO - cancel current operation
-            self.tool_active = widget.name
+            tool_changed = (self.tool_active != widget.name)
+
+            # cancel active operation if tool has changed
+            if self.active_operation and tool_changed:
+                self.active_operation.endState()
+
+            # turn off other tools
             for child in self.gw_toolbar1.get_children():
                 if child is not widget:
                     child.set_active(False)
+
+            self.tool_active = widget.name
+            self.active_operation = self.operations[self.tool_active](self)
+            self.active_operation.beginState()
         else:
             self.tool_active = None
+            if self.active_operation:
+                self.active_operation.endState()
 
 
 
@@ -224,15 +261,15 @@ class FrontEnd:
                 yield fi
 
     def beginOperation(self, opname, x, y):
-        op = self.active_operation = self.operations[opname](self)
-        op.beginAt(x,y)
+        self._mousedown = 1
+        self.active_operation.beginAt(x,y)
 
     def updateOperation(self, opname, x, y):
         self.active_operation.updateAt(x, y)
 
     def finishOperation(self, opname, x, y):
+        self._mousedown = 0
         self.active_operation.endAt(x, y)
-        self.active_operation = None
 
     def on_canvas_button_press_event(self, widget, ev):
         if self.tool_active:
@@ -240,10 +277,11 @@ class FrontEnd:
 
     def on_canvas_button_release_event(self, widget, ev):
         if self.active_operation:
+            assert self._mousedown
             self.finishOperation(self.tool_active, ev.x, ev.y)
 
     def on_canvas_motion_notify_event(self, widget, ev):
-        if self.active_operation:
+        if self._mousedown:
             self.updateOperation(self.tool_active, ev.x, ev.y)
 
     def displayModel(self):
@@ -272,7 +310,7 @@ class FrontEnd:
         self.canvas.set_size_request(self.bg.get_width(),
                                      self.bg.get_height()
                                      )
-        print self.canvas.get_size_request()
+
                  
         for n, character in enumerate(self._getCharacterInfo()):
             icon_image = gdk.pixbuf_new_from_file(
