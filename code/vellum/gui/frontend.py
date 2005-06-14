@@ -163,6 +163,80 @@ class Zoom(Operation):
         self.gui.canvas.window.set_cursor(self.cursor)
     def endState(self):
         self.gui.canvas.window.set_cursor(None)
+    def begin(self):
+        self.drawn = None
+
+    def finish(self):
+        """Zoom so the inscribed area is maximized in the main window"""
+        if self.drawn:
+            _d = {}
+            for point in ('x1', 'y1', 'x2', 'y2'):
+                _d[point] = self.drawn.get_property(point)
+
+            self.drawn.destroy()
+
+            viewport = self.gui.gw_viewport1
+
+            # baseline measurements
+            alloc = viewport.get_allocation()
+            current_w = alloc.width
+            current_h = alloc.height
+            box_w = abs(_d['x2'] - _d['x1'])
+            box_h = abs(_d['y2'] - _d['y1'])
+
+            ratio_w = current_w / box_w
+            ratio_h = current_h / box_h
+
+            # calculate zoom - the smaller of the two scaling ratios
+            current_zoom = 10.0 / self.gui.canvas.c2w(10, 10)[0]
+            if ratio_w < ratio_h:
+                zoom = ratio_w
+            else:
+                zoom = ratio_h
+            if zoom > 5:
+                zoom = current_zoom
+
+            # scale canvas
+            self.gui.canvas.set_pixels_per_unit(zoom)
+            old_x, old_y = self.gui.canvas.get_size_request()
+            self.gui.canvas.set_size_request(old_x*zoom, old_y*zoom)
+
+            # center the inscribed area - TODO
+            if _d['x1'] < _d['x2']: x1 = _d['x1']
+            else: x1 = _d['x2']
+            if _d['y1'] < _d['y2']: y1 = _d['y1']
+            else: y1 = _d['y2']
+
+            hadj, vadj = self.gui.canvas.w2c(x1, y1)
+            if ratio_w < ratio_h:
+                x_offset = hadj
+                y_offset = vadj
+            else:
+                y_offset = vadj
+                x_offset = hadj
+
+            ha = viewport.get_hadjustment()
+            ha.set_value(x_offset)
+            va = viewport.get_vadjustment()
+            va.set_value(y_offset)
+
+
+    def update(self, x, y):
+        if self.drawn:
+            self.drawn.destroy()
+        # FIXME - when bx > x, swap bx/by with x/y
+        x, y = self.gui.canvas.c2w(x, y)
+        bx, by = self.gui.canvas.c2w(self.begin_x, self.begin_y)
+
+        root = self.gui.canvas.root()
+        self.drawn = root.add("GnomeCanvasRect", x1=bx,
+                              y1=by,
+                              x2=x, y2=y,
+                              width_pixels=1,
+                              # outline_stipple = wtf?
+                              outline_color="gray")
+        self.drawn.show()
+
 
 
 class FrontEnd:
