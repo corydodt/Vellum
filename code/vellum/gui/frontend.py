@@ -37,7 +37,11 @@ except:
 
 import gtk
 from gtk import glade, gdk
-import gnomecanvas
+# my windows build of gnomecanvas uses a nonstandard name
+try:
+    from gnome import canvas as gnomecanvas
+except ImportError:
+    import gnomecanvas
 
 from twisted.python import log
 from twisted.internet import task, reactor
