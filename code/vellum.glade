@@ -33,22 +33,70 @@
 	  <property name="visible">True</property>
 
 	  <child>
-	    <widget class="GtkMenuItem" id="file1">
+	    <widget class="GtkMenuItem" id="file">
 	      <property name="visible">True</property>
 	      <property name="label" translatable="yes">_File</property>
 	      <property name="use_underline">True</property>
-	      <signal name="activate" handler="on_file1_activate" last_modification_time="Wed, 13 Apr 2005 00:13:27 GMT"/>
+	      <signal name="activate" handler="on_file_activate" last_modification_time="Tue, 14 Jun 2005 22:00:26 GMT"/>
 
 	      <child>
-		<widget class="GtkMenu" id="file1_menu">
+		<widget class="GtkMenu" id="file_menu">
 
 		  <child>
-		    <widget class="GtkMenuItem" id="quit1">
+		    <widget class="GtkMenuItem" id="quit">
 		      <property name="visible">True</property>
 		      <property name="tooltip" translatable="yes">Bye!</property>
 		      <property name="label" translatable="yes">_Quit</property>
 		      <property name="use_underline">True</property>
-		      <signal name="activate" handler="on_quit1_activate" last_modification_time="Wed, 13 Apr 2005 00:13:27 GMT"/>
+		      <signal name="activate" handler="on_quit_activate" last_modification_time="Tue, 14 Jun 2005 22:00:26 GMT"/>
+		    </widget>
+		  </child>
+		</widget>
+	      </child>
+	    </widget>
+	  </child>
+
+	  <child>
+	    <widget class="GtkMenuItem" id="view">
+	      <property name="visible">True</property>
+	      <property name="label" translatable="yes">_View</property>
+	      <property name="use_underline">True</property>
+
+	      <child>
+		<widget class="GtkMenu" id="view_menu">
+
+		  <child>
+		    <widget class="GtkMenuItem" id="zoom">
+		      <property name="visible">True</property>
+		      <property name="label" translatable="yes">_Zoom</property>
+		      <property name="use_underline">True</property>
+
+		      <child>
+			<widget class="GtkMenu" id="zoom_menu">
+
+			  <child>
+			    <widget class="GtkMenuItem" id="zoom100pct">
+			      <property name="visible">True</property>
+			      <property name="tooltip" translatable="yes">Zoom to 100%</property>
+			      <property name="label" translatable="yes">_100%</property>
+			      <property name="use_underline">True</property>
+			      <signal name="activate" handler="on_zoom100pct_activate" last_modification_time="Tue, 14 Jun 2005 22:00:26 GMT"/>
+			      <accelerator key="z" modifiers="GDK_MOD1_MASK" signal="activate"/>
+			    </widget>
+			  </child>
+
+			  <child>
+			    <widget class="GtkMenuItem" id="zoomfit">
+			      <property name="visible">True</property>
+			      <property name="tooltip" translatable="yes">Zoom to fit the entire map in the window</property>
+			      <property name="label" translatable="yes">_Fit in Window</property>
+			      <property name="use_underline">True</property>
+			      <signal name="activate" handler="on_zoomfit_activate" last_modification_time="Tue, 14 Jun 2005 22:00:26 GMT"/>
+			      <accelerator key="z" modifiers="GDK_CONTROL_MASK" signal="activate"/>
+			    </widget>
+			  </child>
+			</widget>
+		      </child>
 		    </widget>
 		  </child>
 		</widget>
@@ -290,9 +338,9 @@
 		  </child>
 
 		  <child>
-		    <widget class="GtkToggleToolButton" id="zoom_on">
+		    <widget class="GtkToggleToolButton" id="magnify_on">
 		      <property name="visible">True</property>
-		      <property name="tooltip" translatable="yes">Zoom</property>
+		      <property name="tooltip" translatable="yes">Magnify</property>
 		      <property name="label" translatable="yes">Zoom</property>
 		      <property name="use_underline">True</property>
 		      <property name="stock_id">gtk-zoom-fit</property>

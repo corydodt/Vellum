@@ -160,7 +160,7 @@ class Paint(Operation):
     pass
 
 
-class Zoom(Operation):
+class Magnify(Operation):
     cursor = gdk.Cursor(gdk.TARGET)
     def beginState(self):
         self.gui.canvas.window.set_cursor(self.cursor)
@@ -172,9 +172,10 @@ class Zoom(Operation):
     def finish(self):
         """Zoom so the inscribed area is maximized in the main window"""
         if self.drawn:
-            _d = {}
-            for point in ('x1', 'y1', 'x2', 'y2'):
-                _d[point] = self.drawn.get_property(point)
+            x1 = self.drawn.get_property('x1')
+            y1 = self.drawn.get_property('y1')
+            x2 = self.drawn.get_property('x2')
+            y2 = self.drawn.get_property('y2')
 
             self.drawn.destroy()
             self.drawn = None
@@ -183,39 +184,39 @@ class Zoom(Operation):
 
             # baseline measurements
             alloc = canvas.get_allocation()
-            current_w = alloc.width
-            current_h = alloc.height
-            box_w = abs(_d['x2'] - _d['x1'])
-            box_h = abs(_d['y2'] - _d['y1'])
+            box_w = abs(x2 - x1)
+            box_h = abs(y2 - y1)
 
-            ratio_w = current_w / box_w
-            ratio_h = current_h / box_h
+            ratio_w = alloc.width / box_w
+            ratio_h = alloc.height / box_h
 
             # calculate zoom - the smaller of the two scaling ratios
-            current_zoom = 10.0 / canvas.c2w(10, 10)[0]
+            last_zoom = 10.0 / canvas.c2w(10, 10)[0]
             if ratio_w < ratio_h:
                 zoom = ratio_w
             else:
                 zoom = ratio_h
             if zoom > 8:
-                zoom = current_zoom
+                zoom = last_zoom 
 
             # scale canvas
             canvas.set_pixels_per_unit(zoom)
 
-            # get the NW corner of the selection rectangle for scroll adjust
-            if _d['x1'] < _d['x2']: west = _d['x1']
-            else: west = _d['x2']
-            if _d['y1'] < _d['y2']: north = _d['y1']
-            else: north = _d['y2']
+            # remap coordinates
+            box_w, box_h, x1, y1, x2, y2 = (
+                    [pt/last_zoom * zoom for pt in (box_w, box_h, x1,y1,x2,y2)])
 
-            hadj, vadj = canvas.w2c(west, north)
+            # get the NW corner of the selection rectangle for scroll adjust
+            if x1 < x2: west = x1
+            if y1 < y2: north = y1
+
+            # center scrollbars on inscribed area
             if ratio_w < ratio_h:
-                x_offset = hadj
-                y_offset = vadj + box_h/2 - (alloc.height/2 * zoom)
+                x_offset = west
+                y_offset = north - (alloc.height - box_h) / 2
             else:
-                y_offset = vadj
-                x_offset = hadj + box_w/2 - (alloc.width/2 * zoom)
+                x_offset = west - (alloc.width - box_w) / 2
+                y_offset = north
 
             ha = canvas.get_hadjustment()
             ha.set_value(x_offset)
@@ -226,7 +227,6 @@ class Zoom(Operation):
     def update(self, x, y):
         if self.drawn:
             self.drawn.destroy()
-        # FIXME - when bx > x, swap bx/by with x/y
         x, y = self.gui.canvas.c2w(x, y)
         bx, by = self.gui.canvas.c2w(self.begin_x, self.begin_y)
 
@@ -283,10 +283,13 @@ class FrontEnd:
         self.operations = {
             'pan_on': Pan,
             'paint_on': Paint,
-            'zoom_on': Zoom,
+            'magnify_on': Magnify,
             }
 
         self._mousedown = 0
+
+    def on_quit_active(self, widget):
+        self.quit()
 
 
     def on_toolbar_toggled(self, widget):
@@ -313,9 +316,19 @@ class FrontEnd:
             if self.active_operation:
                 self.active_operation.endState()
 
+    def on_zoom100pct_activate(self, widget):
+        if self.canvas:
+            self.canvas.set_pixels_per_unit(1.0)
+
+    def on_zoomfit_activate(self, widget):
+        if self.canvas:
+            print 'TODO: fit'
 
 
     def on_Vellum_destroy(self, widget):
+        self.quit()
+
+    def quit(self):
         log.msg("Goodbye.")
         self.deferred.callback(None)
 
