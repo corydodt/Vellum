@@ -313,7 +313,7 @@ class FrontEnd:
 
 
 
-    def on_Tester_destroy(self, widget):
+    def on_Vellum_destroy(self, widget):
         log.msg("Goodbye.")
         self.deferred.callback(None)
 
