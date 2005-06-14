@@ -126,15 +126,14 @@ class Pan(Operation):
         self.gui.canvas.window.set_cursor(self.cursor)
 
     def update(self, x, y):
-        viewport = self.gui.gw_viewport1
-        ha = viewport.get_hadjustment()
-        va = viewport.get_vadjustment()
+        ha = self.gui.canvas.get_hadjustment()
+        va = self.gui.canvas.get_vadjustment()
 
         # FIXME - Pan could be much faster, but it gets jittery
         x_moved = self.begin_x - x
         y_moved = self.begin_y - y
         
-        alloc = viewport.get_allocation()
+        alloc = self.gui.canvas.get_allocation()
 
         if x_moved:
             if ha.lower <= (ha.value + x_moved + alloc.width) <= ha.upper:
@@ -175,10 +174,10 @@ class Zoom(Operation):
 
             self.drawn.destroy()
 
-            viewport = self.gui.gw_viewport1
+            canvas = self.gui.canvas
 
             # baseline measurements
-            alloc = viewport.get_allocation()
+            alloc = canvas.get_allocation()
             current_w = alloc.width
             current_h = alloc.height
             box_w = abs(_d['x2'] - _d['x1'])
@@ -188,18 +187,16 @@ class Zoom(Operation):
             ratio_h = current_h / box_h
 
             # calculate zoom - the smaller of the two scaling ratios
-            current_zoom = 10.0 / self.gui.canvas.c2w(10, 10)[0]
+            current_zoom = 10.0 / canvas.c2w(10, 10)[0]
             if ratio_w < ratio_h:
                 zoom = ratio_w
             else:
                 zoom = ratio_h
-            if zoom > 5:
+            if zoom > 8:
                 zoom = current_zoom
 
             # scale canvas
-            self.gui.canvas.set_pixels_per_unit(zoom)
-            old_x, old_y = self.gui.canvas.get_size_request()
-            self.gui.canvas.set_size_request(old_x*zoom, old_y*zoom)
+            canvas.set_pixels_per_unit(zoom)
 
             # center the inscribed area - TODO
             if _d['x1'] < _d['x2']: x1 = _d['x1']
@@ -207,7 +204,7 @@ class Zoom(Operation):
             if _d['y1'] < _d['y2']: y1 = _d['y1']
             else: y1 = _d['y2']
 
-            hadj, vadj = self.gui.canvas.w2c(x1, y1)
+            hadj, vadj = canvas.w2c(x1, y1)
             if ratio_w < ratio_h:
                 x_offset = hadj
                 y_offset = vadj
@@ -215,9 +212,9 @@ class Zoom(Operation):
                 y_offset = vadj
                 x_offset = hadj
 
-            ha = viewport.get_hadjustment()
+            ha = canvas.get_hadjustment()
             ha.set_value(x_offset)
-            va = viewport.get_vadjustment()
+            va = canvas.get_vadjustment()
             va.set_value(y_offset)
 
 
@@ -263,7 +260,7 @@ class FrontEnd:
         gc = _pixmap.new_gc()
         _pixmap.draw_pixbuf(gc, self.bg, 0, 0, 0, 0)
         # a kludge to make gw_viewport1 generate a new style object:
-        self.gw_viewport1.modify_bg(gtk.STATE_NORMAL, gdk.Color(0))
+        self.gw_viewport1.modify_bg(gtk.STATE_NORMAL, gdk.Color(0xff0000))
         # now modify the new style object
         self.gw_viewport1.style.bg_pixmap[gtk.STATE_NORMAL] = _pixmap
 
@@ -363,7 +360,11 @@ class FrontEnd:
             self.canvas = gnomecanvas.Canvas()
             # make canvas draw widgets in the NW corner...
             self.canvas.set_center_scroll_region(False)
-            self.gw_viewport1.add(self.canvas)
+
+            # out with the old
+            self.gw_viewport1.destroy()
+            # in with the new
+            self.gw_scrolledwindow1.add(self.canvas)
             self.canvas.show()
 
             self.canvas.connect('button-press-event',
@@ -381,9 +382,10 @@ class FrontEnd:
         self.model = Model(self.bg)
         root = self.canvas.root()
         root.add("GnomeCanvasPixbuf", pixbuf=self.bg)
-        self.canvas.set_size_request(self.bg.get_width(),
-                                     self.bg.get_height()
-                                     )
+        self.canvas.set_scroll_region(0, 0, 
+                                      self.bg.get_width(),
+                                      self.bg.get_height()
+                                      )
 
                  
         for n, character in enumerate(self._getCharacterInfo()):
