@@ -208,7 +208,9 @@ class Magnify(Operation):
 
             # get the NW corner of the selection rectangle for scroll adjust
             if x1 < x2: west = x1
+            else: west = x2
             if y1 < y2: north = y1
+            else: north = y2
 
             # center scrollbars on inscribed area
             if ratio_w < ratio_h:
@@ -322,7 +324,11 @@ class FrontEnd:
 
     def on_zoomfit_activate(self, widget):
         if self.canvas:
-            print 'TODO: fit'
+            alloc = self.canvas.get_allocation()
+            _, _, canv_w, canv_h = self.canvas.get_scroll_region()
+            ratio_w = alloc.width / canv_w
+            ratio_h = alloc.height / canv_h
+            self.canvas.set_pixels_per_unit(min([ratio_w, ratio_h]))
 
 
     def on_Vellum_destroy(self, widget):
