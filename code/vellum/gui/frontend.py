@@ -204,7 +204,7 @@ class Magnify(Operation):
 
             # remap coordinates
             box_w, box_h, x1, y1, x2, y2 = (
-                    [pt/last_zoom * zoom for pt in (box_w, box_h, x1,y1,x2,y2)])
+                    [pt * zoom for pt in (box_w, box_h, x1,y1,x2,y2)])
 
             # get the NW corner of the selection rectangle for scroll adjust
             if x1 < x2: west = x1
