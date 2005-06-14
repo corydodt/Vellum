@@ -173,6 +173,7 @@ class Zoom(Operation):
                 _d[point] = self.drawn.get_property(point)
 
             self.drawn.destroy()
+            self.drawn = None
 
             canvas = self.gui.canvas
 
@@ -198,19 +199,19 @@ class Zoom(Operation):
             # scale canvas
             canvas.set_pixels_per_unit(zoom)
 
-            # center the inscribed area - TODO
-            if _d['x1'] < _d['x2']: x1 = _d['x1']
-            else: x1 = _d['x2']
-            if _d['y1'] < _d['y2']: y1 = _d['y1']
-            else: y1 = _d['y2']
+            # get the NW corner of the selection rectangle for scroll adjust
+            if _d['x1'] < _d['x2']: west = _d['x1']
+            else: west = _d['x2']
+            if _d['y1'] < _d['y2']: north = _d['y1']
+            else: north = _d['y2']
 
-            hadj, vadj = canvas.w2c(x1, y1)
+            hadj, vadj = canvas.w2c(west, north)
             if ratio_w < ratio_h:
                 x_offset = hadj
-                y_offset = vadj
+                y_offset = vadj + box_h/2 - (alloc.height/2 * zoom)
             else:
                 y_offset = vadj
-                x_offset = hadj
+                x_offset = hadj + box_w/2 - (alloc.width/2 * zoom)
 
             ha = canvas.get_hadjustment()
             ha.set_value(x_offset)
