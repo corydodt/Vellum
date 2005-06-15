@@ -11,18 +11,23 @@ files:
         type: map
         md5: fd693cc6ce9fc63ca03ed9600b9feeae
     -
+        name: The Gnoll Huddle (obscurement)
+        uri: images/gnoll-huddle_obm.png
+        type: mask/obscurement
+        md5: 2768f296b66341457c0a619904ba3ad9
+    -
         name: Shara
         uri: images/shara-kw.png
         type: character
         md5: 0865ea97c08cb3cb47e68312a48222cb
-        corner: [200, 200]
+        corner: [900, 1000]
         scale: 1.0
     -
         name: Halbren
         uri: images/halbren.png
         type: character
         md5: ee9d888024cf8456402eb3883995398a
-        corner: [50, 50]
+        corner: [1000, 1020]
         scale: 1.0
     -
         name: Crom Grumdalsen

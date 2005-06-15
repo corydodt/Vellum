@@ -50,9 +50,9 @@ class NetClient:
             except ValueError:
                 log.msg('Getting file at %s' % (fi['uri'],))
                 uri = 'http://%s:%s/%s' % (self.server,
-                                          HTTPPORT,
-                                          fi['uri'],
-                                          )
+                                           HTTPPORT,
+                                           fi['uri'],
+                                           )
                 return downloadPage(uri, fs.downloads(fi['name'])
                         ).addErrback(log.err
                         ).addCallback(lambda _: self.checkFile(fi)

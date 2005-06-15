@@ -288,7 +288,7 @@ class FrontEnd:
         # graphics setup
         self.gw_Vellum.set_icon_from_file(fs('pixmaps', 'v.ico'))
 
-        # one button icon isn't stock
+        # set one button icon that isn't stock
         _hand_pb = gdk.pixbuf_new_from_file(fs('pixmaps', 'stock_stop.png'))
         _image = gtk.Image()
         _image.set_from_pixbuf(_hand_pb)
@@ -308,7 +308,6 @@ class FrontEnd:
             'paint_on': Paint,
             'magnify_on': Magnify,
             }
-        self._mousedown = 0
 
     def _drawDefaultBackground(self):
         # allocate the slate background
@@ -376,42 +375,26 @@ class FrontEnd:
         d.addCallback(self._cb_gotFileInfos)
         d.addCallback(lambda _: self.displayModel())
 
-    def _getMapInfo(self):
-        for fi in self.fileinfos:
-            if fi['type'] == 'map':
-                return fi
-
-    def _getCharacterInfo(self):
-        for fi in self.fileinfos:
-            if fi['type'] == 'character':
-                yield fi
-
     def on_canvas_button_press_event(self, widget, ev):
         if self.tool_active:
-            self._mousedown = 1
             self.active_operation.beginAt(ev.x, ev.y)
 
     def on_canvas_button_release_event(self, widget, ev):
         if self.active_operation:
-            assert self._mousedown
-            self._mousedown = 0
             self.active_operation.endAt(ev.x, ev.y)
 
     def on_canvas_motion_notify_event(self, widget, ev):
-        if self._mousedown:
+        if ev.get_state() & gdk.BUTTON1_MASK:
             self.active_operation.updateAt(ev.x, ev.y)
 
     def on_mini_button_press_event(self, widget, ev):
-        self._mousedown = 1
         self.mini_operation.beginAt(ev.x, ev.y)
 
     def on_mini_button_release_event(self, widget, ev):
-        assert self._mousedown
-        self._mousedown = 0
         self.mini_operation.endAt(ev.x, ev.y)
 
     def on_mini_motion_notify_event(self, widget, ev):
-        if self._mousedown:
+        if ev.get_state() & gdk.BUTTON1_MASK:
             self.mini_operation.updateAt(ev.x, ev.y)
 
     def displayModel(self):
@@ -451,16 +434,21 @@ class FrontEnd:
             # TODO - clear canvas & mini for a new map
 
         # draw map at 100% on canvas
-        mapinfo = self._getMapInfo()
+        mapinfo = self.fileinfos['map']
         log.msg('displaying map %s' % (mapinfo['name'],))
         self.bg = gdk.pixbuf_new_from_file(fs.downloads(mapinfo['name']))
-        self.model = Model(self.bg)
+
         root = self.canvas.root()
         root.add("GnomeCanvasPixbuf", pixbuf=self.bg)
         self.canvas.set_scroll_region(0, 0, 
                                       self.bg.get_width(),
                                       self.bg.get_height()
                                       )
+
+
+        # model
+        self.model = Model(self.bg)
+
         # fit map in mini
         ratio = fitBoxInWidget(self.gw_frame_align,
                                self.bg.get_width(),
@@ -469,7 +457,8 @@ class FrontEnd:
         self.mini.set_pixels_per_unit(ratio)
 
                  
-        for n, character in enumerate(self._getCharacterInfo()):
+        # draw characters
+        for n, character in enumerate(self.fileinfos.get('character', [])):
             icon_image = gdk.pixbuf_new_from_file(
                                 fs.downloads(character['name'])
                                                   )
@@ -478,20 +467,36 @@ class FrontEnd:
             icon.image = icon_image
             if character['corner'] is not None:
                 icon.xy = character['corner']
-                self.canvas.root().add("GnomeCanvasPixbuf", 
-                                       pixbuf=icon.image,
-                                       x=icon.xy[0],
-                                       y=icon.xy[1],
-                                       )
+                root.add("GnomeCanvasPixbuf", 
+                         pixbuf=icon.image,
+                         x=icon.xy[0],
+                         y=icon.xy[1],
+                         )
+                self.mini.root().add("GnomeCanvasPixbuf", 
+                                     pixbuf=icon.image,
+                                     x=icon.xy[0],
+                                     y=icon.xy[1],
+                                     )
+
+        # turn on buttons now that canvas is active
         self.gw_magnify_on.set_sensitive(True)
         self.gw_paint_on.set_sensitive(True)
         self.gw_pan_on.set_sensitive(True)
-        # self.addCharacter
-        # self.addItem
-        # self.addText
-        # self.addSound
-        # self.clearObscurement()
-        # self.obscure?
+
+        # set obscurement
+        obscure = self.fileinfos.get('mask/obscurement', None)
+        if obscure:
+            self.obscurement = gdk.pixbuf_new_from_file(
+                                    fs.downloads(obscure['name']))
+            root.add("GnomeCanvasPixbuf", pixbuf=self.obscurement)
+            self.mini.root().add("GnomeCanvasPixbuf", pixbuf=self.obscurement)
 
     def _cb_gotFileInfos(self, fileinfos):
-        self.fileinfos = fileinfos
+        self.fileinfos = {}
+        for info in fileinfos:
+            if info['type'] == 'map':
+                self.fileinfos['map'] = info
+            elif info['type'] == 'character':
+                self.fileinfos.setdefault('character', []).append(info)
+            elif info['type'] == 'mask/obscurement':
+                self.fileinfos['mask/obscurement'] = info
