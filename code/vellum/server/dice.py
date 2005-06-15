@@ -179,7 +179,6 @@ def test():
     print 'passed all tests'
 
 def run(argv=None):
-    import linesyntax
     if argv is None:
         argv = sys.argv
     while 1:

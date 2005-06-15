@@ -1,4 +1,4 @@
-import sys, os
+import os
 # hack taken from <http://www.livejournal.com/users/glyf/7878.html>
 import _winreg
 def getGtkPath():
@@ -23,14 +23,6 @@ if path is None:
 os.environ['PATH'] += ';'+path.encode('utf8')
 
 
-# win32all
-try:
-    from win32ui import CreateFileDialog
-    import win32con
-except:
-    def CreateFileDialog(*args, **kwargs):
-        """TODO - use gtk one"""
-
 # end goddamn ugly gtk hack
 # end goddamn ugly gtk hack
 # end goddamn ugly gtk hack
@@ -44,7 +36,6 @@ except ImportError:
     import gnomecanvas
 
 from twisted.python import log
-from twisted.internet import task, reactor
 
 from vellum.server import PBPORT
 from vellum.gui.fs import fs
@@ -252,10 +243,6 @@ class Magnify(Operation):
             self.input_drawn.show()
 
         # draw the main rect - this is used to do the actual magnify
-        #izoom = 10.0 / self.canvas.c2w(10, 10)[0]
-        #ozoom = 10.0 / self.output_canvas.c2w(10, 10)[0]
-        #in2o = lambda *pts: [pt * ozoom for pt in pts]
-        #ox, oy, box, biy = in2o(ix, iy, bx, by)
         root = self.output_canvas.root()
         self.output_drawn = root.add("GnomeCanvasRect", 
                                      x1=bx, y1=by,

@@ -228,41 +228,5 @@ def test():
 
 
 
-def _chewLog(filename):
-    """Take a gaim-format irc log and reprocess it, parsing aliases.
-    """
-    m = (r'^$',
-         r'Conversation with \S+',
-         r'\(..:..:..\) The topic for \S+ is: \S+',
-         r'\(..:..:..\) \S+ \[.*@.*\..*\] entered the room',
-         r'\(..:..:..\) \S+ \[.*@.*\..*\] left the room',
-         r'\(..:..:..\) \S+ left the room \(quit: .*?\)\.',
-         r'\(..:..:..\) \S+ is now known as \S+',
-         r'\(..:..:..\) You are now known as \S+',
-         r'\(..:..:..\) \S+: \*(?P<nick>\S+) (?P<msg>.*)',
-         r'\(..:..:..\) (?P<nick>\S+): (?P<msg>.*)',
-         r'\(..:..:..\) \*\*\*(?P<nick>\S+) (?P<msg>\S+)',
-         )
-
-    import re
-    for line in file(filename, 'rb'):
-        line = line.strip()
-        # scan to determine whether this line is a privmsg or should be
-        # ignored
-        for pat in m:
-            matched = re.match(pat, line)
-            if matched is not None: break
-        else:
-            # all lines should match one of the above regex's
-            assert matched is not None, '"%s"' % (line,)
-
-        # pull out nick and extract expressions from msg, then parse exprs
-        nick = matched.groupdict().get('nick', None)
-        if nick is not None:
-            msg = matched.group('msg')
-            for exp in re.findall(r'{.+?}|\[.+?\]', msg):
-                print parseAlias(exp[1:-1], nick),
-    print
-
 if __name__ == '__main__':
     test()

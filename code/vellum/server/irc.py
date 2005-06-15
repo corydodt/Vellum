@@ -11,8 +11,7 @@ from twisted.internet import reactor, protocol, task
 from twisted.python import log
 
 
-from vellum.server import linesyntax, gametime, d20session, alias
-from vellum.server.fs import fs
+from vellum.server import linesyntax, d20session, alias
 
 
 class VellumTalk(irc.IRCClient):

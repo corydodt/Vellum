@@ -3,7 +3,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-import sys, os
+import sys
 # this must happen first because reactors are magikal
 from twisted.internet import gtk2reactor
 gtk2reactor.install()
@@ -12,8 +12,6 @@ from twisted.python import log, usage
 
 from vellum.gui.frontend import FrontEnd
 from vellum.gui.net import NetClient
-
-import gtk
 
 class Options(usage.Options):
     synopsis = 'Usage: vellumapp.py [options]'

@@ -1,7 +1,5 @@
 import sys, os
 
-from twisted.python import util
-
 from vellum.util.filesystem import Filesystem
 
 # for py2exe, make sure __file__ is real

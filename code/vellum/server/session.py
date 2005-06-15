@@ -95,17 +95,6 @@ class Session:
             FIXME
             return '%(name)s: %(classes)s' % char.summarize()
 
-    def respondTo_iam(self, user, charname):
-        """Take control of a character by name."""
-        try:
-            player = self.club.findExact(user)
-        except ValueError:
-            player = encounter.Player(user)
-            self.club.registerPlayer(player)
-        char = self.encounter.find(charname, first=1)
-        player.own(char)
-        return "%s now owns %s." % (player.getName(), char.getName())
-
     def respondTo_remove(self, user, charname):
         """Remove a character from an encounter by name."""
         char = self.party.dismiss(charname)

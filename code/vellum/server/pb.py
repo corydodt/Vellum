@@ -1,6 +1,5 @@
 """The PB service of the vellum server."""
 import ConfigParser
-import glob
 
 from twisted.spread import pb
 

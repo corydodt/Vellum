@@ -401,8 +401,8 @@
 
 		  <child>
 		    <widget class="GtkFrame" id="frame_minimap">
-		      <property name="width_request">160</property>
-		      <property name="height_request">120</property>
+		      <property name="width_request">135</property>
+		      <property name="height_request">180</property>
 		      <property name="visible">True</property>
 		      <property name="label_xalign">0.10000000149</property>
 		      <property name="label_yalign">0.5</property>
