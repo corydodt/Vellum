@@ -15,8 +15,7 @@ from vellum.gui.net import NetClient
 
 class Options(usage.Options):
     synopsis = 'Usage: vellumapp.py [options]'
-    optParameters = [['fps', None, 15, 'Frames per second'],
-                     ['logfile', 'l', None, 'File to use for logging'],
+    optParameters = [['logfile', 'l', None, 'File to use for logging'],
                      ]
 
 def finish(fail=None):
@@ -40,7 +39,7 @@ def run(argv = None):
 
     d = defer.Deferred()
     netclient = NetClient()
-    gui = FrontEnd(d, netclient, o['fps'])
+    gui = FrontEnd(d, netclient, )
     d.addCallback(finish).addErrback(finish)
 
     reactor.run()

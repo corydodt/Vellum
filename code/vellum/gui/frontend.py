@@ -274,26 +274,29 @@ class FrontEnd:
         raise AttributeError, "%s instance has no attribute %s" % (
             self.__class__, name)
 
-    def __init__(self, deferred, netclient, fps):
-        self.fps = fps
+    def __init__(self, deferred, netclient):
         self.deferred = deferred
         self.netclient = netclient
 
+        # load glade and connect it to self's dictionary for signal handling
+        # This needs to happen as early as possible.
         self.glade = glade.XML(fs.gladefile)
         self.glade.signal_autoconnect(self)
 
-        self.gw_Vellum.set_icon_from_file(fs('pixmaps', 'v.ico'))
-
         self._drawDefaultBackground()
 
+        # graphics setup
+        self.gw_Vellum.set_icon_from_file(fs('pixmaps', 'v.ico'))
+
+        # one button icon isn't stock
         _hand_pb = gdk.pixbuf_new_from_file(fs('pixmaps', 'stock_stop.png'))
         _image = gtk.Image()
         _image.set_from_pixbuf(_hand_pb)
         _image.show()
         self.gw_pan_on.set_icon_widget(_image)
 
+        # objects to be named later
         self.canvas = None
-
         self.model = None
         self.tool_active = None
         self.active_operation = None
@@ -305,7 +308,6 @@ class FrontEnd:
             'paint_on': Paint,
             'magnify_on': Magnify,
             }
-
         self._mousedown = 0
 
     def _drawDefaultBackground(self):
