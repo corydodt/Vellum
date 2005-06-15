@@ -13,7 +13,6 @@
   <property name="default_height">450</property>
   <property name="resizable">True</property>
   <property name="destroy_with_parent">False</property>
-  <property name="icon">v.ico</property>
   <property name="role"></property>
   <property name="decorated">True</property>
   <property name="skip_taskbar_hint">False</property>
@@ -306,12 +305,12 @@
 		      <property name="tooltip" translatable="yes">Pan</property>
 		      <property name="label" translatable="yes">Pan</property>
 		      <property name="use_underline">True</property>
-		      <property name="icon">stock_stop.png</property>
 		      <property name="visible_horizontal">True</property>
 		      <property name="visible_vertical">True</property>
 		      <property name="is_important">False</property>
 		      <property name="active">False</property>
 		      <signal name="toggled" handler="on_toolbar_toggled" last_modification_time="Mon, 13 Jun 2005 17:47:12 GMT"/>
+		      <accelerator key="h" modifiers="0" signal="notify"/>
 		    </widget>
 		    <packing>
 		      <property name="expand">False</property>

@@ -156,9 +156,11 @@ class Paint(Operation):
 
 
 class Magnify(Operation):
-    cursor = gdk.Cursor(gdk.TARGET)
+    pixbuf = gdk.pixbuf_new_from_file(fs('pixmaps', 'magnifier.png'))
     def beginState(self):
-        self.canvas.window.set_cursor(self.cursor)
+        magnifier = gdk.Cursor(self.canvas.window.get_display(), 
+                               self.pixbuf, 4, 4)
+        self.canvas.window.set_cursor(magnifier)
     def endState(self):
         self.canvas.window.set_cursor(None)
     def begin(self):
@@ -280,24 +282,17 @@ class FrontEnd:
         self.glade = glade.XML(fs.gladefile)
         self.glade.signal_autoconnect(self)
 
-        # allocate the slate background
-        self.bg = gdk.pixbuf_new_from_file(fs.background)
-        # create a pixmap to put a tile into
-        _pixmap = gdk.Pixmap(self.gw_viewport1.window, 
-                             self.bg.get_width(),
-                             self.bg.get_height())
-        gc = _pixmap.new_gc()
-        _pixmap.draw_pixbuf(gc, self.bg, 0, 0, 0, 0)
-        # a kludge to make gw_viewport1 generate a new style object:
-        self.gw_viewport1.modify_bg(gtk.STATE_NORMAL, gdk.Color(0xff0000))
-        # now modify the new style object
-        self.gw_viewport1.style.bg_pixmap[gtk.STATE_NORMAL] = _pixmap
+        self.gw_Vellum.set_icon_from_file(fs('pixmaps', 'v.ico'))
+
+        self._drawDefaultBackground()
+
+        _hand_pb = gdk.pixbuf_new_from_file(fs('pixmaps', 'stock_stop.png'))
+        _image = gtk.Image()
+        _image.set_from_pixbuf(_hand_pb)
+        _image.show()
+        self.gw_pan_on.set_icon_widget(_image)
 
         self.canvas = None
-
-        # these used to remember the last view of the model between sessions
-        self.scale = 1.0
-        self.corner = (0,0)
 
         self.model = None
         self.tool_active = None
@@ -313,9 +308,22 @@ class FrontEnd:
 
         self._mousedown = 0
 
-    def on_quit_active(self, widget):
-        self.quit()
+    def _drawDefaultBackground(self):
+        # allocate the slate background
+        self.bg = gdk.pixbuf_new_from_file(fs.background)
+        # create a pixmap to put a tile into
+        _pixmap = gdk.Pixmap(self.gw_viewport1.window, 
+                             self.bg.get_width(),
+                             self.bg.get_height())
+        gc = _pixmap.new_gc()
+        _pixmap.draw_pixbuf(gc, self.bg, 0, 0, 0, 0)
+        # a kludge to make gw_viewport1 generate a new style object:
+        self.gw_viewport1.modify_bg(gtk.STATE_NORMAL, gdk.Color(0xff0000))
+        # now modify the new style object
+        self.gw_viewport1.style.bg_pixmap[gtk.STATE_NORMAL] = _pixmap
 
+    def on_quit_activate(self, widget):
+        self.quit()
 
     def on_toolbar_toggled(self, widget):
         """Toggle off any button which is clicked while on.
