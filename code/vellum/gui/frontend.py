@@ -78,7 +78,10 @@ class Operation:
     - access keys
     - a rectangular area
     """
-    def __init__(self, gui):
+    def __init__(self, input_widget, output_widget=None):
+        """If output_widget given, apply visual effects somewhere else.
+        This is left up to subclasses to decide.
+        """
         self.echo_controls = [] # controls that need to be updated when on or
                                 # off
         self.begin_x = None
@@ -86,7 +89,8 @@ class Operation:
         self.end_x = None
         self.end_y = None
 
-        self.gui = gui
+        self.canvas = input_widget
+        self.output_canvas = output_widget
 
     def beginState(self):
         """Impl. in subclasses to do things when the button is pushed,
@@ -121,23 +125,23 @@ class Pan(Operation):
     cursor = gdk.Cursor(gdk.DOT)
     begin_cursor = gdk.Cursor(gdk.CIRCLE)
     def beginState(self):
-        self.gui.canvas.window.set_cursor(self.cursor)
+        self.canvas.window.set_cursor(self.cursor)
     def endState(self):
-        self.gui.canvas.window.set_cursor(None)
+        self.canvas.window.set_cursor(None)
     def begin(self):
-        self.gui.canvas.window.set_cursor(self.begin_cursor)
+        self.canvas.window.set_cursor(self.begin_cursor)
     def finish(self):
-        self.gui.canvas.window.set_cursor(self.cursor)
+        self.canvas.window.set_cursor(self.cursor)
 
     def update(self, x, y):
-        ha = self.gui.canvas.get_hadjustment()
-        va = self.gui.canvas.get_vadjustment()
+        ha = self.canvas.get_hadjustment()
+        va = self.canvas.get_vadjustment()
 
         # FIXME - Pan could be much faster, but it gets jittery
         x_moved = self.begin_x - x
         y_moved = self.begin_y - y
         
-        alloc = self.gui.canvas.get_allocation()
+        alloc = self.canvas.get_allocation()
 
         if x_moved:
             if ha.lower <= (ha.value + x_moved + alloc.width) <= ha.upper:
@@ -163,27 +167,31 @@ class Paint(Operation):
 class Magnify(Operation):
     cursor = gdk.Cursor(gdk.TARGET)
     def beginState(self):
-        self.gui.canvas.window.set_cursor(self.cursor)
+        self.canvas.window.set_cursor(self.cursor)
     def endState(self):
-        self.gui.canvas.window.set_cursor(None)
+        self.canvas.window.set_cursor(None)
     def begin(self):
-        self.drawn = None
+        self.output_drawn = None
+        self.input_drawn = None
+        if self.output_canvas is None:
+            self.output_canvas = self.canvas
 
     def finish(self):
         """Zoom so the inscribed area is maximized in the main window"""
-        if self.drawn:
-            x1 = self.drawn.get_property('x1')
-            y1 = self.drawn.get_property('y1')
-            x2 = self.drawn.get_property('x2')
-            y2 = self.drawn.get_property('y2')
+        if self.output_drawn:
+            x1 = self.output_drawn.get_property('x1')
+            y1 = self.output_drawn.get_property('y1')
+            x2 = self.output_drawn.get_property('x2')
+            y2 = self.output_drawn.get_property('y2')
 
-            self.drawn.destroy()
-            self.drawn = None
-
-            canvas = self.gui.canvas
+            self.output_drawn.destroy()
+            self.output_drawn = None
+            if self.input_drawn:
+                self.input_drawn.destroy()
+                self.input_drawn = None
 
             # baseline measurements
-            alloc = canvas.get_allocation()
+            alloc = self.output_canvas.get_allocation()
             box_w = abs(x2 - x1)
             box_h = abs(y2 - y1)
 
@@ -191,20 +199,18 @@ class Magnify(Operation):
             ratio_h = alloc.height / box_h
 
             # calculate zoom - the smaller of the two scaling ratios
-            last_zoom = 10.0 / canvas.c2w(10, 10)[0]
-            if ratio_w < ratio_h:
-                zoom = ratio_w
-            else:
-                zoom = ratio_h
+            zoom = min([ratio_w, ratio_h])
+            # set a reasonable max for scale degree - 800%
+            last_zoom = 10.0 / self.output_canvas.c2w(10, 10)[0]
             if zoom > 8:
                 zoom = last_zoom 
 
-            # scale canvas
-            canvas.set_pixels_per_unit(zoom)
+            # scale the main canvas
+            self.output_canvas.set_pixels_per_unit(zoom)
 
             # remap coordinates
-            box_w, box_h, x1, y1, x2, y2 = (
-                    [pt * zoom for pt in (box_w, box_h, x1,y1,x2,y2)])
+            o1_to_o2 = lambda *pts: [pt * zoom  for pt in pts]
+            box_w, box_h, x1, y1, x2, y2 = o1_to_o2(box_w, box_h, x1,y1,x2,y2)
 
             # get the NW corner of the selection rectangle for scroll adjust
             if x1 < x2: west = x1
@@ -220,27 +226,56 @@ class Magnify(Operation):
                 x_offset = west - (alloc.width - box_w) / 2
                 y_offset = north
 
-            ha = canvas.get_hadjustment()
+            ha = self.output_canvas.get_hadjustment()
             ha.set_value(x_offset)
-            va = canvas.get_vadjustment()
+            va = self.output_canvas.get_vadjustment()
             va.set_value(y_offset)
 
 
     def update(self, x, y):
-        if self.drawn:
-            self.drawn.destroy()
-        x, y = self.gui.canvas.c2w(x, y)
-        bx, by = self.gui.canvas.c2w(self.begin_x, self.begin_y)
+        if self.output_drawn:
+            self.output_drawn.destroy()
+        if self.input_drawn:
+            self.input_drawn.destroy()
+        ix, iy = self.canvas.c2w(x, y)
+        bx, by = self.canvas.c2w(self.begin_x, self.begin_y)
 
-        root = self.gui.canvas.root()
-        self.drawn = root.add("GnomeCanvasRect", x1=bx,
-                              y1=by,
-                              x2=x, y2=y,
-                              width_pixels=1,
-                              # outline_stipple = wtf?
-                              outline_color="gray")
-        self.drawn.show()
+        if self.canvas is not self.output_canvas:
+            # draw the minimap rect
+            iroot = self.canvas.root()
+            self.input_drawn = iroot.add("GnomeCanvasRect", 
+                                         x1=bx, y1=by,
+                                         x2=ix, y2=iy,
+                                         width_pixels=1,
+                                         # outline_stipple = wtf?
+                                         outline_color="gray")
+            self.input_drawn.show()
 
+        # draw the main rect - this is used to do the actual magnify
+        #izoom = 10.0 / self.canvas.c2w(10, 10)[0]
+        #ozoom = 10.0 / self.output_canvas.c2w(10, 10)[0]
+        #in2o = lambda *pts: [pt * ozoom for pt in pts]
+        #ox, oy, box, biy = in2o(ix, iy, bx, by)
+        root = self.output_canvas.root()
+        self.output_drawn = root.add("GnomeCanvasRect", 
+                                     x1=bx, y1=by,
+                                     x2=ix, y2=iy,
+                                     width_pixels=1,
+                                     # outline_stipple = wtf?
+                                     outline_color="gray")
+        self.output_drawn.show()
+
+
+
+def fitBoxInWidget(widget, width, height):
+    """Return the new ratio required to fit a box (width, height) pixels
+    inside widget widget.
+    Return ratio, remainder_x, remainder_y
+    """
+    alloc = widget.get_allocation()
+    ratio_w = float(alloc.width) / width
+    ratio_h = float(alloc.height) / height
+    return min([ratio_w, ratio_h])
 
 
 class FrontEnd:
@@ -280,6 +315,7 @@ class FrontEnd:
         self.model = None
         self.tool_active = None
         self.active_operation = None
+        self.mini_operation = None # currently only zoom supported
 
         # stateful operations that have mouse interactivity
         self.operations = {
@@ -311,7 +347,7 @@ class FrontEnd:
                     child.set_active(False)
 
             self.tool_active = widget.name
-            self.active_operation = self.operations[self.tool_active](self)
+            self.active_operation = self.operations[self.tool_active](self.canvas)
             self.active_operation.beginState()
         else:
             self.tool_active = None
@@ -324,11 +360,9 @@ class FrontEnd:
 
     def on_zoomfit_activate(self, widget):
         if self.canvas:
-            alloc = self.canvas.get_allocation()
             _, _, canv_w, canv_h = self.canvas.get_scroll_region()
-            ratio_w = alloc.width / canv_w
-            ratio_h = alloc.height / canv_h
-            self.canvas.set_pixels_per_unit(min([ratio_w, ratio_h]))
+            ratio = fitBoxInWidget(self.canvas, canv_w, canv_h)
+            self.canvas.set_pixels_per_unit(ratio)
 
 
     def on_Vellum_destroy(self, widget):
@@ -355,41 +389,49 @@ class FrontEnd:
             if fi['type'] == 'character':
                 yield fi
 
-    def beginOperation(self, opname, x, y):
-        self._mousedown = 1
-        self.active_operation.beginAt(x,y)
-
-    def updateOperation(self, opname, x, y):
-        self.active_operation.updateAt(x, y)
-
-    def finishOperation(self, opname, x, y):
-        self._mousedown = 0
-        self.active_operation.endAt(x, y)
-
     def on_canvas_button_press_event(self, widget, ev):
         if self.tool_active:
-            self.beginOperation(self.tool_active, ev.x, ev.y)
+            self._mousedown = 1
+            self.active_operation.beginAt(ev.x, ev.y)
 
     def on_canvas_button_release_event(self, widget, ev):
         if self.active_operation:
             assert self._mousedown
-            self.finishOperation(self.tool_active, ev.x, ev.y)
+            self._mousedown = 0
+            self.active_operation.endAt(ev.x, ev.y)
 
     def on_canvas_motion_notify_event(self, widget, ev):
         if self._mousedown:
-            self.updateOperation(self.tool_active, ev.x, ev.y)
+            self.active_operation.updateAt(ev.x, ev.y)
+
+    def on_mini_button_press_event(self, widget, ev):
+        self._mousedown = 1
+        self.mini_operation.beginAt(ev.x, ev.y)
+
+    def on_mini_button_release_event(self, widget, ev):
+        assert self._mousedown
+        self._mousedown = 0
+        self.mini_operation.endAt(ev.x, ev.y)
+
+    def on_mini_motion_notify_event(self, widget, ev):
+        if self._mousedown:
+            self.mini_operation.updateAt(ev.x, ev.y)
 
     def displayModel(self):
         if self.canvas is None:
             self.canvas = gnomecanvas.Canvas()
+            self.mini = gnomecanvas.Canvas()
             # make canvas draw widgets in the NW corner...
             self.canvas.set_center_scroll_region(False)
+            self.mini.set_center_scroll_region(False)
 
             # out with the old
             self.gw_viewport1.destroy()
             # in with the new
             self.gw_scrolledwindow1.add(self.canvas)
             self.canvas.show()
+            self.gw_frame_align.add(self.mini)
+            self.mini.show()
 
             self.canvas.connect('button-press-event',
                     self.on_canvas_button_press_event)
@@ -398,8 +440,20 @@ class FrontEnd:
             self.canvas.connect('motion-notify-event',
                     self.on_canvas_motion_notify_event)
 
-        # TODO - clear canvas for a new map
+            self.mini.connect('button-press-event',
+                    self.on_mini_button_press_event)
+            self.mini.connect('button-release-event',
+                    self.on_mini_button_release_event)
+            self.mini.connect('motion-notify-event',
+                    self.on_mini_motion_notify_event)
 
+            # the mini is always in zoom mode
+            self.mini_operation = Magnify(self.mini, self.canvas)
+            self.mini_operation.beginState()
+
+            # TODO - clear canvas & mini for a new map
+
+        # draw map at 100% on canvas
         mapinfo = self._getMapInfo()
         log.msg('displaying map %s' % (mapinfo['name'],))
         self.bg = gdk.pixbuf_new_from_file(fs.downloads(mapinfo['name']))
@@ -410,6 +464,12 @@ class FrontEnd:
                                       self.bg.get_width(),
                                       self.bg.get_height()
                                       )
+        # fit map in mini
+        ratio = fitBoxInWidget(self.gw_frame_align,
+                               self.bg.get_width(),
+                               self.bg.get_height())
+        self.mini.root().add("GnomeCanvasPixbuf", pixbuf=self.bg)
+        self.mini.set_pixels_per_unit(ratio)
 
                  
         for n, character in enumerate(self._getCharacterInfo()):
@@ -426,6 +486,9 @@ class FrontEnd:
                                        x=icon.xy[0],
                                        y=icon.xy[1],
                                        )
+        self.gw_magnify_on.set_sensitive(True)
+        self.gw_paint_on.set_sensitive(True)
+        self.gw_pan_on.set_sensitive(True)
         # self.addCharacter
         # self.addItem
         # self.addText

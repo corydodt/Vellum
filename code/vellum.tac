@@ -21,7 +21,7 @@ pbsvc = internet.TCPServer(PBPORT, pb.PBServerFactory(Gameness()))
 
 httpsvc = internet.TCPServer(HTTPPORT, appserver.NevowSite(webroot))
 
-irc = 0  # edit to disable irc for testing
+irc = 1  # edit to disable irc for testing
 if irc:
     ircsvc = internet.TCPClient(irchost, 6667, 
                                 VellumTalkFactory(start_channel))
