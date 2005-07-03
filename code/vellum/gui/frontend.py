@@ -41,24 +41,6 @@ from vellum.server import PBPORT
 from vellum.gui.fs import fs
 
 
-class Icon:
-    """
-    - image: the image used for the icon
-    - xy: a 2-tuple specify the top-left corner of the icon
-    """
-    def __init__(self):
-        self.image = None
-        self.xy = (None, None)
-
-class Model:
-    """
-    - background: the image used as the background (usually, a map)
-    - icons: a list of icon objects
-    """
-    def __init__(self, background):
-        self.background = background
-        self.icons = []
-
 class Operation:
     """A stateful activity involving the mouse and the user.
     An operation has:
@@ -446,9 +428,6 @@ class FrontEnd:
                                       )
 
 
-        # model
-        self.model = Model(self.bg)
-
         # fit map in mini
         ratio = fitBoxInWidget(self.gw_frame_align,
                                self.bg.get_width(),
@@ -462,20 +441,15 @@ class FrontEnd:
             icon_image = gdk.pixbuf_new_from_file(
                                 fs.downloads(character['name'])
                                                   )
-            icon = Icon()
-            self.model.icons.append(icon)
-            icon.image = icon_image
             if character['corner'] is not None:
-                icon.xy = character['corner']
+                x, y = character['corner']
                 root.add("GnomeCanvasPixbuf", 
-                         pixbuf=icon.image,
-                         x=icon.xy[0],
-                         y=icon.xy[1],
+                         pixbuf=icon_image,
+                         x=x, y=y
                          )
                 self.mini.root().add("GnomeCanvasPixbuf", 
-                                     pixbuf=icon.image,
-                                     x=icon.xy[0],
-                                     y=icon.xy[1],
+                                     pixbuf=icon_image,
+                                     x=x, y=y,
                                      )
 
         # turn on buttons now that canvas is active
