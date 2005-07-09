@@ -1,6 +1,6 @@
 """Classes for customizing and advancing time
 
-Default clock used is earth-like: 365 days in a year, 24 hours in a day,
+Test clock is earth-like: 365 days in a year, 24 hours in a day,
 time divided unto the seconds, single 28 day lunar cycle, weeks and months
 named as in English.  This is deceptive though, as the default clock will
 *not* give the correct dates or days of the week for any given offset.  This
