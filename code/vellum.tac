@@ -12,7 +12,7 @@ from vellum.server.irc import VellumTalkFactory
 
 webroot = static.File('.')
 
-application = service.Application('SeeFantasy')
+application = service.Application('Vellum')
 
 irchost = 'irc.freenode.net'
 start_channel = '#vellum'
