@@ -17,12 +17,8 @@ class Gameness(pb.Root):
     def __init__(self):
         cp = ConfigParser.ConfigParser()
         cp.read('vellumpb.ini')
-        lastmap = cp.get('vellumpb', 'lastmap', None)
-        if lastmap is None:
-            self.map = None
-        else:
-            self.map = yaml.loadFile(lastmap).next()
+        self.lastmap = cp.get('vellumpb', 'lastmap', None)
 
     def remote_listAvailableFiles(self):
-        return self.map
+        return yaml.loadFile(self.lastmap).next()
 
