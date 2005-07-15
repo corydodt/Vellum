@@ -8,6 +8,9 @@ def rollDie(die, mod=0):
     return random.choice(range(1, die+1)) + mod
 
 def parseRange(odds):
+    """parseRange("2-15") => (2, 15) (as ints)
+    Also parseRange("2") => (2, 2)
+    """
     if '-' in odds:
         low,hi = odds.split('-')
     else:
@@ -16,7 +19,7 @@ def parseRange(odds):
 
 def choosePercentile(percentiles):
     """Utility function for choosing an item from a list formatted like this:
-    ['01-11','13-73','74-99','100']
+    ['01-11','12-73','74-99','100']
     Returns the index of the item selected from the list.
     """
     pctile = roll(100)
