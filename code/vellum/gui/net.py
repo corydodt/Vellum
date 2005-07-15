@@ -8,19 +8,36 @@ from twisted.python import log
 from twisted.web.client import downloadPage
 
 from vellum.gui.fs import fs
-from vellum.server import HTTPPORT
+from vellum.server import HTTPPORT, PBPORT
 
 def _cb_connected(pbobject):
     log.msg('connected %s' % (repr(pbobject,)))
     return pbobject
 
 
-class NetClient:
-    def __init__(self):
-        self.pbfactory = pb.PBClientFactory()
+from gtkmvc import model
+from vellum.gui.ctlutil import SilentController
 
-    def startPb(self, server, port):
-        self.server = server
+
+class NetModel(model.Model):
+    __properties__ = {'server': None
+                      }
+
+
+
+class NetClient(SilentController):
+    def __init__(self, map, netmodel):
+        self.pbfactory = pb.PBClientFactory()
+        map.registerObserver(self)
+        self.map = map
+
+        netmodel.registerObserver(self)
+        self.netmodel = netmodel
+
+    def property_server_change_notification(self, model, old, new):
+        self.connectPB(new, PBPORT)
+
+    def connectPB(self, server, port):
         reactor.connectTCP(server, port, self.pbfactory)
         d = self.pbfactory.getRootObject()
         d.addErrback(lambda reason: 'error: '+str(reason.value))
@@ -28,15 +45,25 @@ class NetClient:
         d.addCallback(lambda pbobject: 
                         pbobject.callRemote('listAvailableFiles')
                       )
-        d.addCallback(self.getMapInfo)
+        d.addCallback(self.pb_gotMapInfo)
+        d.addCallback(self.pb_gotAllFiles)
         return d
 
-    def getMapInfo(self, map):
-        self.map = map
+    def pb_gotAllFiles(self, files):
+        for info in files:
+            if info['type'] == 'map':
+                self.map.mapname = info['name']
+                self.map.lastwindow = info['view']
+            elif info['type'] == 'character':
+                icon = self.map.addIcon(info['name'], info['size'])
+                if info['corner'] is not None:
+                    self.map.moveIcon(icon, *info['corner'])
+            elif info['type'] == 'mask/obscurement':
+                self.map.obscurement = None # TODO
+
+    def pb_gotMapInfo(self, map):
         fileiter = iter(map['files'])
         d = defer.maybeDeferred(self._getNextFile, fileiter)
-        # TODO - this might be called after the first _getNextFile instead of
-        # the intended behavior, after the last one.  Please check.
         d.addCallback(lambda _: map['files'])
         return d
 
@@ -49,7 +76,7 @@ class NetClient:
                 return defer.maybeDeferred(self._getNextFile, fileinfos)
             except ValueError:
                 log.msg('Getting file at %s' % (fi['uri'],))
-                uri = 'http://%s:%s/%s' % (self.server,
+                uri = 'http://%s:%s/%s' % (self.netmodel.server,
                                            HTTPPORT,
                                            fi['uri'],
                                            )
@@ -70,6 +97,9 @@ class NetClient:
                 print 'md5 ok for %s' % (fileinfo['name'],)
                 return
         except EnvironmentError:
+            # Missing/unreadable files will fall through to 
+            # raise ValueError (otherwise caller has to check for both kinds
+            # of exception, which is pointless)
             pass
         raise ValueError("File was not received correctly: %s" % (
             str(fileinfo),))
