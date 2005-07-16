@@ -154,7 +154,24 @@ class BigController(SilentController):
         log.msg('displaying map %s' % (new,))
 
     def property_icons_change_notification(self, model, old, new):
-        print 'icons changed'
+        root = self.view['canvas'].root()
+        for icon in new:
+            if self.map.icons[icon] is not None:
+                icon_image = gdk.pixbuf_new_from_file(
+                                    fs.downloads(icon.iconname)
+                                                      )
+                x, y = self.map.icons[icon]
+                igroup = root.add("GnomeCanvasGroup", 
+                         x=x, y=y
+                         )
+                igroup.add("GnomeCanvasPixbuf",
+                         pixbuf=icon_image,
+                         x=0, y=0)
+                igroup.add("GnomeCanvasText",
+                        text=icon.iconname,
+                        x=icon_image.get_width() / 2,
+                        y=icon_image.get_height() + 3)
+
     def property_scale_change_notification(self, model, old, new):
         print 'map scale changed'
     def property_image_change_notification(self, model, old, new):
