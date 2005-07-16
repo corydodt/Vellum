@@ -4,14 +4,15 @@ warnings.filterwarnings('ignore')
 
 
 import sys
-# this must happen first because reactors are magikal
+# install must happen first because reactors are magikal
 from twisted.internet import gtk2reactor
 gtk2reactor.install()
 from twisted.internet import reactor, defer
 from twisted.python import log, usage
 
-from vellum.gui.frontend import FrontEnd
-from vellum.gui.net import NetClient
+from vellum.gui.map import Map 
+from vellum.gui.net import NetClient, NetModel
+from vellum.gui.view import BigController, BigView
 
 class Options(usage.Options):
     synopsis = 'Usage: vellumapp.py [options]'
@@ -25,7 +26,6 @@ def finish(fail=None):
     finally:
         reactor.stop()
 
-
 def run(argv = None):
     if argv is None:
         argv = sys.argv
@@ -38,14 +38,25 @@ def run(argv = None):
         log.startLogging(sys.stderr)
 
     d = defer.Deferred()
-    netclient = NetClient()
-    gui = FrontEnd(d, netclient, )
+
+    
+    map = Map()
+    netmodel = NetModel()
+    netclient = NetClient(map, netmodel)
+
+    bigctl = BigController(map, netmodel, d)
+    bigview = BigView(bigctl)
+
+
     d.addCallback(finish).addErrback(finish)
 
-    reactor.run()
-    # #@!@# -- without the following, we can't quit the app after an error.
-    reactor.suggestThreadPoolSize(0)
+    # FIXME reactor.callLater(1, _setServer, netmodel)
 
+    reactor.run()
+
+def _setServer(netmodel):
+    """FIXME - set a server so we can test things out"""
+    netmodel.server = '127.0.0.1'
 
 if __name__ == '__main__':
     run()
