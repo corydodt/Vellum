@@ -10,9 +10,9 @@ files:
         type: map
         md5: fd693cc6ce9fc63ca03ed9600b9feeae
         # view zooms to fit this rectangle
-        view: [1120, 500, 1420, 800]
+        view: [1020, 400, 1520, 900]
 
-    -   name: The Gnoll Huddle (obscurement)
+    -   name: The Gnoll Huddle
         uri: images/gnoll-huddle_obm.png
         type: mask/obscurement
         md5: 2768f296b66341457c0a619904ba3ad9

@@ -24,6 +24,37 @@ class NetModel(model.Model):
                       }
 
 
+class FileInfo:
+    """Data and operations for the .map file data"""
+    def __init__(self, info):
+        self.info = info
+        if info['type'].startswith('mask/'):
+            _type = info['type'][5:]
+            self.cache_name = '%s (%s)' % (info['name'], _type)
+        else:
+            self.cache_name = info['name']
+        self.md5 = info['md5']
+        self.uri = info['uri']
+
+    def unpack(self, map):
+        """Set values in map based on my data"""
+        _type = self.info['type'].replace('/', '_')
+        unpacker = getattr(self, 'unpack_%s' % (_type,))
+        unpacker(map)
+
+    def unpack_map(self, map):
+        map.mapname = self.info['name']
+        map.lastwindow = self.info['view']
+
+    def unpack_character(self, map):
+        icon = map.addIcon(self.info['name'], self.info['size'])
+        if self.info['corner'] is not None:
+            map.moveIcon(icon, *self.info['corner'])
+
+    def unpack_mask_obscurement(self, map):
+        pass
+
+
 
 class NetClient(SilentController):
     def __init__(self, map, netmodel):
@@ -51,20 +82,12 @@ class NetClient(SilentController):
 
     def pb_gotAllFiles(self, files):
         for info in files:
-            if info['type'] == 'map':
-                self.map.mapname = info['name']
-                self.map.lastwindow = info['view']
-            elif info['type'] == 'character':
-                icon = self.map.addIcon(info['name'], info['size'])
-                if info['corner'] is not None:
-                    self.map.moveIcon(icon, *info['corner'])
-            elif info['type'] == 'mask/obscurement':
-                self.map.obscurement = None # TODO
+            info.unpack(self.map)
 
-    def pb_gotMapInfo(self, map):
-        fileiter = iter(map['files'])
-        d = defer.maybeDeferred(self._getNextFile, fileiter)
-        d.addCallback(lambda _: map['files'])
+    def pb_gotMapInfo(self, mapdata):
+        infos = map(FileInfo, mapdata['files'])
+        d = defer.maybeDeferred(self._getNextFile, iter(infos))
+        d.addCallback(lambda _: infos)
         return d
 
     def _getNextFile(self, fileinfos):
@@ -75,12 +98,12 @@ class NetClient(SilentController):
                 self.checkFile(fi)
                 return defer.maybeDeferred(self._getNextFile, fileinfos)
             except ValueError:
-                log.msg('Getting file at %s' % (fi['uri'],))
+                log.msg('Getting file at %s' % (fi.uri,))
                 uri = 'http://%s:%s/%s' % (self.netmodel.server,
                                            HTTPPORT,
-                                           fi['uri'],
+                                           fi.uri,
                                            )
-                return downloadPage(uri, fs.downloads(fi['name'])
+                return downloadPage(uri, fs.downloads(fi.cache_name)
                         ).addErrback(log.err
                         ).addCallback(lambda _: self.checkFile(fi)
                         ).addCallback(lambda _: self._getNextFile(fileinfos)
@@ -90,11 +113,11 @@ class NetClient(SilentController):
 
     def checkFile(self, fileinfo):
         try:
-            f = file(fs.downloads(fileinfo['name']), 'rb')
+            f = file(fs.downloads(fileinfo.cache_name), 'rb')
             digest = md5.md5(f.read()).hexdigest()
             print 'Got file; checksum:', digest
-            if digest == fileinfo['md5']:
-                print 'md5 ok for %s' % (fileinfo['name'],)
+            if digest == fileinfo.md5:
+                print 'md5 ok for %s' % (fileinfo.cache_name,)
                 return
         except EnvironmentError:
             # Missing/unreadable files will fall through to 

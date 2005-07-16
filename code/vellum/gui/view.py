@@ -148,6 +148,9 @@ class BigController(SilentController):
 
     def property_mapname_change_notification(self, model, old, new):
         self.map.image = gdk.pixbuf_new_from_file(fs.downloads(new))
+        obsc = '%s (obscurement)' % (new,)
+        self.map.obscurement = gdk.pixbuf_new_from_file(fs.downloads(obsc))
+        self.view['Vellum'].set_title('Vellum - %s' % (new,))
         log.msg('displaying map %s' % (new,))
 
     def property_icons_change_notification(self, model, old, new):
@@ -191,7 +194,8 @@ class BigController(SilentController):
                               self.view['canvas'].zoomBox, *model.lastwindow)
             self.justloaded = 0
     def property_obscurement_change_notification(self, model, old, new):
-        print 'obscurement updated'
+        root = self.view['canvas'].root()
+        root.add("GnomeCanvasPixbuf", pixbuf=new)
 
 
     def on_quit_activate(self, widget):
