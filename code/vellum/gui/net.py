@@ -9,6 +9,7 @@ from twisted.web.client import downloadPage
 
 from vellum.gui.fs import fs
 from vellum.server import HTTPPORT, PBPORT
+from vellum.util import distance
 
 def _cb_connected(pbobject):
     log.msg('connected %s' % (repr(pbobject,)))
@@ -25,7 +26,7 @@ class NetModel(model.Model):
 
 
 class FileInfo:
-    """Data and operations for the .map file data"""
+    """An intermediate storage for data and operations read from map files"""
     def __init__(self, info):
         self.info = info
         if info['type'].startswith('mask/'):
@@ -45,11 +46,13 @@ class FileInfo:
     def unpack_map(self, map):
         map.mapname = self.info['name']
         map.lastwindow = self.info['view']
+        map.scale = distance.normalize(self.info['scale100px'])
 
     def unpack_character(self, map):
         icon = map.addIcon(self.info['name'], self.info['size'])
         if self.info['corner'] is not None:
             map.moveIcon(icon, *self.info['corner'])
+        icon.size = distance.normalize(self.info['size'])
 
     def unpack_mask_obscurement(self, map):
         pass
