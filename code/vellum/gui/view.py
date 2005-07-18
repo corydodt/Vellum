@@ -174,34 +174,66 @@ class BigController(SilentController):
         for icon in new:
             if getattr(icon, 'controller', None) is not self:
                 icon.registerObserver(self)
+        # TODO - raise obscurement to the top
 
     def property_iconname_change_notification(self, icon, old, new):
         icon.iconimage = gdk.pixbuf_new_from_file(fs.downloads(new))
 
     def property_iconimage_change_notification(self, icon, old, new):
-        print 'iconimage was', old, 'now', new
-    def property_iconsize_change_notification(self, icon, old, new):
-        print 'iconsize was', old, 'now', new
-
-    def property_iconcorner_change_notification(self, icon, old, new):
-        root = self.view['canvas'].root()
-        x, y = new
+        canvas = self.view['canvas']
+        root = canvas.root()
         image = icon.iconimage
-
+        corner = icon.iconcorner
+        if corner is None: corner = (0,0)
+        x, y = corner
         if icon.widget is None:
             igroup = root.add("GnomeCanvasGroup", x=x, y=y)
             igroup.add("GnomeCanvasPixbuf",
                      pixbuf=image,
                      x=0, y=0)
-            igroup.add("GnomeCanvasText",
-                    text=icon.iconname,
-                    x=image.get_width() / 2,
-                    y=image.get_height() + 3)
+            fontgroup = igroup.add("GnomeCanvasGroup",
+                                   x=image.get_width() /2,
+                                   y=image.get_height() + 3
+                                   )
+            # outline
+            text = fontgroup.add("GnomeCanvasText",
+                                 font="verdana bold",
+                                 text=icon.iconname,
+                                 )
+            w = text.get_property('text-width')
+            h = text.get_property('text-height')
+            textbg = fontgroup.add("GnomeCanvasRect",
+                          fill_color = "white",
+                          x1=-3*w/4, y1=-3*h/4,
+                          x2=3*w/4, y2=3*h/4,
+                          )
+            textbg.lower_to_bottom()
+
+            fontgroup.lower_to_bottom()
+
             igroup.connect('event', self.on_icon_event, icon)
             icon.widget = igroup
-        else:
-            ox, oy = old
-            icon.widget.move(x-ox, y-oy)
+
+    def property_iconsize_change_notification(self, icon, old, new):
+        w = icon.iconimage.get_width()
+        h = icon.iconimage.get_height()
+        scale_ratio = icon.iconsize*(100/w) / self.map.scale100px
+        w = w*scale_ratio
+        h = h*scale_ratio
+        # FIXME - this loses the original image scale, so repeatedly
+        # FIXME   scaling to this size will make the object grow or shrink
+        # FIXME   geometrically instead of remaining the same size.
+        image = icon.iconimage.scale_simple(w,h,gdk.INTERP_HYPER)
+        # redraw a new, resized icon over the old one
+        icon.widget.destroy()
+        icon.widget = None
+        icon.iconimage = image
+
+    def property_iconcorner_change_notification(self, icon, old, new):
+        x, y = new
+        if old is None: old = (0,0)
+        ox, oy = old
+        icon.widget.move(x-ox, y-oy)
 
 
     def on_icon_event(self, widget, event, icon):
@@ -228,7 +260,7 @@ class BigController(SilentController):
             iw, ih = icon.iconimage.get_width(), icon.iconimage.get_height()
             self.map.moveIcon(icon, event.x - iw/2, event.y - ih/2)
 
-    def property_scale_change_notification(self, model, old, new):
+    def property_scale100px_change_notification(self, model, old, new):
         print 'map scale changed'
 
     def property_image_change_notification(self, model, old, new):
@@ -268,6 +300,7 @@ class BigController(SilentController):
                               self.view['canvas'].zoomBox, *model.lastwindow)
             self.justloaded = 0
     def property_obscurement_change_notification(self, model, old, new):
+        # TODO - delete old obscurement?
         root = self.view['canvas'].root()
         root.add("GnomeCanvasPixbuf", pixbuf=new)
 

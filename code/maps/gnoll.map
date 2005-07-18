@@ -12,7 +12,7 @@ files:
         # view zooms to fit this rectangle
         view: [940, 650, 1440, 1150]
         # physical distance represented by 100 pixels
-        scale100px: 5ft.
+        scale100px: 10ft.
 
     -   name: The Gnoll Huddle
         uri: images/gnoll-huddle_obm.png

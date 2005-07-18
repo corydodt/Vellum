@@ -9,7 +9,7 @@ class Icon(model.Model):
     __properties__ = {
         'iconname': 'x',
         'iconimage': None,
-        'iconsize': '2.5ft',
+        'iconsize': 0.500, # physical units in meters
         'iconcorner': None,
         }
 
@@ -25,30 +25,29 @@ class Map(model.Model,):
         # these are managed with simple assignments
         'mapname': None,  # changing updates the string in the titlebar
         'image': None, # changing loads a new map background image
-        'scale': '5ft', # physical units per 100px
+        'scale100px': 1.0, # physical units in meters per 100px
         'obscurement': None,  # the gnomecanvaspixbuf of the obscurement
         'attention': (0,0,100,100),
         'lastwindow': (0,0,100,100),
         'laser': (0,0),
         # these require management methods
-        'icons': {},  # {icon object: x, y}
+        'icons': [],
         'target_lines': [], # specifies two icons (from, to) for a target arrow
         'follow_lines': [], # specifies two icons (from, to) for a follow arrow
-        'drawings': {},
-        'notes': {},
+        'drawings': [],
+        'notes': [],
         }
     def moveIcon(self, icon, x, y):
-        self.icons[icon] = (x, y)
         icon.iconcorner = (x,y)
     def delIcon(self, icon):
-        del self.icons[icon]
+        self.icons.remove(icon)
         self.icons = self.icons
     def addIcon(self, name, size, ):
         """Add the icon to the model
         Follow with .moveIcon if you want to place the icon on the map
         """
         icon = Icon()
-        self.icons[icon] = None
+        self.icons.append(icon)
         self.icons = self.icons
         icon.iconname = name
         icon.size = size

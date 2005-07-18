@@ -46,7 +46,7 @@ class FileInfo:
     def unpack_map(self, map):
         map.mapname = self.info['name']
         map.lastwindow = self.info['view']
-        map.scale = distance.normalize(self.info['scale100px'])
+        map.scale100px = distance.normalize(self.info['scale100px'])
 
     def unpack_character(self, map):
         icon = map.addIcon(self.info['name'], self.info['size'])
