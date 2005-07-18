@@ -8,9 +8,16 @@ import re
 class Icon(model.Model):
     __properties__ = {
         'iconname': 'x',
-        'image': None,
-        'size': '2.5ft',
+        'iconimage': None,
+        'iconsize': '2.5ft',
+        'iconcorner': None,
         }
+
+    def __init__(self, *args, **kwargs):
+        model.Model.__init__(self, *args, **kwargs)
+        self.selected = False
+        self.grabbed = False
+        self.widget = None
 
 
 class Map(model.Model,):
@@ -32,7 +39,7 @@ class Map(model.Model,):
         }
     def moveIcon(self, icon, x, y):
         self.icons[icon] = (x, y)
-        self.icons = self.icons
+        icon.iconcorner = (x,y)
     def delIcon(self, icon):
         del self.icons[icon]
         self.icons = self.icons
@@ -42,17 +49,10 @@ class Map(model.Model,):
         """
         icon = Icon()
         self.icons[icon] = None
-        icon.registerObserver(self)
+        self.icons = self.icons
         icon.iconname = name
         icon.size = size
-        self.icons = self.icons
         return icon
-    def property_iconname_change_notification(self, model, old, new):
-        """Icon name changed"""
-    def property_image_change_notification(self, model, old, new):
-        """Icon image changed"""
-    def property_size_change_notification(self, model, old, new):
-        """Icon size (physical units) changed"""
 
     def delTarget(self, left, right):
         if (left, right) in self.target_lines:

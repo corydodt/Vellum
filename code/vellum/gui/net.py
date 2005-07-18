@@ -52,7 +52,7 @@ class FileInfo:
         icon = map.addIcon(self.info['name'], self.info['size'])
         if self.info['corner'] is not None:
             map.moveIcon(icon, *self.info['corner'])
-        icon.size = distance.normalize(self.info['size'])
+        icon.iconsize = distance.normalize(self.info['size'])
 
     def unpack_mask_obscurement(self, map):
         pass

@@ -68,7 +68,7 @@ class ZoomCanvas(gnomecanvas.Canvas):
         # scale the main canvas
         self.set_pixels_per_unit(zoom)
 
-        # remap coordinates
+        # remap coordinates post-zoom
         o1_to_o2 = lambda *pts: [pt * zoom  for pt in pts]
         box_w, box_h, x1, y1, x2, y2 = o1_to_o2(box_w, box_h, x1,y1,x2,y2)
 
@@ -108,6 +108,8 @@ class BigView(view.View):
 
         self.controller = controller
 
+        self._drawDefaultBackground()
+
     def landCanvas(self):
         """Put in a canvas"""
         if self['viewport1'] is None:
@@ -129,6 +131,20 @@ class BigView(view.View):
                        c.on_canvas_button_release_event)
         canvas.connect('motion-notify-event', 
                        c.on_canvas_motion_notify_event)
+
+    def _drawDefaultBackground(self):
+        # allocate the slate background
+        self.bg = gdk.pixbuf_new_from_file(fs.background)
+        # create a pixmap to put a tile into
+        _pixmap = gdk.Pixmap(self['viewport1'].window, 
+                             self.bg.get_width(),
+                             self.bg.get_height())
+        gc = _pixmap.new_gc()
+        _pixmap.draw_pixbuf(gc, self.bg, 0, 0, 0, 0)
+        # a kludge to make gw_viewport1 generate a new style object:
+        self['viewport1'].modify_bg(gtk.STATE_NORMAL, gdk.Color(0xff0000))
+        # now modify the new style object
+        self['viewport1'].style.bg_pixmap[gtk.STATE_NORMAL] = _pixmap
 
 
 class BigController(SilentController):
@@ -154,26 +170,67 @@ class BigController(SilentController):
         log.msg('displaying map %s' % (new,))
 
     def property_icons_change_notification(self, model, old, new):
-        root = self.view['canvas'].root()
+        """Hook a new icon up to an observer"""
         for icon in new:
-            if self.map.icons[icon] is not None:
-                icon_image = gdk.pixbuf_new_from_file(
-                                    fs.downloads(icon.iconname)
-                                                      )
-                x, y = self.map.icons[icon]
-                igroup = root.add("GnomeCanvasGroup", 
-                         x=x, y=y
-                         )
-                igroup.add("GnomeCanvasPixbuf",
-                         pixbuf=icon_image,
-                         x=0, y=0)
-                igroup.add("GnomeCanvasText",
-                        text=icon.iconname,
-                        x=icon_image.get_width() / 2,
-                        y=icon_image.get_height() + 3)
+            if getattr(icon, 'controller', None) is not self:
+                icon.registerObserver(self)
+
+    def property_iconname_change_notification(self, icon, old, new):
+        icon.iconimage = gdk.pixbuf_new_from_file(fs.downloads(new))
+
+    def property_iconimage_change_notification(self, icon, old, new):
+        print 'iconimage was', old, 'now', new
+    def property_iconsize_change_notification(self, icon, old, new):
+        print 'iconsize was', old, 'now', new
+
+    def property_iconcorner_change_notification(self, icon, old, new):
+        root = self.view['canvas'].root()
+        x, y = new
+        image = icon.iconimage
+
+        if icon.widget is None:
+            igroup = root.add("GnomeCanvasGroup", x=x, y=y)
+            igroup.add("GnomeCanvasPixbuf",
+                     pixbuf=image,
+                     x=0, y=0)
+            igroup.add("GnomeCanvasText",
+                    text=icon.iconname,
+                    x=image.get_width() / 2,
+                    y=image.get_height() + 3)
+            igroup.connect('event', self.on_icon_event, icon)
+            icon.widget = igroup
+        else:
+            ox, oy = old
+            icon.widget.move(x-ox, y-oy)
+
+
+    def on_icon_event(self, widget, event, icon):
+        type = event.type.value_name.lower()
+        handler = getattr(self, 'on_icon_%s' % (type,), None)
+        if handler is not None:
+            return handler(widget, event, icon)
+
+    def on_icon_gdk_enter_notify(self, widget, event, icon):
+        pass # highlight or something
+
+    def on_icon_gdk_leave_notify(self, widget, event, icon):
+        pass # unhighlight or something
+
+    def on_icon_gdk_button_press(self, widget, event, icon):
+        icon.grabbed = True
+
+    def on_icon_gdk_button_release(self, widget, event, icon):
+        icon.selected = not icon.selected
+        icon.grabbed = False
+
+    def on_icon_gdk_motion_notify(self, widget, event, icon):
+        if icon.grabbed:
+            iw, ih = icon.iconimage.get_width(), icon.iconimage.get_height()
+            self.map.moveIcon(icon, event.x - iw/2, event.y - ih/2)
 
     def property_scale_change_notification(self, model, old, new):
         print 'map scale changed'
+
     def property_image_change_notification(self, model, old, new):
         # put in the view window which is invisible by default
         self.view.landCanvas()
@@ -229,8 +286,8 @@ class BigController(SilentController):
         self.netmodel.server = self.view['server'].get_child().get_text()
 
     def on_canvas_button_press_event(self, widget, ev):
-        print 'canvas button pr'
+        pass
     def on_canvas_button_release_event(self, widget, ev):
-        print 'canvas button rel'
+        pass
     def on_canvas_motion_notify_event(self, widget, ev):
         pass
