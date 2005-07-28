@@ -1,0 +1,56 @@
+- paint/erase tools for creating/destroying obscurement mask
+- zoom
+    - magnify
+        o access:
+            - toggle zoom button
+            - hold down z
+        o feedback:
+            - icon changes to magnifier
+            - clicking creates rectangle
+        o context:
+            - available on main map
+            - available on mini map
+    - 100% zoom
+        o access:
+            - press 100% zoom button
+            - press alt+z ?
+        o feedback:
+            - map zooms to 100% centered on same center point
+    - fit whole map
+        o access:
+            - press map fit button
+            - press ctrl+z
+        o feedback:
+            - map zooms so entire map fits in viewport
+            - (changing viewport does not alter zoom)
+    - custom zoom %? 
+        o access:
+            - fill in zoom% widget
+        o feedback:
+            - map zooms to given % centered on same center point
+- single select icon
+    - move around
+    - character context menus
+    - target
+    - follow (?)
+- multi select icon
+    - arrange (marching order)
+    - follow
+    - target
+- measure distances
+    - set map scale
+- draw textured shape
+- paint shapes for areas of effect/paths
+- drag map around
+- center on character/item
+- laser pointer
+- grab client view select
+    
+(?)
+- target/untarget
+    - get item
+    - attack character
+ 
+
+Q: Can gnomecanvas set zooms on individual elements?  Each icon will
+   have its own zoom.
