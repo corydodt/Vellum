@@ -86,7 +86,6 @@ class Gameness(pb.Root):
         self.lastmap = cp.get('vellumpb', 'lastmap', None)
 
         self.map = Map.loadFromYaml(file(self.lastmap, 'rb').read())
-        print self.map.describeToYaml()
 
         self.notifiables = []     # MapListener refs from clients
         self.observable = MapListener(self.map)

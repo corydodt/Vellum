@@ -67,6 +67,7 @@ class NetClient(SilentController):
             # do we already have the file? let's find out.
             if uri in cache:
                 # yep, we do. next!
+                log.msg('Found %s cached' % (uri,))
                 return defer.maybeDeferred(self._getNextFile, fileinfos)
             else:
                 # no, don't have the file.
