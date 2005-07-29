@@ -49,13 +49,7 @@ def run(argv = None):
 
     d.addCallback(finish).addErrback(finish)
 
-    # FIXME reactor.callLater(1, _setServer, netmodel)
-
     reactor.run()
-
-def _setServer(netmodel):
-    """FIXME - set a server so we can test things out"""
-    netmodel.server = '127.0.0.1'
 
 if __name__ == '__main__':
     run()
