@@ -43,7 +43,7 @@ except ImportError:
 from gtkmvc import view
 
 from vellum.gui.ctlutil import SilentController
-from vellum.gui.fs import fs
+from vellum.gui.fs import fs, cache
 
 
 class ZoomCanvas(gnomecanvas.Canvas):
@@ -91,6 +91,14 @@ class ZoomCanvas(gnomecanvas.Canvas):
         va = self.get_vadjustment()
         va.set_value(y_offset)
 
+def fileToImage(filename):
+    """Return a visible gtk.Image from the filename"""
+    pbuf = gdk.pixbuf_new_from_file(filename)
+    image = gtk.Image()
+    image.set_from_pixbuf(pbuf)
+    image.show()
+    return image
+
 
 class BigView(view.View):
     """All the widgets down to the main map window"""
@@ -99,16 +107,17 @@ class BigView(view.View):
         # graphics setup
         self['Vellum'].set_icon_from_file(fs('pixmaps', 'v.ico'))
 
-        # set one button icon that isn't stock
-        _hand_pb = gdk.pixbuf_new_from_file(fs('pixmaps', 'stock_stop.png'))
-        _image = gtk.Image()
-        _image.set_from_pixbuf(_hand_pb)
-        _image.show()
-        self['pan_on'].set_icon_widget(_image)
+        # set non-stock button icons
+        hand = fileToImage(fs('pixmaps', 'stock_stop@24.png'))
+        self['pan_on'].set_icon_widget(hand)
+        laser = fileToImage(fs('pixmaps', 'laser_screen@24.png'))
+        self['laser_on'].set_icon_widget(laser)
+
 
         self.controller = controller
 
         self._drawDefaultBackground()
+        self['laser'] = None
 
     def landCanvas(self):
         """Put in a canvas"""
@@ -146,38 +155,33 @@ class BigView(view.View):
         # now modify the new style object
         self['viewport1'].style.bg_pixmap[gtk.STATE_NORMAL] = _pixmap
 
-
 class BigController(SilentController):
-    def __init__(self, map, netmodel, deferred):
+    def __init__(self, netmodel, deferred):
         self.deferred = deferred
         self.netmodel = netmodel
-        self.map = map
-        # this is kind of a kludge.  I don't think I'm "supposed" to register
-        # a controller with two models, and the initializer only accepts one.
-        # It doesn't seem to do anything but set self.model, so I just picked
-        # one arbitrarily.
-        map.registerObserver(self)
         netmodel.registerObserver(self)
-        SilentController.__init__(self, map)
+        SilentController.__init__(self, netmodel)
 
         self.justloaded = 0
 
-    def property_mapname_change_notification(self, model, old, new):
-        self.map.image = gdk.pixbuf_new_from_file(fs.downloads(new))
-        obsc = '%s (obscurement)' % (new,)
-        self.map.obscurement = gdk.pixbuf_new_from_file(fs.downloads(obsc))
-        self.view['Vellum'].set_title('Vellum - %s' % (new,))
+    def property_mapuri_change_notification(self, model, old, new):
+        file_loc = cache.lookup(new)
+        self.map.image = gdk.pixbuf_new_from_file(file_loc)
         log.msg('displaying map %s' % (new,))
 
-    def property_icons_change_notification(self, model, old, new):
+    def property_mapname_change_notification(self, model, old, new):
+        self.view['Vellum'].set_title('Vellum - %s' % (new,))
+
+    def property_mapicon_added_change_notification(self, model, old, new):
         """Hook a new icon up to an observer"""
-        for icon in new:
-            if getattr(icon, 'controller', None) is not self:
-                icon.registerObserver(self)
-        # TODO - raise obscurement to the top
+        if getattr(new, 'controller', None) is not self:
+            new.registerObserver(self)
+    def property_mapicon_removed_change_notification(self, model, old, new):
+        log.msg('map icon %s removed' % (new.iconname,))
 
     def property_iconname_change_notification(self, icon, old, new):
-        icon.iconimage = gdk.pixbuf_new_from_file(fs.downloads(new))
+        loc = fs.downloads(self.map.mapname, 'character_' + new)
+        icon.iconimage = gdk.pixbuf_new_from_file(loc)
 
     def property_iconimage_change_notification(self, icon, old, new):
         canvas = self.view['canvas']
@@ -276,12 +280,23 @@ class BigController(SilentController):
         self.view['magnify_on'].set_sensitive(True)
         self.view['paint_on'].set_sensitive(True)
         self.view['pan_on'].set_sensitive(True)
+        self.view['laser_on'].set_sensitive(True)
 
         # set a flag so map initialization can happen later
         self.justloaded = 1
 
     def property_laser_change_notification(self, model, old, new):
-        print 'laser moved'
+        if laser is None:
+            self.view['laser'] = None
+        else:
+            if self.view['laser'] is not None:
+                self.view['laser'].destroy()
+            root = self.view['canvas'].root()
+            x, y = new
+            self.view['laser'] = root.add("GnomeCanvasEllipse", 
+                    color="red", x1=x-3, y1=y-3,
+                    x2=y+3, y2=y+3)
+
     def property_attention_change_notification(self, model, old, new):
         print 'new attention rectangle'
     def property_target_lines_change_notification(self, model, old, new):
@@ -299,11 +314,6 @@ class BigController(SilentController):
             reactor.callLater(0.1, 
                               self.view['canvas'].zoomBox, *model.lastwindow)
             self.justloaded = 0
-    def property_obscurement_change_notification(self, model, old, new):
-        # TODO - delete old obscurement?
-        root = self.view['canvas'].root()
-        root.add("GnomeCanvasPixbuf", pixbuf=new)
-
 
     def on_quit_activate(self, widget):
         self.quit()

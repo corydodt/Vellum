@@ -10,7 +10,7 @@ gtk2reactor.install()
 from twisted.internet import reactor, defer
 from twisted.python import log, usage
 
-from vellum.gui.map import Map 
+from vellum.server.map import Map
 from vellum.gui.net import NetClient, NetModel
 from vellum.gui.view import BigController, BigView
 
@@ -40,11 +40,10 @@ def run(argv = None):
     d = defer.Deferred()
 
     
-    map = Map()
     netmodel = NetModel()
-    netclient = NetClient(map, netmodel)
+    netclient = NetClient(netmodel)
 
-    bigctl = BigController(map, netmodel, d)
+    bigctl = BigController(netmodel, d)
     bigview = BigView(bigctl)
 
 

@@ -4,38 +4,63 @@
 # sound fields: name, top, left
 # text fields: title, top, left
 ---
+name: The Gnoll Huddle
+id: 91d8b0b71ca96f6aa6a37f7d788f196a
 files:
-    -   name: The Gnoll Huddle
-        uri: images/gnoll-huddle.jpg
-        type: map
-        md5: fd693cc6ce9fc63ca03ed9600b9feeae
+    -   uri: $SERVER/images/gnoll-huddle.jpg
+        type: background
         # view zooms to fit this rectangle
         view: [940, 650, 1440, 1150]
         # physical distance represented by 100 pixels
         scale100px: 10ft.
 
-    -   name: The Gnoll Huddle
-        uri: images/gnoll-huddle_obm.png
+    -   uri: $SERVER/images/gnoll-huddle_obm.png
         type: mask/obscurement
-        md5: 2768f296b66341457c0a619904ba3ad9
 
     -   name: Shara
-        uri: images/shara-kw.png
+        uri: $SERVER/images/shara-kw.png
         type: character
-        md5: 0865ea97c08cb3cb47e68312a48222cb
+        id: 6df1e2085b6f4e1ac7acefb24c5f4678
         corner: [900, 1000]
         size: 2.5ft
 
     -   name: Halbren
-        uri: images/halbren.png
+        uri: $SERVER/images/halbren.png
         type: character
-        md5: ee9d888024cf8456402eb3883995398a
+        id: 3b50ede7d592195030a8f107e09a1e8d
         corner: [1000, 1020]
         size: 1.5ft
 
     -   name: Crom Grumdalsen
-        uri: images/crom.png
+        uri: $SERVER/images/crom.png
         type: character
-        md5: dc4084622657491f1b8a91587a9e895e
+        id: 7240dcc517506c94038080c6188b2c08
         corner: ~
         size: 2.5ft
+
+    -   title: Room 17
+        type: note
+        corner: [1100, 1100]
+        id: b49448805b5632051c8c78b25a7db93c
+        text: >
+              Hello. Room 17 is a big room.
+
+              You know you love it.
+
+    -   title: Victorious Conclusion
+        type: note
+        corner: ~
+        id: 64a7ba4fa23359a27a83f0d0345a826c
+        uri: $SERVER/text/victorious.html
+
+    -   name: Kaboom
+        type: sound
+        uri: $SERVER/sounds/kaboom.ogg
+        id: c83efd9f671bbf49a835ead429b16443
+        corner: [1200, 1200]
+
+    -   label: Fireball AOE
+        type: drawing
+        uri: $SERVER/images/gnoll-huddle_draw1.png
+        corner: [900, 900]
+
