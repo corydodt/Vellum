@@ -178,27 +178,47 @@ class BigController(SilentController):
         file_loc = cache.lookup(new)
         self.map.image = gdk.pixbuf_new_from_file(file_loc)
         log.msg('displaying map %s' % (new,))
+        if new is None:
+            self.view.cleanCanvas()
+            return
+        # put in the view window which is invisible by default
+        self.view.landCanvas()
+        root = self.view['canvas'].root()
+        img = self.map.image
+        root.add("GnomeCanvasPixbuf", pixbuf=img)
+        self.view['canvas'].set_scroll_region(0, 0, 
+                                              img.get_width(),
+                                              img.get_height()
+                                              )
+        # turn on buttons now that canvas is active
+        self.view['magnify_on'].set_sensitive(True)
+        self.view['paint_on'].set_sensitive(True)
+        self.view['pan_on'].set_sensitive(True)
+        self.view['laser_on'].set_sensitive(True)
+
+        # set a flag so map initialization can happen later
+        self.justloaded = 1
 
     def property_mapname_change_notification(self, model, old, new):
         self.view['Vellum'].set_title('Vellum - %s' % (new,))
 
     def property_mapicon_added_change_notification(self, model, old, new):
         """Hook a new icon up to an observer"""
-        if new is not None:
-            if getattr(new, 'controller', None) is not self:
-                new.registerObserver(self)
+        if getattr(new, 'controller', None) is not self:
+            new.registerObserver(self)
+
     def property_mapicon_removed_change_notification(self, model, old, new):
-        if new is not None:
-            log.msg('map icon %s removed' % (new.iconname,))
+        log.msg('map icon %s removed' % (new.iconname,))
 
     def property_iconname_change_notification(self, icon, old, new):
-        loc = fs.downloads(self.map.mapname, 'character_' + new)
-        icon.iconimage = gdk.pixbuf_new_from_file(loc)
+        pass # TODO
 
-    def property_iconimage_change_notification(self, icon, old, new):
+    def property_iconuri_change_notification(self, icon, old, new):
+        loc = cache.lookup(new)
+        icon.image = gdk.pixbuf_new_from_file(loc)
         canvas = self.view['canvas']
         root = canvas.root()
-        image = icon.iconimage
+        image = icon.image
         corner = icon.iconcorner
         if corner is None: corner = (0,0)
         x, y = corner
@@ -231,19 +251,19 @@ class BigController(SilentController):
             icon.widget = igroup
 
     def property_iconsize_change_notification(self, icon, old, new):
-        w = icon.iconimage.get_width()
-        h = icon.iconimage.get_height()
+        w = icon.image.get_width()
+        h = icon.image.get_height()
         scale_ratio = icon.iconsize*(100/w) / self.map.scale100px
         w = w*scale_ratio
         h = h*scale_ratio
         # FIXME - this loses the original image scale, so repeatedly
         # FIXME   scaling to this size will make the object grow or shrink
         # FIXME   geometrically instead of remaining the same size.
-        image = icon.iconimage.scale_simple(w,h,gdk.INTERP_HYPER)
+        image = icon.image.scale_simple(w,h,gdk.INTERP_HYPER)
         # redraw a new, resized icon over the old one
         icon.widget.destroy()
         icon.widget = None
-        icon.iconimage = image
+        icon.image = image
 
     def property_iconcorner_change_notification(self, icon, old, new):
         x, y = new
@@ -273,32 +293,12 @@ class BigController(SilentController):
 
     def on_icon_gdk_motion_notify(self, widget, event, icon):
         if icon.grabbed:
-            iw, ih = icon.iconimage.get_width(), icon.iconimage.get_height()
+            iw, ih = icon.image.get_width(), icon.image.get_height()
             self.map.moveIcon(icon, event.x - iw/2, event.y - ih/2)
 
     def property_scale100px_change_notification(self, model, old, new):
         print 'map scale changed'
 
-    def property_image_change_notification(self, model, old, new):
-        if new is None:
-            self.view.cleanCanvas()
-            return
-        # put in the view window which is invisible by default
-        self.view.landCanvas()
-        root = self.view['canvas'].root()
-        root.add("GnomeCanvasPixbuf", pixbuf=new)
-        self.view['canvas'].set_scroll_region(0, 0, 
-                                              new.get_width(),
-                                              new.get_height()
-                                              )
-        # turn on buttons now that canvas is active
-        self.view['magnify_on'].set_sensitive(True)
-        self.view['paint_on'].set_sensitive(True)
-        self.view['pan_on'].set_sensitive(True)
-        self.view['laser_on'].set_sensitive(True)
-
-        # set a flag so map initialization can happen later
-        self.justloaded = 1
 
     def property_laser_change_notification(self, model, old, new):
         if new is None:

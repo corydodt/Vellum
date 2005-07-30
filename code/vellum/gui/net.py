@@ -59,10 +59,17 @@ class NetClient(SilentController):
 
         log.msg("Received map, bringing view up to date!!")
         # force updates to the model to take effect immediately
-        for prop in map.__properties__:
-            value = getattr(map, prop)
-            code = "map.%s = value" % (prop, )
-            exec code
+        map.mapname = map.mapname
+        map.mapuri = map.mapuri
+        map.lastwindow = map.lastwindow
+        map.scale100px = map.scale100px
+        for icon in map.icons:
+            icon.iconuri = icon.iconuri
+            icon.iconname = icon.iconname
+            icon.iconsize = icon.iconsize
+            icon.iconcorner = icon.iconcorner
+        # TODO: drawings, notes, sounds
+
 
     def receivedListener(self, listener):
         self.listener = listener

@@ -47,12 +47,12 @@ class Map(IDableModel):
     __properties__ = {
         # these are managed with simple assignments
         'mapname': None,  # changing updates the string in the titlebar
-        'image': None, # changing loads a new map background image
         'scale100px': 1.0, # physical units in meters per 100px
-        'attention': (0,0,100,100),
         'lastwindow': (0,0,100,100),
-        'laser': None,
         'mapuri': None,
+        # these are transient
+        'laser': None,
+        'attention': (0,0,100,100),
         # these require management methods
         'mapicon_added': None,
         'mapicon_removed': None,
@@ -111,7 +111,7 @@ class Map(IDableModel):
         for file in dn['files']:
             if file['type'] == 'background':
                 map.mapuri = file['uri']
-                map.lastview = file['view']
+                map.lastwindow = file['view']
                 map.scale100px = distance.normalize(file['scale100px'])
             elif file['type'] == 'character':
                 size = distance.normalize(file['size'])
