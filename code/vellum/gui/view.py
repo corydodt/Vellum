@@ -42,7 +42,7 @@ except ImportError:
 
 from gtkmvc import view
 
-from vellum.gui.ctlutil import SilentController
+from vellum.util.ctlutil import SilentController
 from vellum.gui.fs import fs, cache
 
 
@@ -141,6 +141,12 @@ class BigView(view.View):
         canvas.connect('motion-notify-event', 
                        c.on_canvas_motion_notify_event)
 
+    def cleanCanvas(self):
+        if self['canvas'] is not None:
+            self['canvas'].destroy()
+            self['canvas'] = None
+            # TODO - put viewport1 back
+
     def _drawDefaultBackground(self):
         # allocate the slate background
         self.bg = gdk.pixbuf_new_from_file(fs.background)
@@ -164,6 +170,10 @@ class BigController(SilentController):
 
         self.justloaded = 0
 
+    def property_map_change_notification(self, model, old, new):
+        new.registerObserver(self)
+        self.map = new
+
     def property_mapuri_change_notification(self, model, old, new):
         file_loc = cache.lookup(new)
         self.map.image = gdk.pixbuf_new_from_file(file_loc)
@@ -174,10 +184,12 @@ class BigController(SilentController):
 
     def property_mapicon_added_change_notification(self, model, old, new):
         """Hook a new icon up to an observer"""
-        if getattr(new, 'controller', None) is not self:
-            new.registerObserver(self)
+        if new is not None:
+            if getattr(new, 'controller', None) is not self:
+                new.registerObserver(self)
     def property_mapicon_removed_change_notification(self, model, old, new):
-        log.msg('map icon %s removed' % (new.iconname,))
+        if new is not None:
+            log.msg('map icon %s removed' % (new.iconname,))
 
     def property_iconname_change_notification(self, icon, old, new):
         loc = fs.downloads(self.map.mapname, 'character_' + new)
@@ -268,6 +280,9 @@ class BigController(SilentController):
         print 'map scale changed'
 
     def property_image_change_notification(self, model, old, new):
+        if new is None:
+            self.view.cleanCanvas()
+            return
         # put in the view window which is invisible by default
         self.view.landCanvas()
         root = self.view['canvas'].root()
@@ -286,7 +301,7 @@ class BigController(SilentController):
         self.justloaded = 1
 
     def property_laser_change_notification(self, model, old, new):
-        if laser is None:
+        if new is None:
             self.view['laser'] = None
         else:
             if self.view['laser'] is not None:

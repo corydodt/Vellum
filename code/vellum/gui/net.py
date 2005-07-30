@@ -11,11 +11,12 @@ from vellum.gui.fs import fs, cache
 from vellum.server import HTTPPORT, PBPORT
 from vellum.server.map import Map
 from vellum.server.pb import MapListener
-from vellum.gui.ctlutil import SilentController
+from vellum.util.ctlutil import SilentController
 
 
 class NetModel(model.Model):
-    __properties__ = {'server': None
+    __properties__ = {'server': None,
+                      'map': None,
                       }
 
 class NetClient(SilentController):
@@ -51,15 +52,24 @@ class NetClient(SilentController):
         return d
 
     def gotMapData(self, data):
-        self.map = Map.loadFromYaml(data)
-        self.map.registerObserver(self)
-        self.listener = MapListener(self.map)
+        map = Map.loadFromYaml(data)
+        self.netmodel.map = map
+
+        self.listener = MapListener(map)
+
+        log.msg("Received map, bringing view up to date!!")
+        # force updates to the model to take effect immediately
+        for prop in map.__properties__:
+            value = getattr(map, prop)
+            code = "map.%s = value" % (prop, )
+            exec code
 
     def receivedListener(self, listener):
         self.listener = listener
 
     def collectFiles(self):
-        return defer.maybeDeferred(self._getNextFile, self.map.iterUris())
+        return defer.maybeDeferred(self._getNextFile, 
+                                   self.netmodel.map.iterUris())
 
     def _getNextFile(self, fileinfos):
         try:

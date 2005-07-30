@@ -7,8 +7,7 @@ from gtkmvc import model
 import yaml
 
 from vellum.util.uuid import uuid
-from vellum.util import cache
-from vellum.util import distance
+from vellum.util import cache, distance
 
 class IDableModel(model.Model):
     def describeToYaml(self):
