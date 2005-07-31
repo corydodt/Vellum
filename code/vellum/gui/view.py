@@ -170,9 +170,12 @@ class BigController(SilentController):
 
         self.justloaded = 0
 
-    def property_map_change_notification(self, model, old, new):
-        new.registerObserver(self)
-        self.map = new
+    def property_map_change_notification(self, model, old, map):
+        map.registerObserver(self)
+        for icon in map.icons:
+            icon.registerObserver(self)
+        # TODO - notes, drawings, sounds
+        self.map = map 
 
     def property_mapuri_change_notification(self, model, old, new):
         file_loc = cache.lookup(new)
@@ -210,12 +213,25 @@ class BigController(SilentController):
     def property_mapicon_removed_change_notification(self, model, old, new):
         log.msg('map icon %s removed' % (new.iconname,))
 
-    def property_iconname_change_notification(self, icon, old, new):
-        pass # TODO
-
     def property_iconuri_change_notification(self, icon, old, new):
+        # clean out the old widget if necessary
+        if icon.widget is not None:
+            icon.widget.destroy()
+            icon.widget = None
+
+        # make an image
         loc = cache.lookup(new)
         icon.image = gdk.pixbuf_new_from_file(loc)
+
+        # scale it to correspond to the map scale
+        w = icon.image.get_width()
+        h = icon.image.get_height()
+        scale_ratio = icon.iconsize*(100/w) / self.map.scale100px
+        w = w*scale_ratio
+        h = h*scale_ratio
+        icon.image = icon.image.scale_simple(w,h,gdk.INTERP_HYPER)
+
+        # place it on the canvas
         canvas = self.view['canvas']
         root = canvas.root()
         image = icon.image
@@ -251,19 +267,12 @@ class BigController(SilentController):
             icon.widget = igroup
 
     def property_iconsize_change_notification(self, icon, old, new):
-        w = icon.image.get_width()
-        h = icon.image.get_height()
-        scale_ratio = icon.iconsize*(100/w) / self.map.scale100px
-        w = w*scale_ratio
-        h = h*scale_ratio
-        # FIXME - this loses the original image scale, so repeatedly
-        # FIXME   scaling to this size will make the object grow or shrink
-        # FIXME   geometrically instead of remaining the same size.
-        image = icon.image.scale_simple(w,h,gdk.INTERP_HYPER)
-        # redraw a new, resized icon over the old one
-        icon.widget.destroy()
-        icon.widget = None
-        icon.image = image
+        # just redraw the whole icon
+        icon.iconuri = icon.iconuri
+
+    def property_iconname_change_notification(self, icon, old, new):
+        # just redraw the whole icon
+        icon.iconuri = icon.iconuri
 
     def property_iconcorner_change_notification(self, icon, old, new):
         x, y = new

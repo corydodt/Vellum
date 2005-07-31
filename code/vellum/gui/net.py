@@ -67,7 +67,8 @@ class NetClient(SilentController):
             icon.iconuri = icon.iconuri
             icon.iconname = icon.iconname
             icon.iconsize = icon.iconsize
-            icon.iconcorner = icon.iconcorner
+            if icon.iconcorner is not None:
+                icon.iconcorner = icon.iconcorner
         # TODO: drawings, notes, sounds
 
 

@@ -57,10 +57,10 @@ files:
         type: sound
         uri: $SERVER/sounds/kaboom.ogg
         id: c83efd9f671bbf49a835ead429b16443
-        corner: [1200, 1200]
+        corner: [1300, 1100]
 
     -   label: Fireball AOE
         type: drawing
         uri: $SERVER/images/gnoll-huddle_draw1.png
-        corner: [900, 900]
+        corner: [950, 750]
 
