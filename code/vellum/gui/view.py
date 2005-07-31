@@ -247,21 +247,22 @@ class BigController(SilentController):
                                    x=image.get_width() /2,
                                    y=image.get_height() + 3
                                    )
-            # outline
-            text = fontgroup.add("GnomeCanvasText",
+            # outlined text
+            text = icon.text = fontgroup.add("GnomeCanvasText",
                                  font="verdana bold",
                                  text=icon.iconname,
                                  )
-            w = text.get_property('text-width')
-            h = text.get_property('text-height')
+            tw = text.get_property('text-width')
+            th = text.get_property('text-height')
             textbg = fontgroup.add("GnomeCanvasRect",
                           fill_color = "white",
-                          x1=-3*w/4, y1=-3*h/4,
-                          x2=3*w/4, y2=3*h/4,
+                          x1=-3*tw/4, y1=-3*th/4,
+                          x2=3*tw/4, y2=3*th/4,
                           )
             textbg.lower_to_bottom()
 
             fontgroup.lower_to_bottom()
+
 
             igroup.connect('event', self.on_icon_event, icon)
             icon.widget = igroup
@@ -288,10 +289,10 @@ class BigController(SilentController):
             return handler(widget, event, icon)
 
     def on_icon_gdk_enter_notify(self, widget, event, icon):
-        pass # highlight or something
+        icon.text.set_property('fill-color', 'red')
 
     def on_icon_gdk_leave_notify(self, widget, event, icon):
-        pass # unhighlight or something
+        icon.text.set_property('fill-color', 'black')
 
     def on_icon_gdk_button_press(self, widget, event, icon):
         icon.grabbed = True
