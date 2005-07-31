@@ -1,5 +1,7 @@
 """HTTP and PB client."""
 
+import re
+
 from twisted.internet import reactor, defer
 from twisted.spread import pb
 from twisted.python import log
@@ -20,6 +22,21 @@ class NetModel(model.Model):
                       }
 
 class NetClient(SilentController):
+    _prop_pattern = re.compile(r'property_(?P<prop>.*)_change_notification', )
+
+    def __getattr__(self, name):
+        """Route changes to the map through my MapListener"""
+        m = self._prop_pattern.match(name)
+        if m is not None:
+            prop = m.group('prop')
+            return lambda m,o,n: self.updateListener(prop, m, n)
+        raise AttributeError(name)
+
+    def updateListener(self, propname, model, value):
+        if self.listener is not None:
+            d = self.listener.callRemote("%s_event" % (propname,), model.id, value)
+            # TODO - wait for d?
+
     def __init__(self, netmodel):
         self.pbfactory = pb.PBClientFactory()
         self.listener = None
@@ -63,12 +80,14 @@ class NetClient(SilentController):
         map.mapuri = map.mapuri
         map.lastwindow = map.lastwindow
         map.scale100px = map.scale100px
+        map.registerObserver(self)
         for icon in map.icons:
             icon.iconuri = icon.iconuri
             icon.iconname = icon.iconname
             icon.iconsize = icon.iconsize
             if icon.iconcorner is not None:
                 icon.iconcorner = icon.iconcorner
+            icon.registerObserver(self)
         # TODO: drawings, notes, sounds
 
 
