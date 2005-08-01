@@ -4,6 +4,9 @@ warnings.filterwarnings('ignore')
 
 
 import sys
+
+import ConfigParser
+
 # install must happen first because reactors are magikal
 from twisted.internet import gtk2reactor
 gtk2reactor.install()
@@ -13,6 +16,7 @@ from twisted.python import log, usage
 from vellum.server.map import Map
 from vellum.gui.net import NetClient, NetModel
 from vellum.gui.view import BigController, BigView
+from vellum.gui.fs import fs
 
 class Options(usage.Options):
     synopsis = 'Usage: vellumapp.py [options]'
@@ -39,12 +43,18 @@ def run(argv = None):
 
     d = defer.Deferred()
 
+    cp = ConfigParser.ConfigParser()
+    cp.read(fs.ini)
+    options = dict(cp.items('vellum'))
+
     
     netmodel = NetModel()
-    netclient = NetClient(netmodel)
+    netclient = NetClient(netmodel, )
 
     bigctl = BigController(netmodel, d)
     bigview = BigView(bigctl)
+
+    netmodel.username = options['username']
 
 
     d.addCallback(finish).addErrback(finish)

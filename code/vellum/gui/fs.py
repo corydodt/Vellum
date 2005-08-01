@@ -14,6 +14,7 @@ fs = Filesystem(util.sibpath(sys.argv[0], ''))
 fs.gladefile = fs("vellum.glade")
 fs.background = fs("pixmaps", "slatebg.png")
 fs.cache = fs.new("cache", mkdir=1)
+fs.ini = fs("vellum.ini")
 
 cache = Cache(fs.cache(''))
 

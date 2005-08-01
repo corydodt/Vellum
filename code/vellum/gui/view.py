@@ -211,6 +211,7 @@ class BigController(SilentController):
         self.netmodel.username = widget.get_text()
 
     def property_username_change_notification(self, model, old, new):
+        self.view['username'].set_text(new)
         if old != new:
             print 'Username: changed to', new
 
