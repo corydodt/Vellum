@@ -19,6 +19,7 @@ from vellum.util.ctlutil import SilentController
 class NetModel(model.Model):
     __properties__ = {'server': None,
                       'map': None,
+                      'username': None,
                       }
 
 class NetClient(SilentController):

@@ -103,7 +103,8 @@ def fileToImage(filename):
 class BigView(view.View):
     """All the widgets down to the main map window"""
     def __init__(self, controller):
-        view.View.__init__(self, controller, fs.gladefile, "Vellum")
+        view.View.__init__(self, controller, fs.gladefile, ["Preferences", 
+                                                            "Vellum"])
         # graphics setup
         self['Vellum'].set_icon_from_file(fs('pixmaps', 'v.ico'))
 
@@ -201,6 +202,17 @@ class BigController(SilentController):
 
         # set a flag so map initialization can happen later
         self.justloaded = 1
+
+    def on_Preferences_delete_event(self, w, ev):
+        w.hide()
+        return True # don't call the default handler (w won't be destroyed)
+
+    def on_username_focus_out_event(self, widget, event):
+        self.netmodel.username = widget.get_text()
+
+    def property_username_change_notification(self, model, old, new):
+        if old != new:
+            print 'Username: changed to', new
 
     def property_mapname_change_notification(self, model, old, new):
         self.view['Vellum'].set_title('Vellum - %s' % (new,))
@@ -339,6 +351,9 @@ class BigController(SilentController):
             reactor.callLater(0.1, 
                               self.view['canvas'].zoomBox, *model.lastwindow)
             self.justloaded = 0
+
+    def on_preferences_activate(self, widget):
+        self.view['Preferences'].show()
 
     def on_quit_activate(self, widget):
         self.quit()
