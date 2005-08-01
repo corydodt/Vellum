@@ -23,12 +23,16 @@ class Options(usage.Options):
     optParameters = [['logfile', 'l', None, 'File to use for logging'],
                      ]
 
-def finish(fail=None):
+def finish(fail, model):
+    """This doubles as callback and errback"""
     try:
         if fail is not None:
             log.err(fail)
     finally:
-        reactor.stop()
+        try:
+            model.saveIni()
+        finally:
+            reactor.stop()
 
 def run(argv = None):
     if argv is None:
@@ -55,9 +59,10 @@ def run(argv = None):
     bigview = BigView(bigctl)
 
     netmodel.username = options['username']
+    netmodel.recent_servers = options['recent_servers'].split()
 
 
-    d.addCallback(finish).addErrback(finish)
+    d.addCallback(finish, netmodel).addErrback(finish, netmodel)
 
     reactor.run()
 

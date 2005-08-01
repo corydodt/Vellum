@@ -210,10 +210,14 @@ class BigController(SilentController):
     def on_username_focus_out_event(self, widget, event):
         self.netmodel.username = widget.get_text()
 
+    def property_recent_servers_change_notification(self, model, old, new):
+        set_model_from_list(self.view['server'], new)
+        model.saveIni()
+
     def property_username_change_notification(self, model, old, new):
         self.view['username'].set_text(new)
         if old != new:
-            print 'Username: changed to', new
+            model.saveIni()
 
     def property_mapname_change_notification(self, model, old, new):
         self.view['Vellum'].set_title('Vellum - %s' % (new,))
@@ -367,7 +371,22 @@ class BigController(SilentController):
         self.deferred.callback(None)
 
     def on_connect_button_clicked(self, widget):
-        self.netmodel.server = self.view['server'].get_child().get_text()
+        peer = self.view['server'].get_child().get_text()
+        model = self.netmodel
+
+        # do recent_server list housekeeping - max 10 entries, put most
+        # recent first, etc.
+        recent = model.recent_servers
+        if peer in recent:
+            recent.remove(peer)
+        recent.insert(0, peer)
+        if len(recent) > 10:
+            del recent[10:]
+        set_model_from_list(self.view['server'], model.recent_servers)
+        model.saveIni()
+
+        # making this assignment connects us!
+        model.server = peer
 
     def on_canvas_button_press_event(self, widget, ev):
         pass
@@ -375,3 +394,19 @@ class BigController(SilentController):
         pass
     def on_canvas_motion_notify_event(self, widget, ev):
         pass
+
+
+# borrowed from PyGTK FAQ
+def set_model_from_list (cb, items):
+    """Setup a ComboBox or ComboBoxEntry based on a list of strings."""           
+    model = gtk.ListStore(str)
+    for i in items:
+        model.append([i])
+    cb.set_model(model)
+    if type(cb) == gtk.ComboBoxEntry:
+        cb.set_text_column(0)
+    elif type(cb) == gtk.ComboBox:
+        cell = gtk.CellRendererText()
+        cb.pack_start(cell, True)
+        cb.add_attribute(cell, 'text', 0)
+

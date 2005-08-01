@@ -1,6 +1,7 @@
 """HTTP and PB client."""
 
 import re
+import ConfigParser
 
 from twisted.internet import reactor, defer
 from twisted.spread import pb
@@ -19,9 +20,21 @@ from vellum.util.ctlutil import SilentController
 
 class NetModel(model.Model):
     __properties__ = {'server': None,
+                      'recent_servers': [],
                       'map': None,
                       'username': None,
                       }
+    def saveIni(self):
+        options = {'username': self.username, 
+                   'recent_servers': ' '.join(self.recent_servers),
+                   }
+        cp = ConfigParser.ConfigParser()
+        cp.add_section('vellum')
+        for k,v in options.items():
+            cp.set('vellum', k, v)
+        cp.write(file(fs.ini, 'w'))
+
+
 
 class NetClient(SilentController):
     _prop_pattern = re.compile(r'property_(?P<prop>.*)_change_notification', )
