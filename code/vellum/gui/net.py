@@ -14,7 +14,7 @@ from gtkmvc import model
 from vellum.gui.fs import fs, cache
 from vellum.server import HTTPPORT, PBPORT
 from vellum.server.map import Map
-from vellum.server.pb import MapListener
+from vellum.server.pb import MapView
 from vellum.util.ctlutil import SilentController
 
 
@@ -40,7 +40,7 @@ class NetClient(SilentController):
     _prop_pattern = re.compile(r'property_(?P<prop>.*)_change_notification', )
 
     def __getattr__(self, name):
-        """Route changes to the map through my MapListener"""
+        """Route changes to the map through my MapView"""
         m = self._prop_pattern.match(name)
         if m is not None:
             prop = m.group('prop')
@@ -106,7 +106,7 @@ class NetClient(SilentController):
                 icon.iconcorner = icon.iconcorner
             icon.registerObserver(self)
         # TODO: drawings, notes, sounds
-        return MapListener(map)
+        return MapView(map)
 
 
     def receivedListener(self, remote_listener):
