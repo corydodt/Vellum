@@ -33,13 +33,14 @@ class NetClient(SilentController):
         raise AttributeError(name)
 
     def updateListener(self, propname, model, value):
-        if self.listener is not None:
-            d = self.listener.callRemote("%s_event" % (propname,), model.id, value)
+        if self.remote_listener is not None:
+            d = self.remote_listener.callRemote("%s_event" % (propname,), 
+                                                model.id, value)
             # TODO - wait for d?
 
     def __init__(self, netmodel):
         self.pbfactory = pb.PBClientFactory()
-        self.listener = None
+        self.remote_listener = None
         self.map = None
 
         netmodel.registerObserver(self)
@@ -61,8 +62,8 @@ class NetClient(SilentController):
         d.addCallback(self._cb_connected)
         d. addCallback(lambda _: self.remote.callRemote('getInitialMap'))
         d.  addCallback(self.gotMapData)
-        d.   addCallback(lambda _: self.remote.callRemote('iWantUpdates', 
-                                                          self.listener))
+        d.   addCallback(lambda listener: 
+                self.remote.callRemote('iWantUpdates', listener))
         d.    addCallback(self.receivedListener)
         d.     addCallback(lambda _: self.collectFiles())
         d.addErrback(lambda reason: log.err(reason))
@@ -71,8 +72,6 @@ class NetClient(SilentController):
     def gotMapData(self, data):
         map = Map.loadFromYaml(data)
         self.netmodel.map = map
-
-        self.listener = MapListener(map)
 
         log.msg("Received map, bringing view up to date!!")
         # force updates to the model to take effect immediately
@@ -89,10 +88,11 @@ class NetClient(SilentController):
                 icon.iconcorner = icon.iconcorner
             icon.registerObserver(self)
         # TODO: drawings, notes, sounds
+        return MapListener(map)
 
 
-    def receivedListener(self, listener):
-        self.listener = listener
+    def receivedListener(self, remote_listener):
+        self.remote_listener = remote_listener
 
     def collectFiles(self):
         return defer.maybeDeferred(self._getNextFile, 

@@ -17,7 +17,7 @@ from vellum.server.map import Map, Icon
 
 class MapListener(pb.Referenceable):
     """Make calls on this remote object to push updates across the wire"""
-    def __init__(self, map):
+    def __init__(self, map, ):
         self.map = map
 
     def remote_mapicon_added_event(self, oid, new):
@@ -35,7 +35,7 @@ class MapListener(pb.Referenceable):
         i = self.map.iconFromId(oid)
         i.iconname = new
         log.msg("iconname changed")
-    def remote_iconimage_event(self, oid, new):
+    def remote_iconuri_event(self, oid, new):
         assert None, 'not implemented'
         log.msg("iconimage changed")
     def remote_iconsize_event(self, oid, new):
@@ -55,44 +55,29 @@ class MapListener(pb.Referenceable):
     def remote_scale100px_event(self, oid, new):
         self.map.scale100px = new
         log.msg("scale100px changed")
-    def remote_notes_event(self, oid, new):
-        assert None, 'not implemented'
-        log.msg("notes changed")
     def remote_mapname_event(self, oid, new):
+        self.map.mapname = new
         log.msg("mapname changed")
-    def remote_image_event(self, oid, new):
+    def remote_mapuri_event(self, oid, new):
         assert None, 'not implemented'
         log.msg("image changed")
-    def remote_drawings_event(self, oid, new):
-        assert None, 'not implemented'
-        log.msg("drawings changed")
     def remote_laser_event(self, oid, new):
         self.map.laser = new
         log.msg("laser changed")
     def remote_obscurement_event(self, oid, new):
         assert None, 'not implemented'
         log.msg("obscurement changed")
-    def remote_follow_lines_event(self, oid, new):
-        assert None, 'not implemented'
-        log.msg("follow_lines changed")
-    def remote_target_lines_event(self, oid, new):
-        assert None, 'not implemented'
-        log.msg("target_lines changed")
 
 class Gameness(pb.Root):
     def __init__(self):
         cp = ConfigParser.ConfigParser()
         cp.read('vellumpb.ini')
-        self.lastmap = cp.get('vellumpb', 'lastmap', None)
-
-        self.map = Map.loadFromYaml(file(self.lastmap, 'rb').read())
 
         self.notifiables = []     # MapListener refs from clients
-        self.observable = MapListener(self.map)
 
-    def dispatchUpdates(self, name, new):
-        for ref in self.notifiables:
-            ref.callRemote('%s_event' % (name,), new)
+        lastmap = cp.get('vellumpb', 'lastmap', None)
+        self.map = Map.loadFromYaml(file(lastmap, 'rb').read())
+        self.observable = MapListener(self.map, )
 
     def remote_getInitialMap(self):
         return self.map.describeToYaml()
@@ -101,4 +86,8 @@ class Gameness(pb.Root):
         """Here's an object you can use to tell me about map updates"""
         self.notifiables.append(listener)
         return self.observable
+
+    # def dispatchUpdates(self, id, name, new):
+    #    for ref in self.notifiables:
+    #        ref.callRemote('%s_event' % (name,), id, new)
 
