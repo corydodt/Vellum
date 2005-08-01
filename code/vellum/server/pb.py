@@ -10,9 +10,13 @@ allowed in what versions.
 import ConfigParser
 
 from twisted.spread import pb
+from twisted.cred import checkers, portal
 from twisted.python import log
 
+from zope import interface
+
 from vellum.server.map import Map, Icon
+from vellum.server.fs import fs
 
 
 class MapListener(pb.Referenceable):
@@ -68,10 +72,10 @@ class MapListener(pb.Referenceable):
         assert None, 'not implemented'
         log.msg("obscurement changed")
 
-class Gameness(pb.Root):
-    def __init__(self):
+class Gameboy(pb.Avatar):
+    def __init__(self, name):
         cp = ConfigParser.ConfigParser()
-        cp.read('vellumpb.ini')
+        cp.read(fs.ini)
 
         self.notifiables = []     # MapListener refs from clients
 
@@ -79,10 +83,10 @@ class Gameness(pb.Root):
         self.map = Map.loadFromYaml(file(lastmap, 'rb').read())
         self.observable = MapListener(self.map, )
 
-    def remote_getInitialMap(self):
+    def perspective_getInitialMap(self):
         return self.map.describeToYaml()
 
-    def remote_iWantUpdates(self, listener):
+    def perspective_iWantUpdates(self, listener):
         """Here's an object you can use to tell me about map updates"""
         self.notifiables.append(listener)
         return self.observable
@@ -90,4 +94,18 @@ class Gameness(pb.Root):
     # def dispatchUpdates(self, id, name, new):
     #    for ref in self.notifiables:
     #        ref.callRemote('%s_event' % (name,), id, new)
+
+
+class GameRealm:
+    interface.implements(portal.IRealm)
+    def requestAvatar(self, avatarId, mind, *interfaces):
+        if pb.IPerspective not in interfaces:
+            raise NotImplementedError
+        return pb.IPerspective, Gameboy(avatarId), lambda:None
+
+c = checkers.InMemoryUsernamePasswordDatabaseDontUse(jezebel='X',
+                                              gm='X',
+                                              )
+gameportal = portal.Portal(GameRealm())
+gameportal.registerChecker(c)
 

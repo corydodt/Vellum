@@ -7,7 +7,7 @@ from nevow import static, appserver
 
 
 from vellum.server import PBPORT, HTTPPORT
-from vellum.server.pb import Gameness
+from vellum.server.pb import gameportal
 from vellum.server.irc import VellumTalkFactory
 
 webroot = static.File('.')
@@ -17,7 +17,8 @@ application = service.Application('Vellum')
 irchost = 'irc.freenode.net'
 start_channel = '#vellum'
 
-pbsvc = internet.TCPServer(PBPORT, pb.PBServerFactory(Gameness()))
+
+pbsvc = internet.TCPServer(PBPORT, pb.PBServerFactory(gameportal))
 
 httpsvc = internet.TCPServer(HTTPPORT, appserver.NevowSite(webroot))
 

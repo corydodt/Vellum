@@ -6,6 +6,7 @@ from twisted.internet import reactor, defer
 from twisted.spread import pb
 from twisted.python import log
 from twisted.web.client import downloadPage
+from twisted.cred import credentials
 
 from gtkmvc import model
 
@@ -59,7 +60,10 @@ class NetClient(SilentController):
 
     def connectPB(self, server, port):
         reactor.connectTCP(server, port, self.pbfactory)
-        d = self.pbfactory.getRootObject()
+
+        creds = credentials.UsernamePassword(self.netmodel.username, 'X')
+
+        d = self.pbfactory.login(creds)
         d.addCallback(self._cb_connected)
         d. addCallback(lambda _: self.remote.callRemote('getInitialMap'))
         d.  addCallback(self.gotMapData)
