@@ -21,7 +21,7 @@ from vellum.server.fs import fs
 class MapView(pb.Viewable):
     """Make calls on this remote object to push updates across the wire"""
     def __getattr__(self, name):
-        if name.startswith('view_'):
+        if name.startswith('view_') and name.endswith('_event'):
             if getattr(self, 'map', None) is None:
                 raise RuntimeError("%r: map is not set" % (self,))
             return getattr(self, name[5:])
