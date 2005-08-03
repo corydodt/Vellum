@@ -216,6 +216,10 @@ class BigController(SilentController):
 
     def property_username_change_notification(self, model, old, new):
         self.view['username'].set_text(new)
+        status = self.view['statusbar1']
+        ctx = status.get_context_id('property_username_change_notification')
+        status.pop(ctx)
+        status.push(ctx, 'Username %s' % (new,))
         if old != new:
             model.saveIni()
 
