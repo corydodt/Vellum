@@ -40,9 +40,8 @@ try:
 except ImportError:
     import gnomecanvas
 
-from gtkmvc import view
+from gtkmvc import view, controller
 
-from vellum.util.ctlutil import SilentController
 from vellum.gui.fs import fs, cache
 
 
@@ -162,14 +161,14 @@ class BigView(view.View):
         # now modify the new style object
         self['viewport1'].style.bg_pixmap[gtk.STATE_NORMAL] = _pixmap
 
-class BigController(SilentController):
+class BigController(controller.Controller):
     def __init__(self, netmodel, deferred):
         self.deferred = deferred
         self.netmodel = netmodel
         netmodel.registerObserver(self)
-        SilentController.__init__(self, netmodel)
-
         self.justloaded = 0
+        controller.Controller.__init__(self, netmodel)
+
 
     def property_map_change_notification(self, model, old, map):
         map.registerObserver(self)
@@ -235,13 +234,16 @@ class BigController(SilentController):
         log.msg('map icon %s removed' % (new.iconname,))
 
     def property_iconuri_change_notification(self, icon, old, new):
+        self.drawIcon(icon, new)
+
+    def drawIcon(self, icon, cacheuri):
         # clean out the old widget if necessary
         if icon.widget is not None:
             icon.widget.destroy()
             icon.widget = None
 
         # make an image
-        loc = cache.lookup(new)
+        loc = cache.lookup(cacheuri)
         icon.image = gdk.pixbuf_new_from_file(loc)
 
         # scale it to correspond to the map scale
@@ -290,11 +292,11 @@ class BigController(SilentController):
 
     def property_iconsize_change_notification(self, icon, old, new):
         # just redraw the whole icon
-        icon.iconuri = icon.iconuri
+        self.drawIcon(icon, icon.iconuri)
 
     def property_iconname_change_notification(self, icon, old, new):
         # just redraw the whole icon
-        icon.iconuri = icon.iconuri
+        self.drawIcon(icon, icon.iconuri)
 
     def property_iconcorner_change_notification(self, icon, old, new):
         x, y = new

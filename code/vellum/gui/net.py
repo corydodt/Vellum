@@ -9,13 +9,12 @@ from twisted.python import log
 from twisted.web.client import downloadPage
 from twisted.cred import credentials
 
-from gtkmvc import model
+from gtkmvc import model, controller
 
 from vellum.gui.fs import fs, cache
 from vellum.server import HTTPPORT, PBPORT
 from vellum.server.map import Map
 from vellum.server.pb import MapView
-from vellum.util.ctlutil import SilentController
 
 
 class NetModel(model.Model):
@@ -36,7 +35,7 @@ class NetModel(model.Model):
 
 
 
-class NetClient(SilentController):
+class NetClient(controller.Controller):
     _prop_pattern = re.compile(r'property_(?P<prop>.*)_change_notification', )
 
     def __init__(self, netmodel):
@@ -46,6 +45,7 @@ class NetClient(SilentController):
 
         netmodel.registerObserver(self)
         self.netmodel = netmodel
+        controller.Controller.__init__(self, netmodel)
 
     def __getattr__(self, name):
         """Route changes to the map through my MapView"""
