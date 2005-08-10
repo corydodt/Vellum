@@ -19,7 +19,7 @@ class Noumenon:
     Kant is wrong though, noumena derived from this can be introspected. ;-)
     """
     def __init__(self):
-        self.observers = []
+        self.__dict__['observers'] = []
 
     def registerObserver(self, observer):
         self.observers.append(observer)
@@ -27,6 +27,10 @@ class Noumenon:
     def getArbiter(self, tag):
         """Return an object which accepts assignments to phenomena"""
         return Arbiter(tag, self)
+
+    def __setattr__(self, name, value):
+        raise RuntimeError("Assignments must be made through an Arbiter.")
+
 
 
 class Arbiter:
@@ -78,12 +82,20 @@ def test():
     arbiter = h.getArbiter('__main__')
     d = Director(h)
 
+    try: 
+        h.foo = 1
+    except RuntimeError, e:
+        pass
+    else:
+        assert 0, "should not be able to assign to h.foo"
+
     try:
         print h.foo
     except AttributeError, e:
         pass
     else:
         assert 0, "h.foo should raise an AttributeError"
+
     arbiter.foo = 1
     assert output.pop(0) == ('foo', None, 1, '__main__')
     assert output.pop(0) == ('bar', None, 2, 'director')
