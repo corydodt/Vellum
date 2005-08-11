@@ -6,7 +6,6 @@ import re
 from gtkmvc import model
 import yaml
 
-from vellum.util.uuid import uuid
 from vellum.util import cache, distance
 
 class IDableModel(model.Model):
