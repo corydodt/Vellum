@@ -19,7 +19,7 @@ class Noumenon:
     Kant is wrong though, noumena derived from this can be introspected. ;-)
     """
     def __init__(self):
-        self.__dict__['observers'] = []
+        self.observers = []
 
     def registerObserver(self, observer):
         self.observers.append(observer)
@@ -28,21 +28,20 @@ class Noumenon:
         """Return an object which accepts assignments to phenomena"""
         return Arbiter(tag, self)
 
-    def __setattr__(self, name, value):
-        raise RuntimeError("Assignments must be made through an Arbiter.")
-
 
 
 class Arbiter:
     def __init__(self, tag, noumenon):
+        # use __dict__ to set noumenon since __setattr__ uses it.
         self.__dict__['noumenon'] = noumenon
         self.tag = tag
 
     def __setattr__(self, name, value):
         n = self.noumenon
-        old = getattr(n, name, None)
 
+        # phenomena should get assigned in the noumenon
         if name in n.__phenomena__:
+            old = getattr(n, name, None)
             n.__dict__[name] = value
             # call foo_changed(model, old, new) on observers
             for obs in n.observers:
@@ -50,12 +49,11 @@ class Arbiter:
                 if notification is not None:
                     notification(self.tag, n, old, value)
             return
+        # non-phenomena should get assigned in my dict
         self.__dict__[name] = value
 
     def __getattr__(self, name):
-        if name in self.noumenon.__phenomena__:
-            return getattr(self.noumenon, name)
-        raise AttributeError(name)
+        return getattr(self.noumenon, name)
 
 
 def test():
@@ -78,16 +76,9 @@ def test():
             output.append(('bar', old, new, tag))
 
 
-    h = Hork()
+    h = Hork().getArbiter('ROOT')
     arbiter = h.getArbiter('__main__')
     d = Director(h)
-
-    try: 
-        h.foo = 1
-    except RuntimeError, e:
-        pass
-    else:
-        assert 0, "should not be able to assign to h.foo"
 
     try:
         print h.foo
