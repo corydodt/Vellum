@@ -13,7 +13,6 @@ gtk2reactor.install()
 from twisted.internet import reactor, defer
 from twisted.python import log, usage
 
-from vellum.server.map import Map
 from vellum.gui.net import NetClient, NetModel
 from vellum.gui.view import BigController, BigView
 from vellum.gui.fs import fs
