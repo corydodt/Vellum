@@ -18,7 +18,7 @@ from vellum.gui.view import BigController, BigView
 from vellum.gui.fs import fs
 
 class Options(usage.Options):
-    synopsis = 'Usage: vellumapp.py [options]'
+    synopsis = 'Usage: Vellum.py [options]'
     optParameters = [['logfile', 'l', None, 'File to use for logging'],
                      ]
 
