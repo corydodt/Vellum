@@ -3,15 +3,15 @@ Lines may contain the following syntax:
     - A message that begins with the bot's name or begins with a dot
       is a structured command (beginning on the first token after the bot's
       name, if present), and it may take arguments.
-    - A single word beginning with a letter and prefixed by a * anywhere in
-      the line is the name of an NPC or a PC.
+    - A single word beginning with a letter and prefixed by a * or @ anywhere
+      in the line is the name of an NPC or a PC.  With a *, the name is the
+      subject or actor.  With an @, the name is the target or recipient of the
+      action.
     - An expression inside brackets [] is a verb.
     - A verb starts with zero or more verbnames, and ends with an optional dice
       expression.
     - A dice expression: all of the following are valid..
         5    5x3    5+1x3    d6    3d6     d6+2     9d6l3-1x2    3d6x6sort
-    - A targetting expression starts with "vs" or "vs." and is followed by a
-      comma-separated list of character names
 """
 
 try:
