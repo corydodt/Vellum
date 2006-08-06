@@ -53,7 +53,7 @@ command = (P.StringStart() +
            Sup(P.Optional(P.White())) +
            command_args.setResultsName('command_args')).setResultsName('command')
 
-_test_commands = [(".hello", "['hello', '']"),
+_test_commands = [(".hello", "['hello', '']"), # {{{
 (".foo bar", "['foo', 'bar']"),
 (". foo", "['foo', '']"),
 ("..foo", P.ParseException),
@@ -63,7 +63,7 @@ _test_commands = [(".hello", "['hello', '']"),
 ("TestBot: foo", "['foo', '']"),
 ("tesTBot, foo", "['foo', '']"),
 ("tesTBotfoo", P.ParseException),
-]
+] # }}}
 
 # interactions
 # interactions
@@ -111,16 +111,16 @@ dice_bonus = dice_bonus.setResultsName('dice_bonus')
 
 dice_optionals = P.Optional(dice_bonus) + P.Optional(dice_repeat)
 
-nonrandom = dice_count + dice_optionals
+nonrandom = (dice_count + dice_optionals)
 random = (P.Optional(dice_count, default=1) + 
           dice_size +
           P.Optional(dice_filter) + 
           dice_optionals)
 
-dice = (random | nonrandom).setResultsName('dice')
+dice = (random | nonrandom).setResultsName('DICE')
 dice_string = dice + P.StringEnd()
 
-_test_dice = [("5", "[5]"),
+_test_dice = [("5", "[5]"), # {{{
 ("5x3","[5, 3]"),
 ("5+1x3","[5, 1, 3]"),
 ("d6x3","[1, 6, 3]"),
@@ -137,7 +137,7 @@ _test_dice = [("5", "[5]"),
 ("1d6l3l3", P.ParseException),
 ("1d6h3l3", P.ParseException),
 ("d6h+1", P.ParseException),
-]
+] # }}}
 
 # temporary modifier
 # temporary modifier
@@ -160,7 +160,7 @@ v_content = P.Optional(v_words_nonterminal) + (temp_modifier | dice) | v_words
 verb_phrase = Sup(o) + v_content + Sup(t)
 verb_phrase = verb_phrase.setResultsName('verb_phrase')
 
-_test_verb_phrases = [
+_test_verb_phrases = [ # {{{
 ("[]", P.ParseException),
 ("[star]", "['star']"),
 ("[rock star]", "['rock', 'star']"),
@@ -171,7 +171,7 @@ _test_verb_phrases = [
 ("[1d20+1 1d20+1]", "['1d20+1', 1, 20, 1]"),
 ("[arrr matey 1d20+1x7sort]", "['arrr', 'matey', 1, 20, 1, 7, 'sort']"),
 ("[i am a star", P.ParseException),
-]
+] # }}}
 
 
 # targets
@@ -179,12 +179,12 @@ _test_verb_phrases = [
 target_leader = L('@')
 target = (Sup(target_leader) + character_name).setResultsName('target')
 
-_test_targets = [
+_test_targets = [ # {{{
 ("@a", "['a']"),
 ("@ a", "['a']"),
 ("@@", P.ParseException),
 ("@123", P.ParseException),
-]
+] # }}}
 
 
 # bring it all together
@@ -195,7 +195,7 @@ _test_targets = [
 # sentence
 sentence = command | verb_phrase | actor | target
 
-_test_sentences = [
+_test_sentences = [ # {{{
 (".gm", "['gm', '']"),
 (".combat", "['combat', '']"),
 ("lalala", "[]"),
@@ -208,6 +208,7 @@ _test_sentences = [
 ("[foo] *woop2", "['woop2', ['foo']]"),
 (".aliases shara", "['aliases', 'shara']"),
 (".foobly doobly doo", "['foobly', 'doobly doo']"),
+("[attack 1d2+10]", "[['attack', 1, 2, 10]]"),
 ("*grimlock1 [attack 1d2+10]s the paladin. (@shara)", 
         "['grimlock1', ['attack', 1, 2, 10], 'shara']"),
 ("I [attack 1d6+1] @grimlock1", "[['attack', 1, 6, 1], 'grimlock1']"),
@@ -218,12 +219,12 @@ _test_sentences = [
         "[['cast'], ['fireball'], 'grimlock1', 'grimlock2']"),
 ("I [cast] a [fireball] @grimlock1 and@grimlock2", 
         "[['cast'], ['fireball'], 'grimlock1', 'grimlock2']"),
-]
+] # }}}
 
-_test_sentences_altbot = [
+_test_sentences_altbot = [ # {{{
 ("VellumTalk: combat", "['combat', '']"),
 ("vELLUMTAlk aliases shara", "['aliases', 'shara']"),
-]
+] # }}}
 
 # convert scanned sentences into a normalized form and then parse them
 verb_phrases = P.OneOrMore(P.Group(verb_phrase)).setResultsName('verb_phrases')
@@ -252,13 +253,13 @@ def parseSentence(s):
 
 def formatNormalized(actor, verb_phrases, targets):
     """Return a string with only the parts of speech, so a parseString
-    ParseResults object can be return instead of a scanString result.
+    ParseResults object can be returned instead of a scanString result.
     """
     _fm_verb_phrases = []
     for vp in verb_phrases:
         verb_list = ' '.join(vp.verbs)
-        if vp.dice:
-            dice_expr = reverseFormatDice(vp.dice)
+        if vp.DICE:
+            dice_expr = reverseFormatDice(vp)
         elif vp.temp_modifier:
             dice_expr = '%+d' % (vp.temp_modifier,)
         else:
