@@ -1,4 +1,4 @@
-from vellum.util import gtksupport_importfirst
+from vellum.util import gtkpathsupport_importfirst
 
 import gtk
 from gtk import glade, gdk
