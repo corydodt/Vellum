@@ -14,6 +14,8 @@ function xbAddEvent(obj, evType, fn, useCapture){
   }
 }
 
+RT = Divmod.Runtime.theRuntime
+
 Tabby.TabsFragment = Nevow.Athena.Widget.subclass("Tabby.TabsFragment");
 Tabby.TabsFragment.methods(
     function clicked(self, node, event)
@@ -25,20 +27,30 @@ Tabby.TabsFragment.methods(
     {
         Divmod.debug("TabsFragment", "clicked..." + handle.getAttribute("href"));
         var href = handle.getAttribute('href').replace("#", "");
-        var others = Divmod.Runtime.theRuntime.nodesByAttribute(self.node, 'class', 'tab');
-        for (var i=0;i<others.length;i++)
+
+        // set classes on all the panes, either background (bg) or regular
+        var other_panes = RT.nodesByAttribute(self.node, 'class', 'tab');
+        for (var i=0;i<other_panes.length;i++)
         {
             // FTR: node.setAttribute('class', ..) is broken in IE, thus
             // we use this.  className is all over the place in this file.
-            others[i].className = 'bg-tab';
+            other_panes[i].className = 'bg-tab';
         }
-        var mate = Nevow.Athena.FirstNodeByAttribute(self.node, 'id', href);
+        var mate = RT.firstNodeByAttribute(self.node, 'id', href);
         mate.className = 'tab';
+
+        // set classes on all the handles, either background (bg) or regular
+        var other_handles = RT.nodesByAttribute(self.node, 'class', 'tab-handle');
+        for (var i=0;i<other_handles.length;i++)
+        {
+            other_handles[i].className = 'bg-tab-handle';
+        }
+        handle.className = 'tab-handle';
 
         return false;
     },
 
-    function addTab(self, id, label)
+    function addTab(self, id, label, /* optional */ scrollback)
     {
         var handle = document.createElement('a');
         handle.setAttribute('href', '#' + id);
@@ -60,44 +72,51 @@ Tabby.TabsFragment.methods(
         pane.appendChild(junk);
 
 
-        var handles = Nevow.Athena.FirstNodeByAttribute(self.node,
+        var handles = RT.firstNodeByAttribute(self.node,
             'class',
             'handles');
         handles.appendChild(handle);
-        var panes = Nevow.Athena.FirstNodeByAttribute(self.node,
+        var panes = RT.firstNodeByAttribute(self.node,
             'class',
             'panes');
         panes.appendChild(pane);
-        self.buffers[id] = pane;
 
         self._clicked(handle);
+
+        if (scrollback === undefined)
+        {
+            scrollback = 1000; // 1000 whats? :-)
+        }
+        // TODO - set up length of scrollback with optional scrollback arg
 
     },
 
     function removeTab(self, id)
     {
-        handle = Nevow.Athena.FirstNodeByAttribute(self.node, 'href', '#'+id);
-        var handles = Nevow.Athena.FirstNodeByAttribute(self.node,
+        var handle = RT.firstNodeByAttribute(self.node, 'href', '#'+id);
+        var handles = RT.firstNodeByAttribute(self.node,
             'class',
             'handles');
         handles.removeChild(handle);
 
-        pane = Nevow.Athena.FirstNodeByAttribute(self.node, 'id', id);
-        var panes = Nevow.Athena.FirstNodeByAttribute(self.node,
+        var pane = RT.firstNodeByAttribute(self.node, 'id', id);
+        var panes = RT.firstNodeByAttribute(self.node,
             'class',
             'panes');
         panes.removeChild(pane);
 
-        self.buffers[id] = null;
+    },
+
+    function appendToTab(self, id, content)
+    {
+        var pane = RT.firstNodeByAttribute(self.node, 'id', id);
+        // TODO - deal with scrollback length of node
+        RT.appendNodeContent(pane, content);
+        pane.scrollTop = pane.scrollHeight;
     },
 
     function __init__(self, node)
     {
         Tabby.TabsFragment.upcall(self, '__init__', node);
-        self.buffers = new Object;
-        self.addTab('one', 'Tab One');
-        self.addTab('foo', 'Tab Foo');
-        self.addTab('three', 'Tab Three');
-        self.removeTab('foo');
     }
 );
