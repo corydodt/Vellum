@@ -1,19 +1,28 @@
-<html xmlns:n="http://nevow.com/ns/nevow/0.1">
+<html xmlns='http://www.w3.org/1999/xhtml' 
+      xmlns:n="http://nevow.com/ns/nevow/0.1">
   <!-- vi:ft=html
   -->
     <head><title>tabby</title>
     <style type="text/css">
+.bg-tab-handle, .tab-handle
+{
+  background-color: #aaf;
+  color: white;
+  margin: 12pt;
+  text-decoration: none;
+  padding: 3pt;
+  border: thin solid black;
+  color: white;
+}
+
 .tab-handle
 {
-background-color: #aaf;
-color: white;
-margin: 12pt;
-text-decoration: none;
-padding: 3pt;
-border: thin solid black;
+  color: blue;
+  text-decoration: underline;
 }
 
 a[name] { display: block; }
+
 .tab { 
     border: thin solid blue; 
     display: block; 

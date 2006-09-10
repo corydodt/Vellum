@@ -43,3 +43,35 @@ form
     margin: 0.5em;
     border: 1px solid blue;
 }
+
+
+/* for tabs.py */
+    .bg-tab-handle, .tab-handle
+    {
+      background-color: #aaf;
+      color: white;
+      margin: 12pt;
+      text-decoration: none;
+      padding: 3pt;
+      border: thin solid black;
+      color: white;
+    }
+
+    .tab-handle
+    {
+      color: blue;
+      text-decoration: underline;
+    }
+
+    a[name] { display: block; }
+
+    .tab { 
+        border: thin solid blue; 
+        display: block; 
+        overflow: auto;
+        margin-top: 3pt;
+        height: 8em;
+    }
+    .bg-tab { display: none; }
+
+/* ... */
