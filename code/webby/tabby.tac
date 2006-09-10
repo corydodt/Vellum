@@ -1,4 +1,3 @@
-
 # vi:ft=python
 from twisted.application import service, internet
 from twisted.python.util import sibpath
@@ -7,22 +6,10 @@ from nevow import appserver, rend, loaders, tags as t, url, athena
 
 RESOURCE = lambda f: sibpath(__file__, f)
 
-class TabsFragment(athena.LiveFragment):
-    docFactory = loaders.xmlstr(
-"""<span xmlns:n="http://nevow.com/ns/nevow/0.1"
-xmlns:athena="http://divmod.org/ns/athena/0.7"
-n:render="liveFragment">
-    <div class="handles" />
-    <div class="panes" />
-</span>
-""")
-    jsClass = u"Tabby.TabsFragment"
-
-    def addTab(self, id, label):
-        self.callRemote('addTab', id, label)
+from tabs import TabsFragment
 
 
-class TabbedPage2(athena.LivePage):
+class TabbedPage(athena.LivePage):
     addSlash = True
     docFactory = loaders.xmlfile(RESOURCE('tabby.xhtml'))
     def render_tabs(self, ctx, _):
@@ -31,14 +18,14 @@ class TabbedPage2(athena.LivePage):
         return ctx.tag[tf]
 
     def __init__(self, *a, **kw):
-        super(TabbedPage2, self).__init__(*a, **kw)
+        super(TabbedPage, self).__init__(*a, **kw)
         self.jsModules.mapping[u'Tabby'] = RESOURCE('tabby.js')
 
 
 class WVRoot(rend.Page):
     addSlash = True
     def child__(self, ctx, ):
-        return TabbedPage2()
+        return TabbedPage()
 
     def child_css(self, ctx, ):
         return static.File(RESOURCE('webby.css'))
