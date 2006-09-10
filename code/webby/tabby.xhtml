@@ -1,0 +1,32 @@
+<html xmlns:n="http://nevow.com/ns/nevow/0.1">
+  <!-- vi:ft=html
+  -->
+    <head><title>tabby</title>
+    <style type="text/css">
+.tab-handle
+{
+background-color: #aaf;
+color: white;
+margin: 12pt;
+text-decoration: none;
+padding: 3pt;
+border: thin solid black;
+}
+
+a[name] { display: block; }
+.tab { 
+    border: thin solid blue; 
+    display: block; 
+    overflow: auto;
+    margin-top: 3pt;
+    height: 8em;
+}
+.bg-tab { display: none; }
+    </style>
+    <n:invisible n:render="liveglue" />
+    </head>
+    <body n:render="tabs">
+    <a href='#'
+      onclick="w=window.open();w.document.write(document.documentElement.innerHTML)">click</a>
+    </body>
+</html>

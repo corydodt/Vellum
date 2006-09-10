@@ -1,0 +1,45 @@
+h1 
+{
+    position: absolute;
+    top: 1em;
+    right: 1em;
+    font-family: sans-serif;
+}
+
+form
+{
+    clear: both;
+}
+.minimap 
+{ float: left;
+  width: 10em;
+  height: 10em;
+  border: 2px solid black;
+  margin: 0.5em;
+}
+
+.mainmap
+{ float: left;
+  width: 30em;
+  height: 25em;
+  margin: 0.5em;
+  clear: right;
+  border: 2px solid black;
+}
+
+.chatview
+{
+  clear: left;
+  width: 41.5em;
+  height: 7em;
+  border: 2px solid black;
+  margin: 0.5em;
+  overflow: scroll;
+}
+
+.chatentry
+{
+    width: 41.5em;
+    margin: 0.5em;
+    border: 1px solid blue;
+}
