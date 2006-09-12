@@ -1,8 +1,9 @@
-h1 
-{
-    position: absolute;
-    top: 1em;
-    right: 1em;
+.rightSide { 
+    float: left; /* _really_..it lands to the right of any previous left-floats */
+    text-align: right;
+}
+
+h1 {
     font-family: sans-serif;
 }
 
@@ -12,16 +13,16 @@ form
 }
 .minimap 
 { float: left;
-  width: 10em;
-  height: 10em;
+  width: 8.5em;
+  height: 11em;
   border: 2px solid black;
   margin: 0.5em;
 }
 
 .mainmap
 { float: left;
-  width: 30em;
-  height: 25em;
+  width: 25.5em;
+  height: 33em;
   margin: 0.5em;
   clear: right;
   border: 2px solid black;
@@ -29,11 +30,21 @@ form
 
 .chatentry
 {
-    width: 41.5em;
-    margin-left: 0.5em;
+    width: 410pt;
     border: 2px solid blue;
     background-color: #f0f0ff;
 }
+
+.corner
+{
+  border: 1px solid black;
+  padding-left: 3px;
+  padding-bottom: 1px;
+  border-top: 0px;
+  border-right: 0px;
+}
+
+
 
 
 /* for tabs.py */
@@ -43,7 +54,6 @@ form
 
     .bg-tab-handle, .tab-handle
     {
-      color: white;
       margin: 6pt;
       text-decoration: none;
       padding: 3pt;
@@ -64,18 +74,31 @@ form
         display: block; 
         overflow: auto;
         margin-top: 3pt;
-        height: 8em;
-        width: 41em;
-        margin-left: 0.5em;
+        height: 22em;
+        width: 406pt;
         font-family: monospace;
+        color: #ccc;
+        background-color: black;
+        padding: 2pt;
     }
+
 
     .bg-tab { display: none; }
 
     .tabsFragment { 
-        clear: left; 
         display: block;
     }
+
+    .ircArea {
+        text-align: left;
+        border: thin solid #ccc;
+        padding: 5pt;
+    }
+
+    .mapArea {
+        float: left;
+    }
+
 
 /* ... */
 

@@ -7,11 +7,16 @@
       <link rel="stylesheet" type="text/css" href="/css" />
   </head>
   <body>
-    <h1>WebbyVellum</h1>
-    <n:invisible n:render="minimap" />
-    <n:invisible n:render="mainmap" />
-    <n:invisible n:render="chat" />
-
-    <n:invisible n:render="debug" />
+    <div class="mapArea">
+      <n:invisible n:render="minimap" />
+      <n:invisible n:render="mainmap" />
+    </div>
+    <div class="rightSide">
+      <h1>WebbyVellum</h1>
+      <div class="ircArea">
+        <n:invisible n:render="chat" />
+      </div>
+    </div>
+    <!--  <n:invisible n:render="debug" /> -->
   </body>
 </html>
