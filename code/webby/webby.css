@@ -13,17 +13,17 @@ form
 }
 .minimap 
 { float: left;
-  width: 8.5em;
-  height: 11em;
+  width: 85pt;
+  height: 110pt;
   border: 2px solid black;
-  margin: 0.5em;
+  margin: 5pt;
 }
 
 .mainmap
 { float: left;
-  width: 25.5em;
-  height: 33em;
-  margin: 0.5em;
+  width: 255pt;
+  height: 330pt;
+  margin: 5pt;
   clear: right;
   border: 2px solid black;
 }
