@@ -27,21 +27,12 @@ form
   border: 2px solid black;
 }
 
-.chatview
-{
-  clear: left;
-  width: 41.5em;
-  height: 7em;
-  border: 2px solid black;
-  margin: 0.5em;
-  overflow: scroll;
-}
-
 .chatentry
 {
     width: 41.5em;
-    margin: 0.5em;
-    border: 1px solid blue;
+    margin-left: 0.5em;
+    border: 2px solid blue;
+    background-color: #f0f0ff;
 }
 
 
@@ -71,7 +62,17 @@ form
         overflow: auto;
         margin-top: 3pt;
         height: 8em;
+        width: 41em;
+        margin-left: 0.5em;
+        font-family: monospace;
     }
+
     .bg-tab { display: none; }
 
+    .tabsFragment { 
+        clear: left; 
+        display: block;
+    }
+
 /* ... */
+
