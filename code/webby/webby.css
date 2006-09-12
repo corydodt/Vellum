@@ -37,11 +37,14 @@ form
 
 
 /* for tabs.py */
+    .bg-tab-handle {
+      background-color: #aaf;
+    }
+
     .bg-tab-handle, .tab-handle
     {
-      background-color: #aaf;
       color: white;
-      margin: 12pt;
+      margin: 6pt;
       text-decoration: none;
       padding: 3pt;
       border: thin solid black;
@@ -75,4 +78,5 @@ form
     }
 
 /* ... */
+
 
