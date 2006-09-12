@@ -51,23 +51,28 @@ class MinConversation(basechat.Conversation):
     """
     def __init__(self, widget, *a, **kw):
         basechat.Conversation.__init__(self, *a, **kw)
-        self.webPrint = lambda m: widget.printclean(self.user.name, m) 
+        self.widget = widget
+        self.webPrint = lambda m: widget.printClean(self.person.name, m) 
 
     def show(self):
         """If you don't have a GUI, this is a no-op.
         """
-        if self.user.name in self.widget.conversations:
+        pname = self.person.name
+        if pname in self.widget.conversations:
             self.widget.foregroundConversation = self
-            self.widget.callRemote("show", unicode(self.user.name))
+            self.widget.callRemote("show", unicode(pname))
     
     def hide(self):
         """If you don't have a GUI, this is a no-op.
         """
     
     def showMessage(self, text, metadata=None):
-        event = "<%s> %s" % (self.person.name, text)
-        return self.webPrint(event)
-        
+        if metadata and metadata.get("style", None) == "emote":
+            t = '* %s %s' % (self.person.name, text)
+        else:
+            t = "<%s> %s" % (self.person.name, text)
+        return self.webPrint(t)
+
     def contactChangedNick(self, person, newnick):
         basechat.Conversation.contactChangedNick(self, person, newnick)
         event = "-!- %s is now known as %s" % (person.name, newnick)
@@ -99,7 +104,10 @@ class MinGroupConversation(basechat.GroupConversation):
         pass
 
     def showGroupMessage(self, sender, text, metadata=None):
-        t = "<%s> %s" % (sender, text)
+        if metadata and metadata.get("style", None) == "emote":
+            t = '* %s %s' % (sender, text)
+        else:
+            t = "<%s> %s" % (sender, text)
         return self.webPrint(t)
 
     def setTopic(self, topic, author):
@@ -122,6 +130,17 @@ class MinGroupConversation(basechat.GroupConversation):
         basechat.GroupConversation.memberLeft(self, member)
         event = "-!- %s left %s" % (member, self.group.name)
         return self.webPrint(event)
+
+    def sendText(self, text, metadata=None):
+        r = self.group.sendGroupMessage(text, metadata)
+        me = self.group.account.client.name
+        if metadata and metadata.get('style', None) == 'emote':
+            out = u'* %s %s' % (me, text)
+        else:
+            out = u'<%s> %s' % (me, text)
+        self.webPrint(out)
+
+        return r
 
 class NoUIConnected(Exception):
     pass

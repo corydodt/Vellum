@@ -3,6 +3,7 @@ from nevow import tags as T, rend, loaders, athena, url, static, flat
 
 import minchat
 import tabs
+import parseirc
 
 RESOURCE = lambda f: sibpath(__file__, f)
 
@@ -122,9 +123,18 @@ class ChatEntry(athena.LiveFragment):
 
     def chatMessage(self, message,):
         w = self.chatui.widget
+        parsed = parseirc.line.parseString(message)
         conv = w.foregroundConversation
-        conv.sendText(message.encode('utf8'))
+        if parsed.command:
+            m = getattr(self, 'irccmd_%s' % (parsed.commandWord,))
+            m(conv, parsed.commandArgs)
+        else:
+            conv.sendText(parsed.nonCommand[0].encode('utf8'))
     athena.expose(chatMessage)
+
+    def irccmd_me(self, conversation, args):
+        conversation.sendText(args, metadata={'style':'emote'})
+
 
 
 class LiveVellum(athena.LivePage):
