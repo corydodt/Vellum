@@ -11,84 +11,6 @@ PROTOS = {}
 
 IRCPORT = 6667
 
-class VellumIRCProto(ircsupport.IRCProto):
-    def irc_RPL_ENDOFNAMES(self,prefix,params):
-        """Fixes a bug in the upstream implementation - the upstream strips
-        off the # from the group name!
-        """
-        group=params[1][:]
-        self.getGroupConversation(group).setGroupMembers(self._namreplies[group.lower()])
-        del self._namreplies[group.lower()]
-
-    def irc_JOIN(self,prefix,params):
-        nickname = prefix.split("!")[0]
-        group = params[0][:].lower()
-        if nickname != self.nickname:
-            try:
-                self._ingroups[nickname].append(group)
-            except:
-                self._ingroups[nickname] = [group]
-            self.getGroupConversation(group).memberJoined(nickname)
-
-    def irc_RPL_NAMREPLY(self,prefix,params):
-        """
-        Same as above.
-
-        RPL_NAMREPLY
-        >> NAMES #bnl
-        << :Arlington.VA.US.Undernet.Org 353 z3p = #bnl :pSwede Dan-- SkOyg AG
-        """
-        group=params[2][:].lower()
-        users=params[3].split()
-        for ui in range(len(users)):
-            while users[ui][0] in ["@","+"]: # channel modes
-                users[ui]=users[ui][1:]
-        if not self._namreplies.has_key(group):
-            self._namreplies[group]=[]
-        self._namreplies[group].extend(users)
-        for nickname in users:
-                try:
-                    self._ingroups[nickname].append(group)
-                except:
-                    self._ingroups[nickname]=[group]
-
-    def irc_333(self,prefix,params):
-        """
-        Same as above.
-        """
-        group=params[1][:]
-        self.getGroupConversation(group).setTopic(self._topics[group],params[2])
-        del self._topics[group]
-
-    def irc_RPL_TOPIC(self,prefix,params):
-        """
-        Same as above.
-        """
-        self._topics[params[1][:]]=params[2]
-
-    def privmsg(self, username, channel, message, metadata=None):
-        """Same as above."""
-        if metadata is None:
-            metadata = {}
-        username = username.split('!', 1)[0]
-        if username == self.name: return
-        if channel[0] == '#':
-            group = channel[:]
-            self.getGroupConversation(group).showGroupMessage(username, message, metadata)
-            return
-        self.chat.getConversation(self.getPerson(username)).showMessage(message, metadata)
-        
-class VellumIRCAccount(ircsupport.IRCAccount):
-    def _startLogOn(self, chatui):
-        """Rape/paste from ircsupport to use VellumIRCProto instead.
-        """
-        logonDeferred = defer.Deferred()
-        cc = protocol.ClientCreator(reactor, VellumIRCProto, self, chatui,
-                                    logonDeferred)
-        d = cc.connectTCP(self.host, self.port)
-        d.addErrback(logonDeferred.errback)
-        return logonDeferred
-
 class AccountManager(baseaccount.AccountManager):
     """This class is a minimal implementation of the Acccount Manager.
 
@@ -99,12 +21,11 @@ class AccountManager(baseaccount.AccountManager):
     def __init__(self, chatui):
         self.chatui = chatui
 
-
     def doConnection(self, host, username, password, channels):
         if username in ACCOUNTS and ACCOUNTS[username].isOnline():
             self.disconnect(ACCOUNTS[username])
 
-        acct = VellumIRCAccount("IRC", 1, username, password, host,
+        acct = ircsupport.IRCAccount("IRC", 1, username, password, host,
                 IRCPORT, channels)
         ACCOUNTS[username] = acct
         dl = []
@@ -162,14 +83,15 @@ class MinGroupConversation(basechat.GroupConversation):
     def __init__(self, widget, *a, **kw):
         basechat.GroupConversation.__init__(self, *a, **kw)
         self.widget = widget
-        self.webPrint = lambda m: widget.printClean(self.group.name, m)
+        self.webPrint = lambda m: widget.printClean('#' + self.group.name, m)
 
     def show(self):
         """If you don't have a GUI, this is a no-op.
         """
-        if self.group.name in self.widget.conversations:
+        groupname = '#' + self.group.name
+        if groupname in self.widget.conversations:
             self.widget.foregroundConversation = self
-            self.widget.callRemote("show", unicode(self.group.name))
+            self.widget.callRemote("show", unicode(groupname))
 
     def hide(self):
         """If you don't have a GUI, this is a no-op.
