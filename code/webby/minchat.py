@@ -100,7 +100,7 @@ class AccountManager(baseaccount.AccountManager):
         self.chatui = chatui
 
 
-    def doConnection(self, username, password, host, channels):
+    def doConnection(self, host, username, password, channels):
         if username in ACCOUNTS and ACCOUNTS[username].isOnline():
             self.disconnect(ACCOUNTS[username])
 

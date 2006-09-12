@@ -75,11 +75,10 @@ class AccountManagerFragment(athena.LiveFragment):
         xmlns:athena="http://divmod.org/ns/athena/0.7"
         n:render="liveFragment">
         <athena:handler event="onclick" handler="onLogOnSubmit" />
-        <input name="host" value="localhost" />
-        <input name="username" value="bot" />
-        <input name="password" value="ninjas" />
-        <input name="channels" value="#vellum" />
-        <input type="button" value="Log ON" />
+        U: <input name="username" value="bot" class="corner" />
+        P: <input name="password" value="ninjas" class="corner" />
+        Channels: <input name="channels" value="#vellum" class="corner" />
+        <input type="button" value="Log ON"  />
     </form>
     """)
 
@@ -88,8 +87,8 @@ class AccountManagerFragment(athena.LiveFragment):
         self.accountManager = accountManager
         self.conversationWindow = conversationWindow
 
-    def onLogOnSubmit(self, host, username, password, channels):
-        host = host.encode('utf8')
+    def onLogOnSubmit(self, username, password, channels):
+        host = 'localhost'.encode('utf8') # TODO - get from config file
         username = username.encode('utf8')
         password = password.encode('utf8')
         channels = channels.encode('utf8')
