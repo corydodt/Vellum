@@ -16,13 +16,6 @@ WebbyVellum.AccountManager.methods(
 );
 
 
-
-WebbyVellum.ConversationWindow = Nevow.Athena.Widget.subclass('WebbyVellum.ConversationWindow');
-WebbyVellum.ConversationWindow.methods(
-    function showChatEvent(self, text) {
-        self.node.innerHTML = self.node.innerHTML + text + "<br />";
-    });
-
 WebbyVellum.ChatEntry = Nevow.Athena.Widget.subclass('WebbyVellum.ChatEntry');
 WebbyVellum.ChatEntry.methods(
     function checkEnter(self, node, event) {

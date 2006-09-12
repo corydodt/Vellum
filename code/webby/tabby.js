@@ -23,6 +23,12 @@ Tabby.TabsFragment.methods(
         self._clicked(node);
     },
 
+    function show(self, id)
+    {
+        var handle = RT.firstNodeByAttribute(self.node, 'href', '#' + id);
+        self._clicked(handle);
+    },
+
     function _clicked(self, handle)
     {
         Divmod.debug("TabsFragment", "clicked..." + handle.getAttribute("href"));

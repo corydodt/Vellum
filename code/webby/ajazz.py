@@ -1,7 +1,8 @@
 from twisted.python.util import sibpath
-from nevow import tags as T, rend, loaders, athena, url, static
+from nevow import tags as T, rend, loaders, athena, url, static, flat
 
 import minchat
+import tabs
 
 RESOURCE = lambda f: sibpath(__file__, f)
 
@@ -38,28 +39,35 @@ class Mainmap(Map):
     </div>
     """)
 
-class ConversationWindow(athena.LiveFragment):
-    docFactory = loaders.xmlstr("""
-    <div class="chatview"
-         xmlns:n="http://nevow.com/ns/nevow/0.1"
-         n:render="liveFragment">
-    </div>
-    """)
-
-    jsClass = u"WebbyVellum.ConversationWindow"
-
+class ConversationWindow(tabs.TabsFragment):
     def __init__(self, *a, **kw):
         super(ConversationWindow, self).__init__(*a, **kw)
         self.conversations = {}
-
-    def printClean(self, message):
-        self.callRemote("showChatEvent", webClean(message))
+    
+    def printClean(self, id, message):
+        self.callRemote('appendToTab', webClean(id), flattenMessageString(message))
 
     def joinedConversation(self, conversation):
-        self.conversations[conversation.name] = conversation
+        name = unicode(conversation.name)
+        self.addTab(name, name)
+        self.conversations[name] = conversation
+
+    def getInitialArguments(self):
+        return (u'SERVER', u'SERVER', 
+                flattenMessageString(
+u'''Vellum IRC v0.0
+Click Log ON to connect.'''
+                    ))
 
 def webClean(st):
     return unicode(st.replace('<','&lt;').replace('>','&gt;'))
+
+def flattenMessageString(st):
+    """Return a string suitable for serializing over to a tab pane."""
+    span = T.span(xmlns="http://www.w3.org/1999/xhtml")
+    for line in st.splitlines():
+        span[line, T.br]
+    return unicode(flat.flatten(span))
 
 class AccountManagerFragment(athena.LiveFragment):
     docFactory = loaders.xmlstr("""
@@ -90,8 +98,8 @@ class AccountManagerFragment(athena.LiveFragment):
             for status, account in rl:
                 if status:
                     for channel in account.channels:
-                        import pdb; pdb.set_trace()
-                        self.conversationWindow.joinedConversation(channel)
+                        group = account.getGroup(channel)
+                        self.conversationWindow.joinedConversation(group)
 
         d.addCallback(_connectedAccounts)
         return d
@@ -114,7 +122,6 @@ class ChatEntry(athena.LiveFragment):
         self.chatui = chatui
 
     def chatMessage(self, message):
-        import pdb; pdb.set_trace()
         self.chatui.groupConversations.values()[0].sendText(message.encode('utf8'))
     athena.expose(chatMessage)
 
@@ -126,6 +133,7 @@ class LiveVellum(athena.LivePage):
     def __init__(self, *a, **kw):
         super(LiveVellum, self).__init__(*a, **kw)
         self.jsModules.mapping[u'WebbyVellum'] = RESOURCE('webby.js')
+        self.jsModules.mapping[u'Tabby'] = RESOURCE('tabby.js')
         self.chatui = minchat.MinChat()
         self.accountManager = minchat.AccountManager(self.chatui)
 
