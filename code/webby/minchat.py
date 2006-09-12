@@ -20,6 +20,16 @@ class VellumIRCProto(ircsupport.IRCProto):
         self.getGroupConversation(group).setGroupMembers(self._namreplies[group.lower()])
         del self._namreplies[group.lower()]
 
+    def irc_JOIN(self,prefix,params):
+        nickname = prefix.split("!")[0]
+        group = params[0][:].lower()
+        if nickname != self.nickname:
+            try:
+                self._ingroups[nickname].append(group)
+            except:
+                self._ingroups[nickname] = [group]
+            self.getGroupConversation(group).memberJoined(nickname)
+
     def irc_RPL_NAMREPLY(self,prefix,params):
         """
         Same as above.
@@ -56,6 +66,18 @@ class VellumIRCProto(ircsupport.IRCProto):
         """
         self._topics[params[1][:]]=params[2]
 
+    def privmsg(self, username, channel, message, metadata=None):
+        """Same as above."""
+        if metadata is None:
+            metadata = {}
+        username = username.split('!', 1)[0]
+        if username == self.name: return
+        if channel[0] == '#':
+            group = channel[:]
+            self.getGroupConversation(group).showGroupMessage(username, message, metadata)
+            return
+        self.chat.getConversation(self.getPerson(username)).showMessage(message, metadata)
+        
 class VellumIRCAccount(ircsupport.IRCAccount):
     def _startLogOn(self, chatui):
         """Rape/paste from ircsupport to use VellumIRCProto instead.
@@ -113,6 +135,9 @@ class MinConversation(basechat.Conversation):
     def show(self):
         """If you don't have a GUI, this is a no-op.
         """
+        if self.user.name in self.widget.conversations:
+            self.widget.foregroundConversation = self
+            self.widget.callRemote("show", unicode(self.user.name))
     
     def hide(self):
         """If you don't have a GUI, this is a no-op.
@@ -129,9 +154,10 @@ class MinConversation(basechat.Conversation):
 
 
 class MinGroupConversation(basechat.GroupConversation):
-    """This class is a minimal implementation of the abstract GroupConversation class.
+    """This class is a minimal implementation of the abstract
+    GroupConversation class.
 
-    This is all you need to override to listen in on a group conversaion.
+    This is all you need to override to listen in on a group conversation.
     """
     def __init__(self, widget, *a, **kw):
         basechat.GroupConversation.__init__(self, *a, **kw)
@@ -142,6 +168,7 @@ class MinGroupConversation(basechat.GroupConversation):
         """If you don't have a GUI, this is a no-op.
         """
         if self.group.name in self.widget.conversations:
+            self.widget.foregroundConversation = self
             self.widget.callRemote("show", unicode(self.group.name))
 
     def hide(self):
@@ -150,7 +177,7 @@ class MinGroupConversation(basechat.GroupConversation):
         pass
 
     def showGroupMessage(self, sender, text, metadata=None):
-        t = "<%s/%s> %s" % (sender, self.group.name, text)
+        t = "<%s> %s" % (sender, text)
         return self.webPrint(t)
 
     def setTopic(self, topic, author):
@@ -206,10 +233,3 @@ class MinChat(basechat.ChatUI):
         conv = basechat.ChatUI.getConversation(self, person, self.convoClass, 
                 stayHidden)
         return conv
-
-if __name__ == "__main__":
-    from twisted.internet import reactor
-
-    AccountManager()
-
-    reactor.run()

@@ -121,8 +121,10 @@ class ChatEntry(athena.LiveFragment):
         super(ChatEntry, self).__init__(*a, **kw)
         self.chatui = chatui
 
-    def chatMessage(self, message):
-        self.chatui.groupConversations.values()[0].sendText(message.encode('utf8'))
+    def chatMessage(self, message,):
+        w = self.chatui.widget
+        conv = w.foregroundConversation
+        conv.sendText(message.encode('utf8'))
     athena.expose(chatMessage)
 
 
