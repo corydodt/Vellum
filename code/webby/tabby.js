@@ -14,7 +14,7 @@ function xbAddEvent(obj, evType, fn, useCapture){
   }
 }
 
-RT = Divmod.Runtime.theRuntime
+RT = Divmod.Runtime.theRuntime;
 
 Tabby.TabsFragment = Nevow.Athena.Widget.subclass("Tabby.TabsFragment");
 Tabby.TabsFragment.methods(
@@ -26,7 +26,7 @@ Tabby.TabsFragment.methods(
     function _clicked(self, handle)
     {
         Divmod.debug("TabsFragment", "clicked..." + handle.getAttribute("href"));
-        var href = handle.getAttribute('href').replace("#", "");
+        var id = handle.getAttribute('href').substr(1);
 
         // set classes on all the panes, either background (bg) or regular
         var other_panes = RT.nodesByAttribute(self.node, 'class', 'tab');
@@ -36,7 +36,7 @@ Tabby.TabsFragment.methods(
             // we use this.  className is all over the place in this file.
             other_panes[i].className = 'bg-tab';
         }
-        var mate = RT.firstNodeByAttribute(self.node, 'id', href);
+        var mate = RT.firstNodeByAttribute(self.node, 'id', id);
         mate.className = 'tab';
 
         // set classes on all the handles, either background (bg) or regular
@@ -67,9 +67,7 @@ Tabby.TabsFragment.methods(
         var pane = document.createElement('div');
         pane.setAttribute('id', id);
         pane.className = 'tab';
-        var junk = document.createElement('h3');
-        junk.appendChild(document.createTextNode(label + ' Contents'));
-        pane.appendChild(junk);
+        // pane is created empty initially.
 
 
         var handles = RT.firstNodeByAttribute(self.node,
@@ -115,8 +113,24 @@ Tabby.TabsFragment.methods(
         pane.scrollTop = pane.scrollHeight;
     },
 
-    function __init__(self, node)
+    function __init__(self, node, 
+                      /* optional */ initialTabId, initialTabLabel,
+                      /* optional */ nodeContent)
     {
         Tabby.TabsFragment.upcall(self, '__init__', node);
+        if (initialTabId !== undefined)
+        {
+            if (initialTabLabel !== undefined)
+            {
+                self.addTab(initialTabId, initialTabLabel);
+                if (nodeContent !== undefined)
+                {
+                    self.appendToTab(initialTabId, nodeContent);
+                }
+            } else {
+                Divmod.debug("TabsFragment", 
+                    "initialTabId provided to __init__ without initialTabLabel");
+            }
+        }
     }
 );
