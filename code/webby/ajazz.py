@@ -23,22 +23,10 @@ class Map(athena.LiveFragment):
     docFactory = loaders.stan(['map'])
 
 class Minimap(Map):
-    docFactory = loaders.xmlstr("""
-    <div class="minimap"
-         xmlns:n="http://nevow.com/ns/nevow/0.1"
-         n:render="liveFragment">
-         mini map
-    </div>
-    """)
+    docFactory = loaders.xmlfile(RESOURCE('fragments/Minimap'))
 
 class Mainmap(Map):
-    docFactory = loaders.xmlstr("""
-    <div class="mainmap"
-         xmlns:n="http://nevow.com/ns/nevow/0.1"
-         n:render="liveFragment">
-         main map
-    </div>
-    """)
+    docFactory = loaders.xmlfile(RESOURCE('fragments/Mainmap'))
 
 class ConversationWindow(tabs.TabsFragment):
     def __init__(self, *a, **kw):
@@ -71,16 +59,7 @@ def flattenMessageString(st):
     return unicode(flat.flatten(span))
 
 class AccountManagerFragment(athena.LiveFragment):
-    docFactory = loaders.xmlstr("""
-    <form xmlns:n="http://nevow.com/ns/nevow/0.1" 
-        xmlns:athena="http://divmod.org/ns/athena/0.7"
-        n:render="liveFragment"><athena:handler event="onsubmit" handler="onLogOnSubmit" />
-        U: <input name="username" value="bot" class="corner" />
-        P: <input name="password" value="ninjas" class="corner" />
-        Channels: <input name="channels" value="#vellum" class="corner" />
-        <input type="submit" value="Log ON" />
-    </form>
-    """)
+    docFactory = loaders.xmlfile(RESOURCE('fragments/AccountManagerFragment'))
 
     def __init__(self, accountManager, conversationWindow, *a, **kw):
         super(AccountManagerFragment, self).__init__(*a, **kw)
@@ -105,12 +84,7 @@ class AccountManagerFragment(athena.LiveFragment):
     jsClass = u"WebbyVellum.AccountManager"
 
 class ChatEntry(athena.LiveFragment):
-    docFactory = loaders.xmlstr("""
-    <p xmlns:n="http://nevow.com/ns/nevow/0.1"
-       xmlns:athena="http://divmod.org/ns/athena/0.7"
-       n:render="liveFragment"><athena:handler event="onkeyup" handler="checkEnter"
-       /><input class="chatentry" /></p>
-    """)
+    docFactory = loaders.xmlfile(RESOURCE('fragments/ChatEntry'))
 
     jsClass = u"WebbyVellum.ChatEntry"
 
