@@ -74,12 +74,11 @@ class AccountManagerFragment(athena.LiveFragment):
     docFactory = loaders.xmlstr("""
     <form xmlns:n="http://nevow.com/ns/nevow/0.1" 
         xmlns:athena="http://divmod.org/ns/athena/0.7"
-        n:render="liveFragment">
-        <athena:handler event="onclick" handler="onLogOnSubmit" />
+        n:render="liveFragment"><athena:handler event="onsubmit" handler="onLogOnSubmit" />
         U: <input name="username" value="bot" class="corner" />
         P: <input name="password" value="ninjas" class="corner" />
         Channels: <input name="channels" value="#vellum" class="corner" />
-        <input type="button" value="Log ON"  />
+        <input type="submit" value="Log ON" />
     </form>
     """)
 
@@ -94,14 +93,12 @@ class AccountManagerFragment(athena.LiveFragment):
         password = password.encode('utf8')
         channels = channels.encode('utf8')
         d = self.accountManager.doConnection(host, username, password, channels)
-        def _connectedAccounts(rl):
-            for status, account in rl:
-                if status:
-                    for channel in account.channels:
-                        group = account.getGroup(channel)
-                        self.conversationWindow.joinedConversation(group)
+        def _connectedAccount(account):
+            for channel in account.channels:
+                group = account.getGroup(channel)
+                self.conversationWindow.joinedConversation(group)
 
-        d.addCallback(_connectedAccounts)
+        d.addCallback(_connectedAccount)
         return d
     athena.expose(onLogOnSubmit)
 

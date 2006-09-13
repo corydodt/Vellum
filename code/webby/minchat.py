@@ -22,25 +22,25 @@ class AccountManager(baseaccount.AccountManager):
         self.chatui = chatui
 
     def doConnection(self, host, username, password, channels):
-        if username in ACCOUNTS and ACCOUNTS[username].isOnline():
-            self.disconnect(ACCOUNTS[username])
+        key = (username, host)
+        if key in ACCOUNTS and ACCOUNTS[key].isOnline():
+            self.disconnect(ACCOUNTS[key])
 
-        acct = ircsupport.IRCAccount("IRC", 1, username, password, host,
-                IRCPORT, channels)
-        ACCOUNTS[username] = acct
-        dl = []
-        for acct in ACCOUNTS.values():
-            d = acct.logOn(self.chatui)
-            def _addProto(proto, self, acct):
-                PROTOS[acct.username] = proto
-                return acct
-            d.addCallback(_addProto, self, acct)
-            dl.append(d)
+        acct = ircsupport.IRCAccount('%s@%s' % key,
+                                     1, username, password, 
+                                     host, IRCPORT, channels)
+        ACCOUNTS[key] = acct
+        d = acct.logOn(self.chatui)
+        def _addProto(proto, self, acct):
+            PROTOS[key] = proto
+            return acct
+        d.addCallback(_addProto, self, acct)
 
-        return defer.DeferredList(dl)
+        return d
         
-    def disconnect(self, username):
-        PROTOS[username].transport.loseConnection()
+    def disconnect(self, account):
+        key = (account.username, account.host)
+        PROTOS[key].transport.loseConnection()
 
 
 

@@ -11,6 +11,7 @@ WebbyVellum.AccountManager.methods(
         password = node.password.value;
         channels = node.channels.value;
         self.callRemote("onLogOnSubmit", username, password, channels);
+        return false;
     }
 );
 
