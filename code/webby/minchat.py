@@ -31,16 +31,18 @@ class AccountManager(baseaccount.AccountManager):
                                      host, IRCPORT, channels)
         ACCOUNTS[key] = acct
         d = acct.logOn(self.chatui)
-        def _addProto(proto, self, acct):
+        def _addProto(proto, acct, key):
             PROTOS[key] = proto
             return acct
-        d.addCallback(_addProto, self, acct)
+        d.addCallback(_addProto, acct, key)
 
         return d
         
     def disconnect(self, account):
         key = (account.username, account.host)
         PROTOS[key].transport.loseConnection()
+        del PROTOS[key]
+        del ACCOUNTS[key]
 
 
 
