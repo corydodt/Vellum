@@ -1,4 +1,5 @@
-    <p xmlns:n="http://nevow.com/ns/nevow/0.1"
+    <form xmlns:n="http://nevow.com/ns/nevow/0.1"
        xmlns:athena="http://divmod.org/ns/athena/0.7"
-       n:render="liveFragment"><athena:handler event="onkeyup" handler="checkEnter"
-       /><input class="chatentry" /></p>
+       n:render="liveFragment"><athena:handler event="onsubmit"
+       handler="chatMessage" /><input class="chatentry" />
+    </form>

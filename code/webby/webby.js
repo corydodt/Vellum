@@ -18,15 +18,12 @@ WebbyVellum.AccountManager.methods(
 
 WebbyVellum.ChatEntry = Nevow.Athena.Widget.subclass('WebbyVellum.ChatEntry');
 WebbyVellum.ChatEntry.methods(
-    function checkEnter(self, node, event) {
+    function chatMessage(self, node, event) {
         Divmod.debug("ChatEntry", event);
-        if (event.keyCode == 13)
-        {
-            var input = Nevow.Athena.FirstNodeByAttribute(node,
-                'class', 'chatentry')
-            self.callRemote("chatMessage", input.value);
-            input.value = "";
-        }
+        var input = Nevow.Athena.FirstNodeByAttribute(node,
+            'class', 'chatentry')
+        self.callRemote("chatMessage", input.value);
+        input.value = "";
         return false;
     }
 );

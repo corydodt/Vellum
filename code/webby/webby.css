@@ -33,6 +33,7 @@ form
     width: 410pt;
     border: 2px solid blue;
     background-color: #f0f0ff;
+    margin-top: 4px;
 }
 
 .corner
