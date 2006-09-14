@@ -7,9 +7,9 @@ WebbyVellum.AccountManager = Nevow.Athena.Widget.subclass('WebbyVellum.AccountMa
 WebbyVellum.AccountManager.methods(
     function onLogOnSubmit(self, node, event) {
         Divmod.debug("AccountManager", "logon clicked");
-        username = node.username.value;
-        password = node.password.value;
-        channels = node.channels.value;
+        var username = node.username.value;
+        var password = node.password.value;
+        var channels = node.channels.value;
         self.callRemote("onLogOnSubmit", username, password, channels);
         return false;
     }
