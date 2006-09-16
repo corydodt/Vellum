@@ -18,6 +18,11 @@ RT = Divmod.Runtime.theRuntime;
 
 Tabby.TabsFragment = Nevow.Athena.Widget.subclass("Tabby.TabsFragment");
 Tabby.TabsFragment.methods(
+    function activeTabId(self)
+    {
+        return self._activeTabId;
+    },
+
     function clicked(self, node, event)
     {
         self._clicked(node);
@@ -52,6 +57,8 @@ Tabby.TabsFragment.methods(
             other_handles[i].className = 'bg-tab-handle';
         }
         handle.className = 'tab-handle';
+
+        self._activeTabId = id;
 
         return false;
     },
