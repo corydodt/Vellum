@@ -23,12 +23,36 @@ class Map(athena.LiveFragment):
     docFactory = loaders.stan(['map'])
 
 class Minimap(Map):
+    ## jsClass = u"WebbyVellum.Minimap"
     docFactory = loaders.xmlfile(RESOURCE('fragments/Minimap'))
 
 class Mainmap(Map):
+    ## jsClass = u"WebbyVellum.Mainmap"
     docFactory = loaders.xmlfile(RESOURCE('fragments/Mainmap'))
 
+class IRCContainer(athena.LiveFragment):
+    jsClass = u"WebbyVellum.IRCContainer"
+    docFactory = loaders.xmlfile(RESOURCE('fragments/IRCContainer'))
+    def __init__(self, 
+                 accountManagerFragment, 
+                 conversationFragment,
+                 chatEntry,
+                 *a, **kw):
+        athena.LiveFragment.__init__(self, *a, **kw)
+        self.conversationFragment = conversationFragment
+        self.accountManagerFragment = accountManagerFragment
+        self.chatEntry = chatEntry
+
+    def render_irc(self, ctx, data):
+        return ctx.tag[
+                self.accountManagerFragment,
+                self.conversationFragment,
+                self.chatEntry,
+                ]
+
 class ConversationWindow(tabs.TabsFragment):
+    ## jsClass = u"WebbyVellum.ConversationWindow"
+
     def __init__(self, *a, **kw):
         super(ConversationWindow, self).__init__(*a, **kw)
         self.conversations = {}
@@ -36,10 +60,12 @@ class ConversationWindow(tabs.TabsFragment):
     def printClean(self, id, message):
         self.callRemote('appendToTab', webClean(id), flattenMessageString(message))
 
-    def joinedConversation(self, conversation):
-        name = unicode(conversation.name)
-        self.addTab(name, name)
-        self.conversations[name] = conversation
+    def showConversation(self, conversation, conversationName):
+        cn = unicode(conversationName)
+        if cn not in self.conversations:
+            self.addTab(cn, cn)
+        self.conversations[cn] = conversation
+        self.callRemote("show", cn)
 
     def getInitialArguments(self):
         return (u'SERVER', u'SERVER', 
@@ -72,12 +98,7 @@ class AccountManagerFragment(athena.LiveFragment):
         password = password.encode('utf8')
         channels = channels.encode('utf8')
         d = self.accountManager.doConnection(host, username, password, channels)
-        def _connectedAccount(account):
-            for channel in account.channels:
-                group = account.getGroup(channel)
-                self.conversationWindow.joinedConversation(group)
-
-        d.addCallback(_connectedAccount)
+        d.addCallback(lambda account: True)
         return d
     athena.expose(onLogOnSubmit)
 
@@ -92,10 +113,10 @@ class ChatEntry(athena.LiveFragment):
         super(ChatEntry, self).__init__(*a, **kw)
         self.chatui = chatui
 
-    def chatMessage(self, message,):
+    def chatMessage(self, message, tabid):
         w = self.chatui.widget
         parsed = parseirc.line.parseString(message)
-        conv = w.foregroundConversation
+        conv = w.conversations[tabid]
         if parsed.command:
             m = getattr(self, 'irccmd_%s' % (parsed.commandWord,))
             m(conv, parsed.commandArgs)
@@ -136,15 +157,18 @@ class LiveVellum(athena.LivePage):
         return ctx.tag[m]
 
     def render_chat(self, ctx, data):
-        c = ConversationWindow()
-        c.page = self
+        cw = ConversationWindow()
+        cw.page = self
         # chatui.initUI hooks this conversation window up
-        self.chatui.initUI(c)
+        self.chatui.initUI(cw)
 
-        am = AccountManagerFragment(self.accountManager, c)
+        am = AccountManagerFragment(self.accountManager, cw)
         am.page = self
 
         ce = ChatEntry(chatui=self.chatui)
         ce.page = self
 
-        return ctx.tag[am, c, ce]
+        irc = IRCContainer(am, cw, ce)
+        irc.page = self
+
+        return ctx.tag[irc]

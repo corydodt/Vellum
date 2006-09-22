@@ -59,10 +59,8 @@ class MinConversation(basechat.Conversation):
     def show(self):
         """If you don't have a GUI, this is a no-op.
         """
-        pname = self.person.name
-        if pname in self.widget.conversations:
-            self.widget.foregroundConversation = self
-            self.widget.callRemote("show", unicode(pname))
+        pname = unicode(self.person.name)
+        self.widget.showConversation(self, pname)
     
     def hide(self):
         """If you don't have a GUI, this is a no-op.
@@ -90,15 +88,14 @@ class MinGroupConversation(basechat.GroupConversation):
     def __init__(self, widget, *a, **kw):
         basechat.GroupConversation.__init__(self, *a, **kw)
         self.widget = widget
-        self.webPrint = lambda m: widget.printClean('#' + self.group.name, m)
+        gn = '#' + self.group.name
+        self.webPrint = lambda m: widget.printClean(gn, m)
 
     def show(self):
         """If you don't have a GUI, this is a no-op.
         """
-        groupname = '#' + self.group.name
-        if groupname in self.widget.conversations:
-            self.widget.foregroundConversation = self
-            self.widget.callRemote("show", unicode(groupname))
+        groupname = unicode('#' + self.group.name)
+        self.widget.showConversation(self, groupname)
 
     def hide(self):
         """If you don't have a GUI, this is a no-op.
