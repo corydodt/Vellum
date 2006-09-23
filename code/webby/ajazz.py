@@ -135,8 +135,6 @@ class LiveVellum(athena.LivePage):
     docFactory = loaders.xmlfile(RESOURCE('webby.xhtml'))
     def __init__(self, *a, **kw):
         super(LiveVellum, self).__init__(*a, **kw)
-        self.jsModules.mapping[u'WebbyVellum'] = RESOURCE('webby.js')
-        self.jsModules.mapping[u'Tabby'] = RESOURCE('tabby.js')
         self.chatui = minchat.MinChat()
         self.accountManager = minchat.AccountManager(self.chatui)
 
