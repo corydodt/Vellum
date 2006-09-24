@@ -10,8 +10,9 @@ WebbyVellum.AccountManager.methods(
         var username = node.username.value;
         var password = node.password.value;
         var channels = node.channels.value;
-        self.callRemote("onLogOnSubmit", username, password, channels);
-        return false;
+        var d = self.callRemote("onLogOnSubmit", username, password, channels);
+        event.cancelBubble = true;
+        return d;
     }
 );
 
@@ -21,9 +22,10 @@ WebbyVellum.ChatEntry.methods(
     function chatMessage(self, node, event) {
         var active = self.widgetParent.activeTabId();
         var input = RT.firstNodeByAttribute(node, 'class', 'chatentry');
-        self.callRemote("chatMessage", input.value, active);
+        var d = self.callRemote("chatMessage", input.value, active);
         input.value = "";
-        return false;
+        event.cancelBubble = true;
+        return d;
     }
 );
 
