@@ -30,7 +30,7 @@ Tabby.TabsFragment.methods(
 
     function show(self, id)
     {
-        var handle = RT.firstNodeByAttribute(self.node, 'href', '#' + id);
+        var handle = self.getHandleForId(id);
         self._clicked(handle);
     },
 
@@ -104,26 +104,32 @@ Tabby.TabsFragment.methods(
 
     function removeTab(self, id)
     {
-        var handle = RT.firstNodeByAttribute(self.node, 'href', '#'+id);
-        var handles = RT.firstNodeByAttribute(self.node,
-            'class',
-            'handles');
+        var handle = self.getHandleForId(id);
+        var handles = RT.firstNodeByAttribute(self.node, 'class', 'handles');
         handles.removeChild(handle);
 
-        var pane = RT.firstNodeByAttribute(self.node, 'id', id);
-        var panes = RT.firstNodeByAttribute(self.node,
-            'class',
-            'panes');
+        var pane = self.getPaneForId(id);
+        var panes = RT.firstNodeByAttribute(self.node, 'class', 'panes');
         panes.removeChild(pane);
 
     },
 
     function appendToTab(self, id, content)
     {
-        var pane = RT.firstNodeByAttribute(self.node, 'id', id);
+        var pane = self.getPaneForId(id);
         // TODO - deal with scrollback length of node
         RT.appendNodeContent(pane, content);
         pane.scrollTop = pane.scrollHeight;
+    },
+
+    function getPaneForId(self, id)
+    {
+        return RT.firstNodeByAttribute(self.node, 'id', id);
+    },
+
+    function getHandleForId(self, id)
+    {
+        return RT.firstNodeByAttribute(self.node, 'href', '#' + id);
     },
 
     function __init__(self, node, 
