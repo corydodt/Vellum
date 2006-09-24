@@ -1,15 +1,33 @@
 """Chat functionality"""
 
-from twisted.words.im import basechat, baseaccount
+from twisted.words.im import basechat, baseaccount, ircsupport
 from twisted.internet import defer, protocol, reactor
 
-from twisted.words.im import ircsupport 
+from zope.interface import Interface
 
 ACCOUNTS = {}
 
 PROTOS = {}
 
 IRCPORT = 6667
+class IChatEntry(Interface):
+    def chatMessage(self, message, id):
+        """Handler to process typed chat events on the client"""
+
+class IChatConversations(Interface):
+    def showConversation(self, conversation, conversationName):
+        """Cause a conversation window to appear"""
+
+    def printClean(self, message, id):
+        """Send text to a conversation"""
+
+    def getConversation(self, id, default):
+        """Return a MinConversation object having the specified id"""
+
+class IChatAccountManager(Interface):
+    def onLogOnSubmit(self, username, password, channels):
+        """Handler to process an attempt to log on from the UI"""
+
 
 class AccountManager(baseaccount.AccountManager):
     """This class is a minimal implementation of the Acccount Manager.
@@ -54,13 +72,14 @@ class MinConversation(basechat.Conversation):
     def __init__(self, widget, *a, **kw):
         basechat.Conversation.__init__(self, *a, **kw)
         self.widget = widget
-        self.webPrint = lambda m: widget.printClean(self.person.name, m) 
+        chatconv = IChatConversations(widget)
+        self.webPrint = lambda m: chatconv.printClean(m, self.person.name) 
 
     def show(self):
         """If you don't have a GUI, this is a no-op.
         """
         pname = unicode(self.person.name)
-        self.widget.showConversation(self, pname)
+        IChatConversations(self.widget).showConversation(self, pname)
     
     def hide(self):
         """If you don't have a GUI, this is a no-op.
@@ -89,13 +108,14 @@ class MinGroupConversation(basechat.GroupConversation):
         basechat.GroupConversation.__init__(self, *a, **kw)
         self.widget = widget
         gn = '#' + self.group.name
-        self.webPrint = lambda m: widget.printClean(gn, m)
+        chatconv = IChatConversations(widget)
+        self.webPrint = lambda m: chatconv.printClean(m, gn)
 
     def show(self):
         """If you don't have a GUI, this is a no-op.
         """
         groupname = unicode('#' + self.group.name)
-        self.widget.showConversation(self, groupname)
+        IChatConversations(self.widget).showConversation(self, groupname)
 
     def hide(self):
         """If you don't have a GUI, this is a no-op.

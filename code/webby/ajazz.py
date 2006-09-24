@@ -1,9 +1,13 @@
 from twisted.python.util import sibpath
+from twisted.python import components
+
+from zope.interface import implements
+
 from nevow import tags as T, rend, loaders, athena, url, static, flat
 
-import minchat
-import tabs
-import parseirc
+from webby import minchat, tabs, parseirc
+
+from webby.minchat import IChatConversations, IChatEntry, IChatAccountManager
 
 RESOURCE = lambda f: sibpath(__file__, f)
 
@@ -30,34 +34,57 @@ class Mainmap(Map):
     ## jsClass = u"WebbyVellum.Mainmap"
     docFactory = loaders.xmlfile(RESOURCE('fragments/Mainmap'))
 
-class IRCContainer(athena.LiveFragment):
+
+class IRCContainer(athena.LiveFragment, components.Componentized):
     jsClass = u"WebbyVellum.IRCContainer"
     docFactory = loaders.xmlfile(RESOURCE('fragments/IRCContainer'))
-    def __init__(self, 
-                 accountManagerFragment, 
-                 conversationFragment,
-                 chatEntry,
-                 *a, **kw):
+
+    def __init__(self, accountManager, *a, **kw):
         athena.LiveFragment.__init__(self, *a, **kw)
-        self.conversationFragment = conversationFragment
-        self.accountManagerFragment = accountManagerFragment
-        self.chatEntry = chatEntry
+        components.Componentized.__init__(self)
+        cw = ConversationWindow()
+        cw.setInitialArguments(u'**SERVER**', u'**SERVER**', 
+                flattenMessageString(
+u'''Vellum IRC v0.0
+Click Log ON to connect.'''
+                    ))
+        cw.setFragmentParent(self)
+        self.setComponent(IChatConversations, cw)
+
+        am = AccountManagerFragment(accountManager, cw)
+        am.setFragmentParent(self)
+        self.setComponent(IChatAccountManager, am)
+
+        ce = ChatEntry()
+        ce.setFragmentParent(self)
+        self.setComponent(IChatEntry, ce)
 
     def render_irc(self, ctx, data):
         return ctx.tag[
-                self.accountManagerFragment,
-                self.conversationFragment,
-                self.chatEntry,
+                IChatAccountManager(self),
+                IChatConversations(self),
+                IChatEntry(self),
                 ]
+
+
+
+NODEFAULT = object()
 
 class ConversationWindow(tabs.TabsFragment):
     ## jsClass = u"WebbyVellum.ConversationWindow"
+    implements(IChatConversations)
 
     def __init__(self, *a, **kw):
         super(ConversationWindow, self).__init__(*a, **kw)
         self.conversations = {}
+
+    def getConversation(self, id, default=NODEFAULT):
+        if default is NODEFAULT:
+            return self.conversations[id]
+        else:
+            return self.conversations.get(id, default)
     
-    def printClean(self, id, message):
+    def printClean(self, message, id):
         self.callRemote('appendToTab', webClean(id), flattenMessageString(message))
 
     def showConversation(self, conversation, conversationName):
@@ -79,6 +106,7 @@ def flattenMessageString(st):
 
 class AccountManagerFragment(athena.LiveFragment):
     docFactory = loaders.xmlfile(RESOURCE('fragments/AccountManagerFragment'))
+    implements(IChatAccountManager)
 
     def __init__(self, accountManager, conversationWindow, *a, **kw):
         super(AccountManagerFragment, self).__init__(*a, **kw)
@@ -99,26 +127,28 @@ class AccountManagerFragment(athena.LiveFragment):
 
 class ChatEntry(athena.LiveFragment):
     docFactory = loaders.xmlfile(RESOURCE('fragments/ChatEntry'))
+    implements(IChatEntry)
 
     jsClass = u"WebbyVellum.ChatEntry"
 
-    def __init__(self, chatui, *a, **kw):
-        super(ChatEntry, self).__init__(*a, **kw)
-        self.chatui = chatui
-
     def chatMessage(self, message, tabid):
-        w = self.chatui.widget
+        conv = IChatConversations(self.fragmentParent).getConversation(tabid, None)
+
         parsed = parseirc.line.parseString(message)
-        conv = w.conversations[tabid]
         if parsed.command:
             m = getattr(self, 'irccmd_%s' % (parsed.commandWord,))
-            m(conv, parsed.commandArgs)
+            m(parsed.commandArgs.encode('utf8'), conv)
         else:
-            conv.sendText(parsed.nonCommand[0].encode('utf8'))
+            self.say(parsed.nonCommand[0].encode('utf8'), conv)
     athena.expose(chatMessage)
 
-    def irccmd_me(self, conversation, args):
-        conversation.sendText(args, metadata={'style':'emote'})
+    def say(self, message, conv):
+        # TODO - if conv is None: ...
+        conv.sendText(message)
+
+    def irccmd_me(self, args, conv):
+        # TODO - if conv is None: ...
+        conv.sendText(args, metadata={'style':'emote'})
 
 
 
@@ -129,7 +159,6 @@ class LiveVellum(athena.LivePage):
     def __init__(self, *a, **kw):
         super(LiveVellum, self).__init__(*a, **kw)
         self.chatui = minchat.MinChat()
-        self.accountManager = minchat.AccountManager(self.chatui)
 
 
     def render_debug(self, ctx, data):
@@ -148,23 +177,10 @@ class LiveVellum(athena.LivePage):
         return ctx.tag[m]
 
     def render_chat(self, ctx, data):
-        cw = ConversationWindow()
-        cw.setInitialArguments(u'SERVER', u'SERVER', 
-                flattenMessageString(
-u'''Vellum IRC v0.0
-Click Log ON to connect.'''
-                    ))
-        cw.page = self
-        # chatui.initUI hooks this conversation window up
-        self.chatui.initUI(cw)
-
-        am = AccountManagerFragment(self.accountManager, cw)
-        am.page = self
-
-        ce = ChatEntry(chatui=self.chatui)
-        ce.page = self
-
-        irc = IRCContainer(am, cw, ce)
+        accountManager = minchat.AccountManager(self.chatui)
+        irc = IRCContainer(accountManager)
         irc.page = self
+
+        self.chatui.initUI(irc)
 
         return ctx.tag[irc]
