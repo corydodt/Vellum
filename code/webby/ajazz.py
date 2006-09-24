@@ -67,13 +67,6 @@ class ConversationWindow(tabs.TabsFragment):
         self.conversations[cn] = conversation
         self.callRemote("show", cn)
 
-    def getInitialArguments(self):
-        return (u'SERVER', u'SERVER', 
-                flattenMessageString(
-u'''Vellum IRC v0.0
-Click Log ON to connect.'''
-                    ))
-
 def webClean(st):
     return unicode(st.replace('<','&lt;').replace('>','&gt;'))
 
@@ -156,6 +149,11 @@ class LiveVellum(athena.LivePage):
 
     def render_chat(self, ctx, data):
         cw = ConversationWindow()
+        cw.setInitialArguments(u'SERVER', u'SERVER', 
+                flattenMessageString(
+u'''Vellum IRC v0.0
+Click Log ON to connect.'''
+                    ))
         cw.page = self
         # chatui.initUI hooks this conversation window up
         self.chatui.initUI(cw)

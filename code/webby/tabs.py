@@ -15,6 +15,20 @@ class="tabsFragment">
 </span>
 """)
     jsClass = u"Tabby.TabsFragment"
+    widgetArgs = None
 
     def addTab(self, id, label):
         self.callRemote('addTab', id, label)
+
+    def setInitialArguments(self, *a, **kw):
+        assert len(kw) == 0, "Cannot pass keyword arguments to a Widget"
+        self.widgetArgs = a
+
+
+    def getInitialArguments(self):
+        args = ()
+        if self.widgetArgs is not None:
+            args = self.widgetArgs
+
+        return args
+
