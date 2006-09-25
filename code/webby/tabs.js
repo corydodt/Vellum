@@ -1,18 +1,7 @@
 // import Nevow.Athena
 // import Divmod
+// import DeanEdwards
 
-// add events in a cross-browser way
-function xbAddEvent(obj, evType, fn, useCapture){
-  if (obj.addEventListener){
-    obj.addEventListener(evType, fn, useCapture);
-    return true;
-  } else if (obj.attachEvent){
-    var r = obj.attachEvent("on"+evType, fn);
-    return r;
-  } else {
-    alert("Handler could not be attached");
-  }
-}
 
 RT = Divmod.Runtime.theRuntime;
 
@@ -23,7 +12,7 @@ Tabby.TabsFragment.methods(
         return self._activeTabId;
     },
 
-    function clicked(self, node, event)
+    function clicked(self, node)
     {
         self._clicked(node);
     },
@@ -72,10 +61,10 @@ Tabby.TabsFragment.methods(
 
         function _clickWrap(ev)
         {
-            return self.clicked(handle, ev);
+            return self.clicked(handle);
         }
 
-        xbAddEvent(handle, 'click', _clickWrap, true);
+        DeanEdwards.addEvent(handle, 'click', _clickWrap);
 
         var pane = document.createElement('div');
         pane.setAttribute('id', id);
