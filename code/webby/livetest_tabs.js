@@ -37,12 +37,26 @@ Tabby.Tests.TestTabs.methods(
         return d;
     },
 
+    function test_clicked(self) {
+        var d = self.setUp();
+        d.addCallback(
+            function _(tabs) { 
+                tabs.addTab('1', 'One');
+                tabs.addTab('2', 'Two');
+                self.assertEqual(tabs.activeTabId(), '2');
+                var onehandle = RT.firstNodeByAttribute(tabs.node, 'href', '#1');
+                tabs.clicked(onehandle);
+                self.assertEqual(tabs.activeTabId(), '1');
+            });
+    },
+
     function test_show(self) {
         var d = self.setUp();
         d.addCallback(
             function _(tabs) { 
                 tabs.addTab('1', 'One');
                 tabs.addTab('2', 'Two');
+                self.assertEqual(tabs.activeTabId(), '2');
                 tabs.show('1');
                 self.assertEqual(tabs.activeTabId(), '1');
                 }
