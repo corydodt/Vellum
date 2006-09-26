@@ -14,17 +14,19 @@ WebbyVellum.AccountManager.methods(
         // while retaining the ability to return the deferred.
         // Mother of God but javascript can be awful.
         DeanEdwards.addEvent(node, 'submit', 
-            function onLogOnSubmit(event) {
-                var node = event.target;
-                var username = node.username.value;
-                var password = node.password.value;
-                var channels = node.channels.value;
-                var d = self.callRemote("onLogOnSubmit", 
-                        username, password, channels);
-                event.stopPropagation();
-                event.preventDefault();
-                return d;
-            });
+            function onLogOnSubmit(event) { return self.onLogOnSubmit(event) });
+    },
+
+    function onLogOnSubmit(self, event) {
+        var node = event.target;
+        var username = node.username.value;
+        var password = node.password.value;
+        var channels = node.channels.value;
+        var d = self.callRemote("onLogOnSubmit", 
+                username, password, channels);
+        event.stopPropagation();
+        event.preventDefault();
+        return d;
     }
 );
 
@@ -39,15 +41,18 @@ WebbyVellum.ChatEntry.methods(
         // while retaining the ability to return the deferred.
         // Mother of God but javascript can be awful.
         DeanEdwards.addEvent(node, 'submit', 
-            function chatMessage(event) {
-                var active = self.widgetParent.activeTabId();
-                var input = RT.firstNodeByAttribute(node, 'class', 'chatentry');
-                var d = self.callRemote("chatMessage", input.value, active);
-                input.value = "";
-                event.stopPropagation();
-                event.preventDefault();
-                return d;
-            });
+            function chatMessage(event) { return self.submit(event) });
+    },
+
+    function submit(self, event) {
+        var active = self.widgetParent.activeTabId();
+        var node = event.target;
+        var input = RT.firstNodeByAttribute(node, 'class', 'chatentry');
+        var d = self.callRemote("chatMessage", input.value, active);
+        input.value = "";
+        event.stopPropagation();
+        event.preventDefault();
+        return d;
     }
 );
 
