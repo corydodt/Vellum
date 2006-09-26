@@ -119,7 +119,9 @@ class AccountManagerFragment(athena.LiveFragment):
         password = password.encode('utf8')
         channels = channels.encode('utf8')
         d = self.accountManager.doConnection(host, username, password, channels)
-        d.addCallback(lambda account: True)
+        d.addCallback(
+                lambda account: u'connected %s:%s@%s and joined %s' % (
+                    username, password, host, channels))
         return d
     athena.expose(onLogOnSubmit)
 
