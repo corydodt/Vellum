@@ -28,16 +28,16 @@ class Map(athena.LiveElement):
 
 class Minimap(Map):
     ## jsClass = u"WebbyVellum.Minimap"
-    docFactory = loaders.xmlfile(RESOURCE('fragments/Minimap'))
+    docFactory = loaders.xmlfile(RESOURCE('elements/Minimap'))
 
 class Mainmap(Map):
     ## jsClass = u"WebbyVellum.Mainmap"
-    docFactory = loaders.xmlfile(RESOURCE('fragments/Mainmap'))
+    docFactory = loaders.xmlfile(RESOURCE('elements/Mainmap'))
 
 
 class IRCContainer(athena.LiveElement, components.Componentized):
     jsClass = u"WebbyVellum.IRCContainer"
-    docFactory = loaders.xmlfile(RESOURCE('fragments/IRCContainer'))
+    docFactory = loaders.xmlfile(RESOURCE('elements/IRCContainer'))
 
     def __init__(self, accountManager, *a, **kw):
         athena.LiveElement.__init__(self, *a, **kw)
@@ -115,7 +115,7 @@ def flattenMessageString(st):
     return unicode(flat.flatten(span))
 
 class AccountManagerElement(athena.LiveElement):
-    docFactory = loaders.xmlfile(RESOURCE('fragments/AccountManagerElement'))
+    docFactory = loaders.xmlfile(RESOURCE('elements/AccountManagerElement'))
     implements(IChatAccountManager)
 
     def __init__(self, accountManager, conversationWindow, *a, **kw):
@@ -138,7 +138,7 @@ class AccountManagerElement(athena.LiveElement):
     jsClass = u"WebbyVellum.AccountManager"
 
 class ChatEntry(athena.LiveElement):
-    docFactory = loaders.xmlfile(RESOURCE('fragments/ChatEntry'))
+    docFactory = loaders.xmlfile(RESOURCE('elements/ChatEntry'))
     implements(IChatEntry)
 
     jsClass = u"WebbyVellum.ChatEntry"
