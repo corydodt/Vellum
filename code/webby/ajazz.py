@@ -23,7 +23,7 @@ class WVRoot(rend.Page):
         return url.root.child("_")
 
 
-class Map(athena.LiveFragment):
+class Map(athena.LiveElement):
     docFactory = loaders.stan(['map'])
 
 class Minimap(Map):
@@ -54,7 +54,7 @@ Click Log ON to connect.'''
         cw.setFragmentParent(self)
         self.setComponent(IChatConversations, cw)
 
-        am = AccountManagerFragment(self.accountManager, cw)
+        am = AccountManagerElement(self.accountManager, cw)
         am.setFragmentParent(self)
         self.setComponent(IChatAccountManager, am)
 
@@ -114,12 +114,12 @@ def flattenMessageString(st):
         span[line, T.br]
     return unicode(flat.flatten(span))
 
-class AccountManagerFragment(athena.LiveFragment):
+class AccountManagerElement(athena.LiveElement):
     docFactory = loaders.xmlfile(RESOURCE('fragments/AccountManagerFragment'))
     implements(IChatAccountManager)
 
     def __init__(self, accountManager, conversationWindow, *a, **kw):
-        super(AccountManagerFragment, self).__init__(*a, **kw)
+        super(AccountManagerElement, self).__init__(*a, **kw)
         self.accountManager = accountManager
         self.conversationWindow = conversationWindow
 
@@ -137,7 +137,7 @@ class AccountManagerFragment(athena.LiveFragment):
 
     jsClass = u"WebbyVellum.AccountManager"
 
-class ChatEntry(athena.LiveFragment):
+class ChatEntry(athena.LiveElement):
     docFactory = loaders.xmlfile(RESOURCE('fragments/ChatEntry'))
     implements(IChatEntry)
 
