@@ -5,8 +5,8 @@
 
 RT = Divmod.Runtime.theRuntime;
 
-Tabby.TabsFragment = Nevow.Athena.Widget.subclass("Tabby.TabsFragment");
-Tabby.TabsFragment.methods(
+Tabby.TabsElement = Nevow.Athena.Widget.subclass("Tabby.TabsElement");
+Tabby.TabsElement.methods(
     function activeTabId(self)
     {
         return self._activeTabId;
@@ -25,7 +25,7 @@ Tabby.TabsFragment.methods(
 
     function _clicked(self, handle)
     {
-        Divmod.debug("TabsFragment", "clicked..." + handle.getAttribute("href"));
+        Divmod.debug("TabsElement", "clicked..." + handle.getAttribute("href"));
         var id = handle.getAttribute('href').substr(1);
 
         // set classes on all the panes, either background (bg) or regular
@@ -125,7 +125,7 @@ Tabby.TabsFragment.methods(
                       /* optional */ initialTabId, initialTabLabel,
                       /* optional */ nodeContent)
     {
-        Tabby.TabsFragment.upcall(self, '__init__', node);
+        Tabby.TabsElement.upcall(self, '__init__', node);
         if (initialTabId !== undefined)
         {
             if (initialTabLabel !== undefined)
@@ -136,7 +136,7 @@ Tabby.TabsFragment.methods(
                     self.appendToTab(initialTabId, nodeContent);
                 }
             } else {
-                Divmod.debug("TabsFragment", 
+                Divmod.debug("TabsElement", 
                     "initialTabId provided to __init__ without initialTabLabel");
             }
         }

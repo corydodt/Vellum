@@ -68,7 +68,7 @@ Click Log ON to connect.'''
 
 NODEFAULT = object()
 
-class ConversationWindow(tabs.TabsFragment):
+class ConversationWindow(tabs.TabsElement):
     ## jsClass = u"WebbyVellum.ConversationWindow"
     implements(IChatConversations)
 
