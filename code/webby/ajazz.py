@@ -1,12 +1,12 @@
 from twisted.python.util import sibpath
 from twisted.python import components
+from twisted.internet import defer
 
 from zope.interface import implements
 
 from nevow import tags as T, rend, loaders, athena, url, static, flat
 
 from webby import minchat, tabs, parseirc
-
 from webby.minchat import IChatConversations, IChatEntry, IChatAccountManager
 
 RESOURCE = lambda f: sibpath(__file__, f)
@@ -90,9 +90,21 @@ class ConversationWindow(tabs.TabsFragment):
     def showConversation(self, conversation, conversationName):
         cn = unicode(conversationName)
         if cn not in self.conversations:
-            self.addTab(cn, cn)
-        self.conversations[cn] = conversation
-        self.callRemote("show", cn)
+            d = self.addTab(cn, cn)
+            self.conversations[cn] = conversation
+        else:
+            d = defer.succeed(None)
+
+        def _conversationIsReady(_):
+            return self.callRemote("show", cn)
+        d.addCallback(_conversationIsReady)
+
+        def _conversationFailed(e):
+            del self.conversations[cn]
+            return e
+        d.addErrback(_conversationFailed)
+        # FIXME - we do not return this deferred.  Need to see whether
+        # minchat deals with deferreds returned by this stack
 
 def webClean(st):
     return unicode(st.replace('<','&lt;').replace('>','&gt;'))

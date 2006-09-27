@@ -18,7 +18,7 @@ class="tabsFragment">
     widgetArgs = None
 
     def addTab(self, id, label):
-        self.callRemote('addTab', id, label)
+        return self.callRemote('addTab', id, label)
 
     def setInitialArguments(self, *a, **kw):
         assert len(kw) == 0, "Cannot pass keyword arguments to a Widget"
