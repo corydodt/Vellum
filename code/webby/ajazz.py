@@ -173,11 +173,6 @@ class LiveVellum(athena.LivePage):
         self.chatui = minchat.MinChat()
 
 
-    def render_debug(self, ctx, data):
-        f = athena.IntrospectionFragment()
-        f.setFragmentParent(self)
-        return ctx.tag[f]
-
     def render_minimap(self, ctx, data):
         m = Minimap()
         m.page = self
