@@ -175,18 +175,18 @@ class LiveVellum(athena.LivePage):
 
     def render_minimap(self, ctx, data):
         m = Minimap()
-        m.page = self
+        m.setFragmentParent(self)
         return ctx.tag[m]
 
     def render_mainmap(self, ctx, data):
         m = Mainmap()
-        m.page = self
+        m.setFragmentParent(self)
         return ctx.tag[m]
 
     def render_chat(self, ctx, data):
         accountManager = minchat.AccountManager(self.chatui)
         irc = IRCContainer(accountManager)
-        irc.page = self
+        irc.setFragmentParent(self)
 
         self.chatui.initUI(irc)
 
