@@ -12,9 +12,13 @@ class MockAccountManager:
 class TestIRCContainer(testcase.TestCase):
     jsClass = u'WebbyVellum.Tests.TestIRCContainer'
     def newContainer(self, ):
-        """Return a new IRC Container"""
+        """
+        Return a new IRC Container with mock conversations for the ids given
+        """
         w = ajazz.IRCContainer(MockAccountManager())
         w.setFragmentParent(self)
         return w
+        
+
     athena.expose(newContainer)
 

@@ -3,9 +3,7 @@
 
 MockEvent = Divmod.Class.subclass('MockEvent');
 MockEvent.methods(
-    function __init__(self, node) {
-        self.target = self.srcElement = node;
-    },
+    function __init__(self, node) { self.target = self.srcElement = node; },
 
     function stopPropagation(self) { /* */ },
 
@@ -14,6 +12,18 @@ MockEvent.methods(
 
 WebbyVellum.Tests.TestIRCContainer = Nevow.Athena.Test.TestCase.subclass("WebbyVellum.Tests.TestIRCContainer");
 WebbyVellum.Tests.TestIRCContainer.methods(
+    function test_submitText(self) {
+        var d = self.setUp();
+        d.addCallback(function _(irc) {
+            var chat = irc.childWidgets[2];
+            var event = new MockEvent(chat.node);
+            var d2 = chat.submit(event);
+            d2.addCallback(function (_) { undefined.xyz; });
+            return d2;
+        });
+        return d;
+    },
+
     function test_logOn(self) {
         var d = self.setUp();
         d.addCallback(function _(irc) {
@@ -28,7 +38,7 @@ WebbyVellum.Tests.TestIRCContainer.methods(
             node.password = password;
             node.channels = channels;
 
-            var event = new MockEvent(node)
+            var event = new MockEvent(node);
 
             var acctManager = irc.childWidgets[0];
             var d2 = acctManager.onLogOnSubmit(event );
