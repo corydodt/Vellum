@@ -115,7 +115,7 @@ def flattenMessageString(st):
     return unicode(flat.flatten(span))
 
 class AccountManagerElement(athena.LiveElement):
-    docFactory = loaders.xmlfile(RESOURCE('fragments/AccountManagerFragment'))
+    docFactory = loaders.xmlfile(RESOURCE('fragments/AccountManagerElement'))
     implements(IChatAccountManager)
 
     def __init__(self, accountManager, conversationWindow, *a, **kw):
