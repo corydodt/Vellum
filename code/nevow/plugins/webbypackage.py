@@ -7,7 +7,7 @@ def _f(*sib):
 
 webbyPkg = athena.JSPackage({
     'WebbyVellum': _f('webby.js'),
-    ## 'WebbyVellum.Tests': _f('livetest_webby.js'),
+    'WebbyVellum.Tests': _f('livetest_webby.js'),
     'Tabby': _f('tabs.js'),
     'Tabby.Tests': _f('livetest_tabs.js'),
     'DeanEdwards': _f('events.js')
