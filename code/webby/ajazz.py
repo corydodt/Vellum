@@ -35,13 +35,16 @@ class Mainmap(Map):
     docFactory = loaders.xmlfile(RESOURCE('fragments/Mainmap'))
 
 
-class IRCContainer(athena.LiveFragment, components.Componentized):
+class IRCContainer(athena.LiveElement, components.Componentized):
     jsClass = u"WebbyVellum.IRCContainer"
     docFactory = loaders.xmlfile(RESOURCE('fragments/IRCContainer'))
 
     def __init__(self, accountManager, *a, **kw):
-        athena.LiveFragment.__init__(self, *a, **kw)
+        athena.LiveElement.__init__(self, *a, **kw)
         components.Componentized.__init__(self)
+        self.accountManager = accountManager
+
+    def irc(self, request, tag):
         cw = ConversationWindow()
         cw.setInitialArguments(u'**SERVER**', u'**SERVER**', 
                 flattenMessageString(
@@ -51,20 +54,15 @@ Click Log ON to connect.'''
         cw.setFragmentParent(self)
         self.setComponent(IChatConversations, cw)
 
-        am = AccountManagerFragment(accountManager, cw)
+        am = AccountManagerFragment(self.accountManager, cw)
         am.setFragmentParent(self)
         self.setComponent(IChatAccountManager, am)
 
         ce = ChatEntry()
         ce.setFragmentParent(self)
         self.setComponent(IChatEntry, ce)
-
-    def render_irc(self, ctx, data):
-        return ctx.tag[
-                IChatAccountManager(self),
-                IChatConversations(self),
-                IChatEntry(self),
-                ]
+        return tag[am, cw, ce]
+    athena.renderer(irc)
 
 
 
@@ -146,7 +144,7 @@ class ChatEntry(athena.LiveFragment):
     jsClass = u"WebbyVellum.ChatEntry"
 
     def chatMessage(self, message, tabid):
-        conv = IChatConversations(self.fragmentParent).getConversation(tabid, None)
+        conv = IChatConversations(self.fragmentParent).getConversation(tabid)
 
         parsed = parseirc.line.parseString(message)
         if parsed.command:
