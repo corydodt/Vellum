@@ -47,6 +47,7 @@ WebbyVellum.ChatEntry.methods(
     function submit(self, event) {
         var active = self.widgetParent.activeTabId();
         var node = event.target;
+        // TODO - this could just as easily be self.firstNodeByAttribute..
         var input = RT.firstNodeByAttribute(node, 'class', 'chatentry');
         var d = self.callRemote("chatMessage", input.value, active);
         input.value = "";

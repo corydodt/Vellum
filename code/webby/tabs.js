@@ -29,6 +29,7 @@ Tabby.TabsElement.methods(
         var id = handle.getAttribute('href').substr(1);
 
         // set classes on all the panes, either background (bg) or regular
+        // FIXME - this could be self.nodesByAttribute
         var other_panes = RT.nodesByAttribute(self.node, 'class', 'tab');
         for (var i=0;i<other_panes.length;i++)
         {
@@ -36,10 +37,12 @@ Tabby.TabsElement.methods(
             // we use this.  className is all over the place in this file.
             other_panes[i].className = 'bg-tab';
         }
+        // FIXME - this should just be self.firstNodeByAttribute
         var mate = RT.firstNodeByAttribute(self.node, 'id', id);
         mate.className = 'tab';
 
         // set classes on all the handles, either background (bg) or regular
+        // FIXME - this should just be self.nodesByAttribute
         var other_handles = RT.nodesByAttribute(self.node, 'class', 'tab-handle');
         for (var i=0;i<other_handles.length;i++)
         {
@@ -72,10 +75,12 @@ Tabby.TabsElement.methods(
         // pane is created empty initially.
 
 
+        // FIXME - this should be self.firstNodeByAttribute
         var handles = RT.firstNodeByAttribute(self.node,
             'class',
             'handles');
         handles.appendChild(handle);
+        // FIXME - this should be self.firstNodeByAttribute
         var panes = RT.firstNodeByAttribute(self.node,
             'class',
             'panes');
@@ -94,10 +99,12 @@ Tabby.TabsElement.methods(
     function removeTab(self, id)
     {
         var handle = self.getHandleForId(id);
+        // FIXME - this should be self.firstNodeByAttribute
         var handles = RT.firstNodeByAttribute(self.node, 'class', 'handles');
         handles.removeChild(handle);
 
         var pane = self.getPaneForId(id);
+        // FIXME - this should be self.firstNodeByAttribute
         var panes = RT.firstNodeByAttribute(self.node, 'class', 'panes');
         panes.removeChild(pane);
 
@@ -113,11 +120,13 @@ Tabby.TabsElement.methods(
 
     function getPaneForId(self, id)
     {
+        // FIXME - could this be self.firstNodeByAttribute
         return RT.firstNodeByAttribute(self.node, 'id', id);
     },
 
     function getHandleForId(self, id)
     {
+        // FIXME - could this be self.firstNodeByAttribute
         return RT.firstNodeByAttribute(self.node, 'href', '#' + id);
     },
 
