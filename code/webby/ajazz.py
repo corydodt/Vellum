@@ -46,13 +46,13 @@ class IRCContainer(athena.LiveElement, components.Componentized):
 
     def irc(self, request, tag):
         cw = ConversationWindow()
+        cw.setFragmentParent(self)
+        self.setComponent(IChatConversations, cw)
         cw.setInitialArguments(u'**SERVER**', u'**SERVER**', 
                 flattenMessageString(
 u'''Vellum IRC v0.0
 Click Log ON to connect.'''
                     ))
-        cw.setFragmentParent(self)
-        self.setComponent(IChatConversations, cw)
 
         am = AccountManagerElement(self.accountManager, cw)
         am.setFragmentParent(self)
@@ -83,7 +83,17 @@ class ConversationWindow(tabs.TabsElement):
             return self.conversations.get(id, default)
     
     def printClean(self, message, id):
-        self.callRemote('appendToTab', webClean(id), flattenMessageString(message))
+        id = webClean(id)
+        message = flattenMessageString(message)
+        return self.callRemote('appendToTab', id, message)
+ 
+    def setInitialArguments(self, initialId, initialLabel, initialContent):
+        super(ConversationWindow, self).setInitialArguments(
+                initialId, initialLabel, initialContent)
+        nullconv = minchat.NullConversation(self.fragmentParent, initialId)
+        self.conversations[initialId] = nullconv
+        
+
 
     def showConversation(self, conversation, conversationName):
         cn = unicode(conversationName)
@@ -152,15 +162,14 @@ class ChatEntry(athena.LiveElement):
             m(parsed.commandArgs.encode('utf8'), conv)
         else:
             self.say(parsed.nonCommand[0].encode('utf8'), conv)
+        return None
     athena.expose(chatMessage)
 
     def say(self, message, conv):
-        # TODO - if conv is None: ...
-        conv.sendText(message)
+        return conv.sendText(message)
 
     def irccmd_me(self, args, conv):
-        # TODO - if conv is None: ...
-        conv.sendText(args, metadata={'style':'emote'})
+        return conv.sendText(args, metadata={'style':'emote'})
 
 
 

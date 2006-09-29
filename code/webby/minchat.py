@@ -64,6 +64,24 @@ class AccountManager(baseaccount.AccountManager):
 
 
 
+class NullConversation:
+    """This conversation is a placeholder without an actual interface to IRC.
+    It should be used for things like server tabs in the UI.
+    """
+    def __init__(self, widget, name):
+        chatconv = IChatConversations(widget)
+        self.webPrint = lambda m: chatconv.printClean(m, name)
+ 
+    def sendText(self, text, metadata=None):
+        if metadata is None:
+            style = ''
+        else:
+            style = u'(%s) ' % (metadata.get('style', ''),)
+        text = unicode(style + text)
+        return self.webPrint(
+                '** Not in a channel or conversation: %s' % (text,))
+
+
 class MinConversation(basechat.Conversation):
     """This class is a minimal implementation of the abstract Conversation class.
 
