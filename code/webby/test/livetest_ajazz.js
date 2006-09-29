@@ -16,9 +16,27 @@ WebbyVellum.Tests.TestIRCContainer.methods(
         var d = self.setUp();
         d.addCallback(function _(irc) {
             var chat = irc.childWidgets[2];
+            var chatentry = chat.firstNodeByAttribute('class', 'chatentry');
+
+            // entry field should start empty
+            self.assertEqual(chatentry.value, '');
+
+            chatentry.value = 'hello';
             var event = new MockEvent(chat.node);
             var d2 = chat.submit(event);
-            d2.addCallback(function (_) { undefined.xyz; });
+            d2.addCallback(function (_) { 
+                // should reset the entry field to empty
+                self.assertEqual(chatentry.value, '');
+
+                var pw = chat.widgetParent;
+                var fgtab = pw.firstNodeByAttribute('class', 'tab');
+
+                // the server tab should be in the foreground
+                self.assertEqual(fgtab.id, '**SERVER**');
+
+                // the server tab should contain a span with the text
+                self.assertEqual(fgtab.innerHTML.search('hello') > 0, true);
+            });
             return d2;
         });
         return d;
