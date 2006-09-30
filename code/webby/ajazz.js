@@ -1,8 +1,5 @@
 
 // import Nevow.Athena
-// import Divmod
-
-RT = Divmod.Runtime.theRuntime;
 
 WebbyVellum.AccountManager = Nevow.Athena.Widget.subclass('WebbyVellum.AccountManager');
 WebbyVellum.AccountManager.methods(
@@ -47,8 +44,7 @@ WebbyVellum.ChatEntry.methods(
     function submit(self, event) {
         var active = self.widgetParent.activeTabId();
         var node = event.target;
-        // TODO - this could just as easily be self.firstNodeByAttribute..
-        var input = RT.firstNodeByAttribute(node, 'class', 'chatentry');
+        var input = self.firstNodeByAttribute('class', 'chatentry');
         var d = self.callRemote("chatMessage", input.value, active);
         input.value = "";
         event.stopPropagation();
