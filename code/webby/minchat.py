@@ -115,6 +115,16 @@ class MinConversation(basechat.Conversation):
         event = "-!- %s is now known as %s" % (person.name, newnick)
         return self.webPrint(event)
 
+    def sendText(self, text, metadata=None):
+        r = self.person.sendMessage(text, metadata)
+        me = self.person.account.client.name
+        if metadata and metadata.get('style', None) == 'emote':
+            out = u'* %s %s' % (me, text)
+        else:
+            out = u'<%s> %s' % (me, text)
+        self.webPrint(out)
+
+        return r
 
 class MinGroupConversation(basechat.GroupConversation):
     """This class is a minimal implementation of the abstract
