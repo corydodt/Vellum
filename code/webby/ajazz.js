@@ -15,14 +15,19 @@ WebbyVellum.AccountManager.methods(
     },
 
     function onLogOnSubmit(self, event) {
-        var node = event.target;
+        event.stopPropagation();
+        event.preventDefault();
+
+        // var node = event.target; // WRONG!
+        // in FF, event.target is not the form if submit event was caused
+        // by a keyboard "enter" press.  Use self.node for consistency.
+        var node = self.node;
+
         var username = node.username.value;
         var password = node.password.value;
         var channels = node.channels.value;
         var d = self.callRemote("onLogOnSubmit", 
                 username, password, channels);
-        event.stopPropagation();
-        event.preventDefault();
         return d;
     }
 );
@@ -42,13 +47,13 @@ WebbyVellum.ChatEntry.methods(
     },
 
     function submit(self, event) {
+        event.stopPropagation();
+        event.preventDefault();
         var active = self.widgetParent.activeTabId();
         var node = event.target;
         var input = self.firstNodeByAttribute('class', 'chatentry');
         var d = self.callRemote("chatMessage", input.value, active);
         input.value = "";
-        event.stopPropagation();
-        event.preventDefault();
         return d;
     }
 );
