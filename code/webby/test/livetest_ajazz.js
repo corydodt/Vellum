@@ -10,6 +10,7 @@ MockEvent.methods(
     function preventDefault(self) { /* */ }
 );
 
+
 WebbyVellum.Tests.TestIRCContainer = Nevow.Athena.Test.TestCase.subclass("WebbyVellum.Tests.TestIRCContainer");
 WebbyVellum.Tests.TestIRCContainer.methods(
     function test_initialize(self) {
@@ -63,24 +64,26 @@ WebbyVellum.Tests.TestIRCContainer.methods(
     function test_logOn(self) {
         var d = self.setUp();
         d.addCallback(function _(irc) {
-            var node = Object();
-            var username = Object();
-            var password = Object();
-            var channels = Object();
-            username.value = 'MFen';
-            password.value = 'ninjas';
-            channels.value = '#vellum';
-            node.username = username;
-            node.password = password;
-            node.channels = channels;
-
-            var event = new MockEvent(node);
-
             var acctManager = irc.childWidgets[0];
+            var amnode = acctManager.node;
+            amnode.username.value = 'MFen';
+            amnode.password.value = 'ninjas';
+            amnode.channels.value = '#vellum';
+            var event = new MockEvent(amnode);
+
             var d2 = acctManager.onLogOnSubmit(event );
             d2.addCallback(function _(response) {
-                    self.assertEqual(response, 
-                        'connected MFen:ninjas@localhost and joined #vellum');
+                // check username/password/host are a match
+                self.assertEqual(response, 
+                    'connected MFen:ninjas@localhost and joined #vellum');
+
+                /* !!! TODO
+                var fgtab = irc.firstNodeByAttribute('class', 'tab');
+
+                // check presence of channel tab
+                self.assertEqual(fgtab.id, "#vellum");
+                */
+
                 }
             );
             return d2;
@@ -88,6 +91,76 @@ WebbyVellum.Tests.TestIRCContainer.methods(
         );
         return d;
     },
+
+    /* XXX not yet
+    function test_failLogOn(self) {
+        var d = self.setUp();
+        d.addCallback(function _(irc) {
+            var acctManager = irc.childWidgets[0];
+            var amnode = acctManager.node;
+            amnode.username.value = 'MFen';
+            amnode.password.value = 'ninjasxxx';
+            amnode.channels.value = '#vellum';
+            var event = new MockEvent(amnode);
+
+            var d2 = acctManager.onLogOnSubmit(event );
+            d2.addCallback(function _(response) {
+                // look for a failure response
+                self.failIf(
+                    response ==
+                    'connected MFen:ninjasxxx@localhost and joined #vellum'
+                    );
+
+                }
+            );
+            return d2;
+            }
+        );
+        return d;
+    },
+    */
+
+    // TODO - test keyboard login submit vs. click button submit?
+
+    /* !!!!!!!!!!!! not yet
+    function test_logOnChannels(self) {
+        var d = self.setUp();
+        d.addCallback(function _(irc) {
+            var acctManager = irc.childWidgets[0];
+            var amnode = acctManager.node;
+            amnode.username.value = 'MFen';
+            amnode.password.value = 'ninjas';
+            amnode.channels.value = '#vellum,#stuff';
+            var event = new MockEvent(amnode);
+
+            var d2 = acctManager.onLogOnSubmit(event );
+            d2.addCallback(function _(response) {
+                var fgtab = irc.firstNodeByAttribute('class', 'tab');
+
+                // check that latest tab is in the foreground
+                self.assertEqual(fgtab.id, "#stuff");
+
+                var vellumtab = irc.firstNodeByAttribute('href', '##vellum');
+
+                // check that other channel tab is present and has the
+                // background class
+                self.assertEqual(vellumtab.className, 'background-tab');
+
+                // check username/password/host are a match
+                self.assertEqual(response, 
+                    'connected MFen:ninjas@localhost and joined #vellum,#stuff');
+            });
+            return d2;
+            }
+         );
+         return d;
+     },
+     */
+
+
+    // TODO - tests for the window.location after clicking on a tab (make sure
+    // there's no #fragment added by the act of clicking on the link
+
 
     function setUp(self) {
         var d = self.callRemote("newContainer");
