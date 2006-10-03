@@ -2,18 +2,18 @@
 // import Divmod
 
 MockEvent = Divmod.Class.subclass('MockEvent');
-MockEvent.methods(
+MockEvent.methods( // {{{
     function __init__(self, node) { self.target = self.srcElement = node; },
 
     function stopPropagation(self) { /* */ },
 
     function preventDefault(self) { /* */ }
-);
+); // }}}
 
 
 WebbyVellum.Tests.TestIRCContainer = Nevow.Athena.Test.TestCase.subclass("WebbyVellum.Tests.TestIRCContainer");
-WebbyVellum.Tests.TestIRCContainer.methods(
-    function test_initialize(self) {
+WebbyVellum.Tests.TestIRCContainer.methods( // {{{
+    function test_initialize(self) {  // {{{
         var d = self.setUp();
         d.addCallback(function _(irc) {
             // check that subwidgets are present and supply the right methods
@@ -36,9 +36,9 @@ WebbyVellum.Tests.TestIRCContainer.methods(
 
             // TODO - assert something about accountManager
         });
-    },
+    }, // }}}
 
-    function test_conversationTabs(self) {
+    function test_conversationTabs(self) { // {{{
         var d = self.setUp();
         d.addCallback(function _(irc) {
             d2 = self.callRemote('generateConversation', '#test');
@@ -50,9 +50,9 @@ WebbyVellum.Tests.TestIRCContainer.methods(
             return d2;
         });
         return d;
-    },
+    }, // }}}
 
-    function test_submitText(self) {
+    function test_submitText(self) { // {{{
         var d = self.setUp();
         d.addCallback(function _(irc) {
             var chat = irc.childWidgets[2];
@@ -73,9 +73,9 @@ WebbyVellum.Tests.TestIRCContainer.methods(
             return d2;
         });
         return d;
-    },
+    }, // }}}
 
-    function test_logOn(self) {
+    function test_logOn(self) { // {{{
         var d = self.setUp();
         d.addCallback(function _(irc) {
             // try it with one channel
@@ -109,7 +109,7 @@ WebbyVellum.Tests.TestIRCContainer.methods(
             }
         );
         return d;
-    },
+    }, // }}}
 
 
     // TODO - test keyboard login submit vs. click button submit?
@@ -119,11 +119,11 @@ WebbyVellum.Tests.TestIRCContainer.methods(
     // there's no #fragment added by the act of clicking on the link
 
 
-    function setUp(self) {
+    function setUp(self) { // {{{
         var d = self.callRemote("newContainer");
         d.addCallback(
             function _(wi) { return self.addChildWidgetFromWidgetInfo(wi); }
             );
         return d;
-    }
-);
+    } // }}}
+); // }}}
