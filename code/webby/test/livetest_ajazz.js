@@ -98,34 +98,6 @@ WebbyVellum.Tests.TestIRCContainer.methods(
     },
 
 
-    /* XXX not yet
-    function test_failLogOn(self) {
-        var d = self.setUp();
-        d.addCallback(function _(irc) {
-            var acctManager = irc.childWidgets[0];
-            var amnode = acctManager.node;
-            amnode.username.value = 'MFen';
-            amnode.password.value = 'ninjasxxx';
-            amnode.channels.value = '#vellum';
-            var event = new MockEvent(amnode);
-
-            var d2 = acctManager.onLogOnSubmit(event );
-            d2.addCallback(function _(response) {
-                // look for a failure response
-                self.failIf(
-                    response ==
-                    'connected MFen:ninjasxxx@localhost and joined #vellum'
-                    );
-
-                }
-            );
-            return d2;
-            }
-        );
-        return d;
-    },
-    */
-
     // TODO - test keyboard login submit vs. click button submit?
 
 
