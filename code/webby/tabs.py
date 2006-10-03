@@ -1,3 +1,19 @@
+"""Dynamic Tabs Element
+
+Drop one of these TabsElement items on your athena.LivePage.
+
+Supports callRemotes for:
+
+    addTab(id, label, scrollback) -> create a new tab in the widget
+
+    removeTab(id)
+
+    appendToTab(id, content) -> append content to the tab having id.  The
+                                content must be a single xhtml-namespaced node.
+
+    show(id) -> bring tab id to the foreground.
+
+"""
 from twisted.python.util import sibpath
 
 from nevow import loaders, athena
