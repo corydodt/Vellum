@@ -61,6 +61,8 @@ Tabby.TabsElement.methods(
 
         function _clickWrap(ev)
         {
+            ev.stopPropagation();
+            ev.preventDefault();
             return self.clicked(handle);
         }
 
