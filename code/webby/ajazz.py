@@ -92,8 +92,6 @@ class ConversationWindow(tabs.TabsElement):
                 initialId, initialLabel, initialContent)
         nullconv = minchat.NullConversation(self.fragmentParent, initialId)
         self.conversations[initialId] = nullconv
-        
-
 
     def showConversation(self, conversation, conversationName):
         cn = unicode(conversationName)
@@ -113,6 +111,8 @@ class ConversationWindow(tabs.TabsElement):
         d.addErrback(_conversationFailed)
         # FIXME - we do not return this deferred.  Need to see whether
         # minchat deals with deferreds returned by this stack
+        
+
 
 def webClean(st):
     return unicode(st.replace('<','&lt;').replace('>','&gt;'))
