@@ -38,6 +38,20 @@ WebbyVellum.Tests.TestIRCContainer.methods(
         });
     },
 
+    function test_conversationTabs(self) {
+        var d = self.setUp();
+        d.addCallback(function _(irc) {
+            d2 = self.callRemote('generateConversation', '#test');
+            d2.addCallback(function _generatedConversation(_) {
+                var testTabs = irc.nodesByAttribute('id', '#test');
+                self.assertEqual(testTabs.length, 1);
+                self.assertEqual(irc.activeTabId(), '#test');
+            });
+            return d2;
+        });
+        return d;
+    },
+
     function test_submitText(self) {
         var d = self.setUp();
         d.addCallback(function _(irc) {
