@@ -64,6 +64,7 @@ WebbyVellum.Tests.TestIRCContainer.methods(
     function test_logOn(self) {
         var d = self.setUp();
         d.addCallback(function _(irc) {
+            // try it with one channel
             var acctManager = irc.childWidgets[0];
             var amnode = acctManager.node;
             amnode.username.value = 'MFen';
@@ -76,21 +77,26 @@ WebbyVellum.Tests.TestIRCContainer.methods(
                 // check username/password/host are a match
                 self.assertEqual(response, 
                     'connected MFen:ninjas@localhost and joined #vellum');
-
-                /* !!! TODO
-                var fgtab = irc.firstNodeByAttribute('class', 'tab');
-
-                // check presence of channel tab
-                self.assertEqual(fgtab.id, "#vellum");
-                */
-
                 }
             );
-            return d2;
+
+            // try it with two channels
+            amnode.channels.value = '#vellum,#stuff';
+            var event = new MockEvent(amnode);
+            var d3 = acctManager.onLogOnSubmit(event);
+            d3.addCallback(function _(response) {
+                // check username/password/host are a match
+                self.assertEqual(response, 
+                    'connected MFen:ninjas@localhost and joined #vellum,#stuff');
+                }
+            );
+
+            return Divmod.Defer.DeferredList([d2, d3], false, true);
             }
         );
         return d;
     },
+
 
     /* XXX not yet
     function test_failLogOn(self) {
@@ -121,41 +127,6 @@ WebbyVellum.Tests.TestIRCContainer.methods(
     */
 
     // TODO - test keyboard login submit vs. click button submit?
-
-    /* !!!!!!!!!!!! not yet
-    function test_logOnChannels(self) {
-        var d = self.setUp();
-        d.addCallback(function _(irc) {
-            var acctManager = irc.childWidgets[0];
-            var amnode = acctManager.node;
-            amnode.username.value = 'MFen';
-            amnode.password.value = 'ninjas';
-            amnode.channels.value = '#vellum,#stuff';
-            var event = new MockEvent(amnode);
-
-            var d2 = acctManager.onLogOnSubmit(event );
-            d2.addCallback(function _(response) {
-                var fgtab = irc.firstNodeByAttribute('class', 'tab');
-
-                // check that latest tab is in the foreground
-                self.assertEqual(fgtab.id, "#stuff");
-
-                var vellumtab = irc.firstNodeByAttribute('href', '##vellum');
-
-                // check that other channel tab is present and has the
-                // background class
-                self.assertEqual(vellumtab.className, 'background-tab');
-
-                // check username/password/host are a match
-                self.assertEqual(response, 
-                    'connected MFen:ninjas@localhost and joined #vellum,#stuff');
-            });
-            return d2;
-            }
-         );
-         return d;
-     },
-     */
 
 
     // TODO - tests for the window.location after clicking on a tab (make sure
