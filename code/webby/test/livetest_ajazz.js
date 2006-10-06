@@ -1,3 +1,4 @@
+// vi:foldmethod=marker
 // import Nevow.Athena.Test
 // import Divmod
 
