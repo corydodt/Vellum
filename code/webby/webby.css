@@ -43,16 +43,18 @@ form { clear: both; }
   float: left;
   margin: 5pt;
   border: 2px solid black;
+  border-style: outset;
 }
 
 .enclosure-hidden { display: none; }
 
 .iconified { 
-    float: left;
-    clear: left;
-    width: 3em;
-    border: 2px solid black;
-    margin: 2pt;
+  float: left;
+  clear: left;
+  width: 3em;
+  border: 2px solid black;
+  border-style: outset;
+  margin: 2pt;
 }
 
 .iconified .titlebar { height: 30pt; }
