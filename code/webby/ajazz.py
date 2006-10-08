@@ -6,7 +6,7 @@ from zope.interface import implements
 
 from nevow import tags as T, rend, loaders, athena, url, static, flat
 
-from webby import minchat, tabs, parseirc
+from webby import minchat, tabs, parseirc, windowing
 from webby.minchat import IChatConversations, IChatEntry, IChatAccountManager
 
 RESOURCE = lambda f: sibpath(__file__, f)
@@ -19,32 +19,23 @@ class WVRoot(rend.Page):
     def child_css(self, ctx, ):
         return static.File(RESOURCE('webby.css'))
 
+    def child_tabs_css(self, ctx, ):
+        return static.File(RESOURCE('tabs.css'))
     def renderHTTP(self, ctx):
         return url.root.child("_")
 
 
-class Map(athena.LiveElement):
-    docFactory = loaders.stan(['map'])
 
-class Minimap(Map):
-    ## jsClass = u"WebbyVellum.Minimap"
-    docFactory = loaders.xmlfile(RESOURCE('elements/Minimap'))
-
-class Mainmap(Map):
-    ## jsClass = u"WebbyVellum.Mainmap"
-    docFactory = loaders.xmlfile(RESOURCE('elements/Mainmap'))
-
-
-class IRCContainer(athena.LiveElement, components.Componentized):
+class IRCContainer(windowing.Enclosure, components.Componentized):
     jsClass = u"WebbyVellum.IRCContainer"
-    docFactory = loaders.xmlfile(RESOURCE('elements/IRCContainer'))
 
     def __init__(self, accountManager, *a, **kw):
-        athena.LiveElement.__init__(self, *a, **kw)
+        super(IRCContainer, self).__init__(
+                windowTitle="IRC", userClass="irc", *a, **kw)
         components.Componentized.__init__(self)
         self.accountManager = accountManager
 
-    def irc(self, request, tag):
+    def enclosedRegion(self, request, tag):
         cw = ConversationWindow()
         cw.setFragmentParent(self)
         self.setComponent(IChatConversations, cw)
@@ -62,7 +53,7 @@ Click Log ON to connect.'''
         ce.setFragmentParent(self)
         self.setComponent(IChatEntry, ce)
         return tag[am, cw, ce]
-    athena.renderer(irc)
+    athena.renderer(enclosedRegion)
 
 
 
@@ -183,14 +174,14 @@ class LiveVellum(athena.LivePage):
 
 
     def render_minimap(self, ctx, data):
-        m = Minimap()
-        m.setFragmentParent(self)
-        return ctx.tag[m]
+        enc = windowing.Enclosure(windowTitle="Mini Map", userClass="minimap")
+        enc.setFragmentParent(self)
+        return ctx.tag[enc]
 
     def render_mainmap(self, ctx, data):
-        m = Mainmap()
-        m.setFragmentParent(self)
-        return ctx.tag[m]
+        enc = windowing.Enclosure(windowTitle="Main Map", userClass="mainmap")
+        enc.setFragmentParent(self)
+        return ctx.tag[enc]
 
     def render_chat(self, ctx, data):
         accountManager = minchat.AccountManager(self.chatui)

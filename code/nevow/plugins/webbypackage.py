@@ -8,8 +8,13 @@ def _f(*sib):
 webbyPkg = athena.JSPackage({
     'WebbyVellum': _f('ajazz.js'),
     'WebbyVellum.Tests': _f('test', 'livetest_ajazz.js'),
+
     'Tabby': _f('tabs.js'),
     'Tabby.Tests': _f('test', 'livetest_tabs.js'),
-    'DeanEdwards': _f('events.js')
+
+    'Windowing': _f('windowing.js'),
+    'Windowing.Tests': _f('test', 'livetest_windowing.js'),
+
+    'DeanEdwards': _f('events.js'),
     })
 

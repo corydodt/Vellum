@@ -1,106 +1,84 @@
-.rightSide { 
-    float: left; /* _really_..it lands to the right of any previous left-floats */
-    text-align: right;
-}
+@import url(/tabs_css);
 
-h1 {
-    font-family: sans-serif;
-}
+body { font-size: 9pt; }
 
-form
-{
-    clear: both;
-}
-.minimap 
-{ float: left;
+input { font-size: 8pt; }
+
+h1 { font-family: sans-serif; } 
+
+form { clear: both; }
+
+.irc { width: 424pt; }
+
+.irc .enclosedRegion { padding: 3pt; }
+
+.minimap { 
   width: 85pt;
   height: 110pt;
-  border: 2px solid black;
-  margin: 5pt;
 }
 
-.mainmap
-{ float: left;
+.mainmap { 
   width: 255pt;
   height: 330pt;
-  margin: 5pt;
-  clear: right;
-  border: 2px solid black;
 }
 
-.chatentry
-{
+.chatentry {
     width: 410pt;
     border: 2px solid blue;
     background-color: #f0f0ff;
     margin-top: 4px;
 }
 
-.corner
-{
-  border: 1px solid black;
-  padding-left: 3px;
-  padding-bottom: 1px;
-  border-top: 0px;
-  border-right: 0px;
+.restore, .minimizer {
+    float: right;
+    border: thin solid gray;
+    padding: 1pt;
+    background-color: white;
+    margin: 1pt;
+    font-size: 7pt;
+    cursor: pointer;
+}
+
+.enclosure {
+  float: left;
+  margin: 5pt;
+  border: 2px solid black;
+}
+
+.enclosure-hidden { display: none; }
+
+.iconified { 
+    float: left;
+    clear: left;
+    width: 3em;
+    border: 2px solid black;
+    margin: 2pt;
+}
+
+.iconified .titlebar { height: 30pt; }
+
+.iconified-hidden { display: none; }
+
+
+.windowTitle {
+    float: left;
+    color: white;
+    font-weight: bold;
 }
 
 
+.titlebar {
+    height: 15pt;
+    background-color: blue;
+}
 
 
-/* for tabs.py */
-    .bg-tab-handle {
-      background-color: #aaf;
-    }
-
-    .bg-tab-handle, .tab-handle
-    {
-      margin: 6pt;
-      text-decoration: none;
-      padding: 3pt;
-      border: thin solid black;
-      color: white;
-    }
-
-    .tab-handle
-    {
-      color: blue;
-      text-decoration: underline;
-    }
-
-    a[name] { display: block; }
-
-    .tab { 
-        border: thin solid blue; 
-        display: block; 
-        overflow: auto;
-        margin-top: 3pt;
-        height: 22em;
-        width: 406pt;
-        font-family: monospace;
-        color: #ccc;
-        background-color: black;
-        padding: 2pt;
-    }
-
-
-    .bg-tab { display: none; }
-
-    .tabsElement { 
-        display: block;
-    }
-
-    .ircArea {
-        text-align: left;
-        border: thin solid #ccc;
-        padding: 5pt;
-    }
-
-    .mapArea {
-        float: left;
-    }
-
-
-/* ... */
-
-
+.tab {
+    margin-top: 3pt;
+    height: 22em;
+    width: 406pt;
+    font-family: monospace;
+    color: #ccc;
+    background-color: black;
+    padding: 2pt;
+}

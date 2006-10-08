@@ -1,0 +1,10 @@
+    <div xmlns:n="http://nevow.com/ns/nevow/0.1"
+         n:render="liveElement"><n:attr 
+         name="class">enclosure <n:invisible n:render="userClass"
+         ><n:slot name="userClass" /></n:invisible></n:attr
+         ><div class="titlebar"><div class="windowTitle" 
+                 n:render="windowTitle"><n:slot name="windowTitle" /></div>
+             <a class="minimizer">_</a>
+         </div>
+         <div n:render="enclosedRegion" class="enclosedRegion" />
+    </div>
