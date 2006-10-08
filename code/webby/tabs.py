@@ -18,16 +18,10 @@ from twisted.python.util import sibpath
 
 from nevow import loaders, athena
 
+RESOURCE = lambda f: sibpath(__file__, f)
+
 class TabsElement(athena.LiveElement):
-    docFactory = loaders.xmlstr(
-"""<span xmlns:n="http://nevow.com/ns/nevow/0.1"
-xmlns:athena="http://divmod.org/ns/athena/0.7"
-n:render="liveElement"
-class="tabsElement">
-    <div class="handles" />
-    <div class="panes" />
-</span>
-""")
+    docFactory = loaders.xmlfile(RESOURCE('elements/Tabs'))
     jsClass = u"Tabby.TabsElement"
     widgetArgs = None
 
@@ -37,7 +31,6 @@ class="tabsElement">
     def setInitialArguments(self, *a, **kw):
         assert len(kw) == 0, "Cannot pass keyword arguments to a Widget"
         self.widgetArgs = a
-
 
     def getInitialArguments(self):
         args = ()
