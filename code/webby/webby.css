@@ -70,6 +70,7 @@ form { clear: both; }
 .titlebar {
     height: 15pt;
     background-color: blue;
+    padding: 1pt;
 }
 
 
