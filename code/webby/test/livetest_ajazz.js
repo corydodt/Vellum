@@ -1,4 +1,3 @@
-// vi:foldmethod=marker
 // import Nevow.Athena.Test
 // import Divmod
 
@@ -128,3 +127,5 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
         return d;
     } // }}}
 ); // }}}
+
+// vi:foldmethod=marker
