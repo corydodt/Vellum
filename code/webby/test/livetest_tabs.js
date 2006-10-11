@@ -6,8 +6,8 @@ XHTMLNS = "http://www.w3.org/1999/xhtml";
 RT = Divmod.Runtime.theRuntime;
 
 Tabby.Tests.TestTabs = Nevow.Athena.Test.TestCase.subclass("Tabby.Tests.TestTabs");
-Tabby.Tests.TestTabs.methods(
-    function test_initialTabId(self) {
+Tabby.Tests.TestTabs.methods( // {{{
+    function test_initialTabId(self) { // {{{
         var d = self.callRemote("newTabWidget", 'woop', 'Woop');
         d.addCallback(
             function(wi) { return self.addChildWidgetFromWidgetInfo(wi); }
@@ -20,9 +20,9 @@ Tabby.Tests.TestTabs.methods(
                 }
             );
         return d;
-    },
+    }, // }}}
 
-    function test_initialTabIdAndContent(self) {
+    function test_initialTabIdAndContent(self) { // {{{
         var d = self.callRemote("newTabWidget", 'woop', 'Woop', 
             '<div xmlns="' + XHTMLNS + '"><b>Content</b></div>');
         d.addCallback(
@@ -35,9 +35,9 @@ Tabby.Tests.TestTabs.methods(
                 }
             );
         return d;
-    },
+    }, // }}}
 
-    function test_clicked(self) {
+    function test_clicked(self) { // {{{
         var d = self.setUp();
         d.addCallback(
             function _(tabs) { 
@@ -48,9 +48,9 @@ Tabby.Tests.TestTabs.methods(
                 tabs.clicked(onehandle);
                 self.assertEqual(tabs.activeTabId(), '1');
             });
-    },
+    }, // }}}
 
-    function test_show(self) {
+    function test_show(self) { // {{{
         var d = self.setUp();
         d.addCallback(
             function _(tabs) { 
@@ -62,9 +62,9 @@ Tabby.Tests.TestTabs.methods(
                 }
             );
         return d;
-    },
+    }, // }}}
 
-    function test_removeTab(self) {
+    function test_removeTab(self) { // {{{
         var d = self.setUp();
         d.addCallback(
             function _(tabs) {
@@ -85,9 +85,9 @@ Tabby.Tests.TestTabs.methods(
                         );
             });
         return d;
-    },
+    }, // }}}
 
-    function test_appendToTab(self) {
+    function test_appendToTab(self) { // {{{
         var d = self.setUp();
         d.addCallback(
             function _(tabs) {
@@ -100,15 +100,15 @@ Tabby.Tests.TestTabs.methods(
                 self.failUnless(p.innerHTML.search('Hi</p>') >= 0);
             });
         return d;
-    },
+    }, // }}}
 
-    function setUp(self) {
+    function setUp(self) { // {{{
         var d = self.callRemote("newTabWidget");
         d.addCallback(
             function _(wi) { return self.addChildWidgetFromWidgetInfo(wi); }
             );
         return d;
-    }
+    } // }}}
+); // }}}
 
-
-)
+// vi:foldmethod=marker
