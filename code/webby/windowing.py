@@ -1,4 +1,10 @@
-"""Flexible Enclosure (dumb window) Element
+"""
+Elements for constructing a window interface.
+
+
+========================================
+Flexible Enclosure (dumb window) Element
+========================================
 
 Use one of these for slightly window-like appearance and behavior around a
 widget.
@@ -11,6 +17,18 @@ notify the iconified window when something on the server generates an event.
 
 The "userClass" init arg will be inserted into the 'class' attribute of the
 node.
+
+
+===========================
+Scrolling Text Area Element
+===========================
+
+Use one of these for a console-like text area.
+
+Supports callRemotes for:
+
+    appendTo(content) -> a single, XHTML-namespaced node to add to the widget
+
 """
 
 from twisted.python.util import sibpath
@@ -42,3 +60,11 @@ class Enclosure(athena.LiveElement):
     athena.renderer(windowTitle)
 
 
+
+class TextArea(athena.LiveElement):
+    """A scrollable widget that displays mostly lines of text."""
+    jsClass = u"Windowing.TextArea"
+    docFactory = loaders.xmlfile(RESOURCE('elements/TextArea'))
+    def printClean(self, message):
+        message = flattenMessageString(message)
+        return self.callRemote('appendTo', message)

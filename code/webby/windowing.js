@@ -43,4 +43,13 @@ Windowing.Enclosure.methods( // {{{
     } // }}}
 ); // }}}
 
+Windowing.TextArea = Nevow.Athena.Widget.subclass('Windowing.TextArea');
+Windowing.TextArea.methods(
+    function appendTo(self, content)
+    {
+        RT.appendNodeContent(self.node, content);
+        self.node.scrollTop = self.node.scrollHeight;
+    }
+);
+
 // vi:foldmethod=marker

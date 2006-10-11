@@ -68,4 +68,29 @@ Windowing.Tests.TestEnclosure.methods( // {{{
     } // }}}
 ); // }}}
 
+Windowing.Tests.TestTextArea = Nevow.Athena.Test.TestCase.subclass("Windowing.Tests.TestTextArea");
+Windowing.Tests.TestTextArea.methods( // {{{
+    function test_appendTo(self) { // {{{
+        var d = self.setUp();
+        d.addCallback(
+            function _(ta) {
+                var n = ta.node;
+                self.assertEqual(n.innerHTML.length, 0);
+                ta.appendTo('<span xmlns="' + XHTMLNS + '">Babar</span>');
+                self.failUnless(n.innerHTML.search('Babar') >= 0);
+                ta.appendTo('<p xmlns="' + XHTMLNS + '">Hi</p>');
+                self.failUnless(n.innerHTML.search('Hi</p>') >= 0);
+            });
+        return d;
+    }, // }}}
+
+    function setUp(self) { // {{{
+        var d = self.callRemote("newTextArea");
+        d.addCallback(
+            function _(wi) { return self.addChildWidgetFromWidgetInfo(wi); }
+            );
+        return d;
+    } // }}}
+); // }}}
+
 // vi:foldmethod=marker

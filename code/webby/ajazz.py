@@ -56,6 +56,14 @@ Click Log ON to connect.'''
     athena.renderer(enclosedRegion)
 
 
+class IRCTextArea(windowing.TextArea):
+    docFactory = loaders.xmlfile(RESOURCE('elements/TextArea'))
+    def __init__(self, conversation, *a, **kw):
+        super(IRCTextArea, self).__init__(*a, **kw)
+        self.conversation = conversation
+
+
+
 
 NODEFAULT = object()
 

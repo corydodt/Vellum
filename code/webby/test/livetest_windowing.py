@@ -14,3 +14,14 @@ class TestEnclosure(testcase.TestCase):
         return enc
     athena.expose(newEnclosure)
 
+class TestTextArea(testcase.TestCase):
+    jsClass = u'Windowing.Tests.TestTextArea'
+    def newTextArea(self, ):
+        """
+        Return a new TextArea to the browser
+        """
+        ta = windowing.TextArea()
+        ta.setFragmentParent(self)
+        return ta
+    athena.expose(newTextArea)
+
