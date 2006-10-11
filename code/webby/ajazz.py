@@ -36,7 +36,7 @@ class IRCContainer(windowing.Enclosure, components.Componentized):
         self.accountManager = accountManager
 
     def enclosedRegion(self, request, tag):
-        cw = ConversationWindow()
+        cw = ConversationTabs()
         cw.setFragmentParent(self)
         self.setComponent(IChatConversations, cw)
         cw.setInitialArguments(u'**SERVER**', u'**SERVER**', 
@@ -67,12 +67,12 @@ class IRCTextArea(windowing.TextArea):
 
 NODEFAULT = object()
 
-class ConversationWindow(tabs.TabsElement):
-    ## jsClass = u"WebbyVellum.ConversationWindow"
+class ConversationTabs(tabs.TabsElement):
+    ## jsClass = u"WebbyVellum.ConversationTabs"
     implements(IChatConversations)
 
     def __init__(self, *a, **kw):
-        super(ConversationWindow, self).__init__(*a, **kw)
+        super(ConversationTabs, self).__init__(*a, **kw)
         self.conversations = {}
 
     def getConversation(self, id, default=NODEFAULT):
@@ -87,7 +87,7 @@ class ConversationWindow(tabs.TabsElement):
         return self.callRemote('appendToTab', id, message)
  
     def setInitialArguments(self, initialId, initialLabel, initialContent):
-        super(ConversationWindow, self).setInitialArguments(
+        super(ConversationTabs, self).setInitialArguments(
                 initialId, initialLabel, initialContent)
         nullconv = minchat.NullConversation(self.fragmentParent, initialId)
         self.conversations[initialId] = nullconv
@@ -110,7 +110,7 @@ class ConversationWindow(tabs.TabsElement):
         d.addErrback(_conversationFailed)
         # FIXME - we do not return this deferred.  Need to see whether
         # minchat deals with deferreds returned by this stack
-        
+ 
 
 
 def webClean(st):
@@ -127,10 +127,10 @@ class AccountManagerElement(athena.LiveElement):
     docFactory = loaders.xmlfile(RESOURCE('elements/AccountManagerElement'))
     implements(IChatAccountManager)
 
-    def __init__(self, accountManager, conversationWindow, *a, **kw):
+    def __init__(self, accountManager, conversationTabs, *a, **kw):
         super(AccountManagerElement, self).__init__(*a, **kw)
         self.accountManager = accountManager
-        self.conversationWindow = conversationWindow
+        self.conversationTabs = conversationTabs
 
     def onLogOnSubmit(self, username, password, channels):
         host = 'localhost'.encode('utf8') # TODO - get from config file
