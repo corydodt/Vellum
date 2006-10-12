@@ -39,11 +39,7 @@ class IRCContainer(windowing.Enclosure, components.Componentized):
         cw = ConversationTabs()
         cw.setFragmentParent(self)
         self.setComponent(IChatConversations, cw)
-        cw.setInitialArguments(u'**SERVER**', u'**SERVER**', 
-                flattenMessageString(
-u'''Vellum IRC v0.0
-Click Log ON to connect.'''
-                    ))
+        cw.setInitialArguments(u'**SERVER**', u'**SERVER**', GREETING)
 
         am = AccountManagerElement(self.accountManager, cw)
         am.setFragmentParent(self)
@@ -122,6 +118,8 @@ def flattenMessageString(st):
     for line in st.splitlines():
         span[line, T.br]
     return unicode(flat.flatten(span))
+
+GREETING = flattenMessageString(u'''Vellum IRC v0.0\nClick Log ON to connect.''')
 
 class AccountManagerElement(athena.LiveElement):
     docFactory = loaders.xmlfile(RESOURCE('elements/AccountManagerElement'))
