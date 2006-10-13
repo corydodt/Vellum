@@ -50,7 +50,6 @@ WebbyVellum.ChatEntry.methods( // {{{
         event.stopPropagation();
         event.preventDefault();
         var active = self.widgetParent.activeTabId();
-        var node = event.target;
         var input = self.firstNodeByAttribute('class', 'chatentry');
         var d = self.callRemote("chatMessage", input.value, active);
         input.value = "";
