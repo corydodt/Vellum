@@ -44,12 +44,21 @@ Windowing.Enclosure.methods( // {{{
 ); // }}}
 
 Windowing.TextArea = Nevow.Athena.Widget.subclass('Windowing.TextArea');
-Windowing.TextArea.methods(
-    function appendTo(self, content)
+Windowing.TextArea.methods( // {{{
+    function __init__(self,  // {{{
+                      node, 
+                      /* OPTIONAL */ initialContent) {
+        Windowing.TextArea.upcall(self, '__init__', node);
+
+        if (initialContent !== undefined)
+            self.appendTo(initialContent);
+    }, // }}}
+
+    function appendTo(self, content) // {{{
     {
         RT.appendNodeContent(self.node, content);
         self.node.scrollTop = self.node.scrollHeight;
-    }
-);
+    } // }}}
+); // }}}
 
 // vi:foldmethod=marker

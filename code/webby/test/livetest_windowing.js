@@ -70,6 +70,20 @@ Windowing.Tests.TestEnclosure.methods( // {{{
 
 Windowing.Tests.TestTextArea = Nevow.Athena.Test.TestCase.subclass("Windowing.Tests.TestTextArea");
 Windowing.Tests.TestTextArea.methods( // {{{
+    function test_initialContent(self) { // {{{
+        var d = self.callRemote("newTextArea", 
+            '<div xmlns="' + XHTMLNS + '"><b>Content</b></div>');
+        d.addCallback(
+            function _(wi) { return self.addChildWidgetFromWidgetInfo(wi); }
+            );
+        d.addCallback(
+            function _(ta) {
+                self.assertEqual(ta.node.innerHTML.search('<b>Content</b>'), 42);
+                }
+            );
+        return d;
+    }, // }}}
+
     function test_appendTo(self) { // {{{
         var d = self.setUp();
         d.addCallback(

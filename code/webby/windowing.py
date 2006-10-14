@@ -68,3 +68,15 @@ class TextArea(athena.LiveElement):
     def printClean(self, message):
         message = flattenMessageString(message)
         return self.callRemote('appendTo', message)
+
+    def setInitialArguments(self, *a, **kw): # FIXME - raped from tabs.py
+        assert len(kw) == 0, "Cannot pass keyword arguments to a Widget"
+        self.widgetArgs = a
+
+    def getInitialArguments(self): # FIXME - raped from tabs.py
+        args = ()
+        if self.widgetArgs is not None:
+            args = self.widgetArgs
+
+        return args
+

@@ -16,12 +16,13 @@ class TestEnclosure(testcase.TestCase):
 
 class TestTextArea(testcase.TestCase):
     jsClass = u'Windowing.Tests.TestTextArea'
-    def newTextArea(self, ):
+    def newTextArea(self, *a):
         """
         Return a new TextArea to the browser
         """
         ta = windowing.TextArea()
         ta.setFragmentParent(self)
+        ta.setInitialArguments(*a)
         return ta
     athena.expose(newTextArea)
 
