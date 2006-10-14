@@ -7,6 +7,7 @@ RT = Divmod.Runtime.theRuntime;
 
 Tabby.Tests.TestTabs = Nevow.Athena.Test.TestCase.subclass("Tabby.Tests.TestTabs");
 Tabby.Tests.TestTabs.methods( // {{{
+    /* get a new tabs widget with just a label and id */
     function test_initialTabId(self) { // {{{
         var d = self.callRemote("newTabWidget", 'woop', 'Woop');
         d.addCallback(
@@ -22,6 +23,7 @@ Tabby.Tests.TestTabs.methods( // {{{
         return d;
     }, // }}}
 
+    /* get a new tabs widget with just a label and id, and XHTML content */
     function test_initialTabIdAndContent(self) { // {{{
         var d = self.callRemote("newTabWidget", 'woop', 'Woop', 
             '<div xmlns="' + XHTMLNS + '"><b>Content</b></div>');
