@@ -58,9 +58,6 @@ class IRCTextArea(windowing.TextArea):
         super(IRCTextArea, self).__init__(*a, **kw)
         self.conversation = conversation
 
-
-
-
 NODEFAULT = object()
 
 class ConversationTabs(tabs.TabsElement):
@@ -106,8 +103,16 @@ class ConversationTabs(tabs.TabsElement):
         d.addErrback(_conversationFailed)
         # FIXME - we do not return this deferred.  Need to see whether
         # minchat deals with deferreds returned by this stack
- 
 
+    def hideConversation(self, conversation, conversationName):
+        cn = unicode(conversationName)
+        if cn in self.conversations:
+            d = self.removeTab(cn)
+            del self.conversations[cn]
+        else:
+            d = defer.succeed(None)
+        # FIXME - we do not return this deferred.  Need to see whether
+        # minchat deals with deferreds returned by this stack
 
 def webClean(st):
     return unicode(st.replace('<','&lt;').replace('>','&gt;'))
@@ -168,7 +173,44 @@ class ChatEntry(athena.LiveElement):
     def irccmd_me(self, args, conv):
         return conv.sendText(args, metadata={'style':'emote'})
 
+    def irccmd_join(self, args, conv):
+        groups=args.split()
 
+        if groups:
+            args=args[len(groups[0])-1:].lstrip()
+            groups=groups[0].split(',')
+            groups=[conv.group.account.getGroup(group.lstrip('#')) for group in groups]
+
+        for group in groups:
+            group.join()
+    irccmd_j=irccmd_join
+
+    def irccmd_part(self, args, conv):
+        groups=args.split()
+        ircgroups=[]
+
+        if groups:
+            args=args[len(groups[0])-1:].lstrip()
+            groups=groups[0].split(',')
+
+            for group in groups:
+                name=group.lstrip('#')
+                if name in conv.group.account.channels:
+                    ircgroups.append(conv.group.account.getGroup(name))
+                else:
+                    conv.sendText("Cannot /part from %s as it has not been joined." % group)
+
+        if len(ircgroups) == 0:
+            try:
+                ircgroups.append(conv.group.account.getGroup(conv.group.name))
+            except AttributeError:
+                conv.sendText("Cannot /part from the SERVER tab, it is not a channel.")
+
+        # TODO: Find out how to support parting messages
+
+        for group in ircgroups:
+            group.leave()
+    irccmd_leave=irccmd_part
 
 class LiveVellum(athena.LivePage):
     addSlash = True
@@ -177,7 +219,6 @@ class LiveVellum(athena.LivePage):
     def __init__(self, *a, **kw):
         super(LiveVellum, self).__init__(*a, **kw)
         self.chatui = minchat.MinChat()
-
 
     def render_minimap(self, ctx, data):
         enc = windowing.Enclosure(windowTitle="Mini Map", userClass="minimap")

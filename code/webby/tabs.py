@@ -28,6 +28,9 @@ class TabsElement(athena.LiveElement):
     def addTab(self, id, label):
         return self.callRemote('addTab', id, label)
 
+    def removeTab(self, id):
+        return self.callRemote('removeTab', id)
+
     def setInitialArguments(self, *a, **kw):
         assert len(kw) == 0, "Cannot pass keyword arguments to a Widget"
         self.widgetArgs = a

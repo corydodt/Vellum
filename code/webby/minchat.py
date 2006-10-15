@@ -18,6 +18,9 @@ class IChatConversations(Interface):
     def showConversation(self, conversation, conversationName):
         """Cause a conversation window to appear"""
 
+    def hideConversation(self, conversation, conversationName):
+        """Cause a conversation window to be hidden"""
+
     def printClean(self, message, id):
         """Send text to a conversation"""
 
@@ -44,6 +47,9 @@ class AccountManager(baseaccount.AccountManager):
         if key in ACCOUNTS and ACCOUNTS[key].isOnline():
             self.disconnect(ACCOUNTS[key])
 
+        #If we make it so we use our own subclass of IRCAccount here, instead of the stock one,
+        #and set it up to use a custom subclass of IRCGroup as the _groupFactory, we can do
+        #protocol actions at the protocol.  Ooooh LA!
         acct = ircsupport.IRCAccount('%s@%s' % key,
                                      1, username, password, 
                                      host, IRCPORT, channels)
@@ -102,6 +108,8 @@ class MinConversation(basechat.Conversation):
     def hide(self):
         """If you don't have a GUI, this is a no-op.
         """
+        pname = unicode(self.person.name)
+        IChatConversations(self.widget).hideConversation(self, pname)
     
     def showMessage(self, text, metadata=None):
         if metadata and metadata.get("style", None) == "emote":
@@ -148,7 +156,8 @@ class MinGroupConversation(basechat.GroupConversation):
     def hide(self):
         """If you don't have a GUI, this is a no-op.
         """
-        pass
+        groupname = unicode('#' + self.group.name)
+        IChatConversations(self.widget).hideConversation(self, groupname)
 
     def showGroupMessage(self, sender, text, metadata=None):
         if metadata and metadata.get("style", None) == "emote":
@@ -160,7 +169,6 @@ class MinGroupConversation(basechat.GroupConversation):
     def setTopic(self, topic, author):
         event = "-!- %s set the topic to: %s" % (author, topic)
         return self.webPrint(event)
-                
 
     def memberJoined(self, member):
         basechat.GroupConversation.memberJoined(self, member)
