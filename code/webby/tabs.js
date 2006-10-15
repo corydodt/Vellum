@@ -1,5 +1,6 @@
 // import Nevow.Athena
 // import Divmod
+// import Divmod.Defer
 // import DeanEdwards
 
 
@@ -120,6 +121,18 @@ Tabby.TabsElement.methods(
         return d;
     },
 
+    function setTabBody(self, id, content)
+    {
+        if (content.markup !== undefined)
+        {
+            // this is a widget.
+            return self.appendWidgetInfoToTab(id, content);
+        } else {
+            // just some regular content.
+            return Divmod.Defer.succeed(self.appendToTab(id, content));
+        };
+    },
+
     function getPaneForId(self, id)
     {
         return self.firstNodeByAttribute('id', id);
@@ -142,14 +155,7 @@ Tabby.TabsElement.methods(
                 self.addTab(initialTabId, initialTabLabel);
                 if (nodeContent !== undefined)
                 {
-                    if (nodeContent.markup !== undefined)
-                    {
-                        // this is a widget.
-                        self.appendWidgetInfoToTab(initialTabId, nodeContent);
-                    } else {
-                        // just some regular content.
-                        self.appendToTab(initialTabId, nodeContent);
-                    };
+                    self.setTabBody(initialTabId, nodeContent);
                 }
             } else {
                 Divmod.debug("TabsElement", 

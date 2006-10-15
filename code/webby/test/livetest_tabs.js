@@ -1,5 +1,6 @@
 // import Nevow.Athena.Test
 // import Divmod.Runtime
+// import Divmod.Defer
 
 XHTMLNS = "http://www.w3.org/1999/xhtml";
 
@@ -137,6 +138,41 @@ Tabby.Tests.TestTabs.methods( // {{{
             });
         return d;
     }, // }}}
+
+    function test_setTabBody(self) { // {{{
+        var d = self.setUp();
+        d.addCallback(
+            function _(tabs) {
+
+                // check the behavior with widgets
+                tabs.addTab('1', 'One');
+                var p1 = tabs.getPaneForId('1');
+
+                var dw = self.callRemote('newVerySimpleWidget');
+                dw.addCallback(function _gotInfo(vswinfo) {
+                    var d3 = tabs.setTabBody('1', vswinfo);
+                    d3.addCallback(function _addedWidget(_) {
+                        self.failUnless(p1.innerHTML.search('Content</b>') >= 0);
+                    });
+                    return d3;
+                });
+
+                // check the behavior with regular content
+                tabs.addTab('2', "Two");
+                var p2 = tabs.getPaneForId('2');
+
+                var content = 
+                    '<span xmlns="http://www.w3.org/1999/xhtml">Regular</span>';
+                var dc = tabs.setTabBody('2', content);
+                dc.addCallback(function _addedContent(_) {
+                    self.failUnless(p2.innerHTML.search('Regular') >= 0);
+                });
+
+                return Divmod.Defer.DeferredList([dw, dc], false, true);
+            });
+        return d;
+    }, // }}}
+
     function setUp(self) { // {{{
         var d = self.callRemote("newTabWidget");
         d.addCallback(
