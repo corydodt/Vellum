@@ -39,6 +39,19 @@ Tabby.Tests.TestTabs.methods( // {{{
         return d;
     }, // }}}
 
+    /* get a new tabs widget with just a label and id, and widget content */
+    function test_initialTabIdAndWidget(self) { // {{{
+        var d = self.callRemote("newTabWidgetContainingWidget", 'woop', 'Woop');
+        d.addCallback(function _(wi) { 
+                return self.addChildWidgetFromWidgetInfo(wi); 
+        });
+        d.addCallback(function _(tabs) {
+                var pane = tabs.getPaneForId('woop');
+                self.assertEqual(pane.innerHTML.search('<b>Content</b>'), 140);
+        });
+        return d;
+    }, // }}}
+
     function test_clicked(self) { // {{{
         var d = self.setUp();
         d.addCallback(
@@ -104,6 +117,26 @@ Tabby.Tests.TestTabs.methods( // {{{
         return d;
     }, // }}}
 
+    function test_appendWidgetToTab(self) { // {{{
+        var d = self.setUp();
+        d.addCallback(
+            function _(tabs) {
+                tabs.addTab('1', 'One');
+                var p = tabs.getPaneForId('1');
+                self.assertEqual(p.innerHTML.length, 0);
+
+                var d2 = self.callRemote('newVerySimpleWidget');
+                d2.addCallback(function _gotInfo(vswinfo) {
+                    var d3 = tabs.appendWidgetInfoToTab('1', vswinfo);
+                    d3.addCallback(function _addedWidget(_) {
+                        self.failUnless(p.innerHTML.search('Content</b>') >= 0);
+                    });
+                    return d3;
+                });
+                return d2;
+            });
+        return d;
+    }, // }}}
     function setUp(self) { // {{{
         var d = self.callRemote("newTabWidget");
         d.addCallback(

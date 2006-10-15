@@ -52,7 +52,7 @@ Tabby.TabsElement.methods(
         return false;
     },
 
-    function addTab(self, id, label, /* optional */ scrollback)
+    function addTab(self, id, label)
     {
         var handle = document.createElement('a');
         handle.setAttribute('href', '#' + id);
@@ -81,12 +81,6 @@ Tabby.TabsElement.methods(
 
         self._clicked(handle);
 
-        if (scrollback === undefined)
-        {
-            scrollback = 1000; // 1000 whats? :-)
-        }
-        // TODO - set up length of scrollback with optional scrollback arg
-
     },
 
     function removeTab(self, id)
@@ -101,12 +95,28 @@ Tabby.TabsElement.methods(
 
     },
 
+    /* add a content string as nodes to the end of the tab pane */
     function appendToTab(self, id, content)
     {
         var pane = self.getPaneForId(id);
-        // TODO - deal with scrollback length of node
         RT.appendNodeContent(pane, content);
-        pane.scrollTop = pane.scrollHeight;
+        pane.scrollTop = pane.scrollHeight; // FIXME - remove this when we start using TextAreas
+    },
+
+    /* make a widget a child of this widget, and add the widget node to the
+       end of the tab pane
+     */
+    function appendWidgetInfoToTab(self, id, info)
+    {
+        var pane = self.getPaneForId(id);
+        var d = self.addChildWidgetFromWidgetInfo(info);
+        d.addCallback(function _(w) {
+            pane.appendChild(w.node);
+        });
+        d.addErrback(function _(f) {
+            debugger;
+        });
+        return d;
     },
 
     function getPaneForId(self, id)
@@ -131,7 +141,14 @@ Tabby.TabsElement.methods(
                 self.addTab(initialTabId, initialTabLabel);
                 if (nodeContent !== undefined)
                 {
-                    self.appendToTab(initialTabId, nodeContent);
+                    if (nodeContent.markup !== undefined)
+                    {
+                        // this is a widget.
+                        self.appendWidgetInfoToTab(initialTabId, nodeContent);
+                    } else {
+                        // just some regular content.
+                        self.appendToTab(initialTabId, nodeContent);
+                    };
                 }
             } else {
                 Divmod.debug("TabsElement", 
