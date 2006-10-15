@@ -174,27 +174,28 @@ class ChatEntry(athena.LiveElement):
         return conv.sendText(args, metadata={'style':'emote'})
 
     def irccmd_join(self, args, conv):
-        groups=args.split()
+        groups = args.split()
 
         if groups:
-            args=args[len(groups[0])-1:].lstrip()
-            groups=groups[0].split(',')
-            groups=[conv.group.account.getGroup(group.lstrip('#')) for group in groups]
+            args = args[len(groups[0])-1:].lstrip()
+            acct = conv.group.account
+            groups = groups[0].split(',')
+            groups = [acct.getGroup(group.lstrip('#')) for group in groups]
 
         for group in groups:
             group.join()
-    irccmd_j=irccmd_join
+    irccmd_j = irccmd_join
 
     def irccmd_part(self, args, conv):
-        groups=args.split()
-        ircgroups=[]
+        groups = args.split()
+        ircgroups = []
 
         if groups:
-            args=args[len(groups[0])-1:].lstrip()
-            groups=groups[0].split(',')
+            args = args[len(groups[0])-1:].lstrip()
+            groups = groups[0].split(',')
 
             for group in groups:
-                name=group.lstrip('#')
+                name = group.lstrip('#')
                 if name in conv.group.account.channels:
                     ircgroups.append(conv.group.account.getGroup(name))
                 else:
@@ -210,7 +211,7 @@ class ChatEntry(athena.LiveElement):
 
         for group in ircgroups:
             group.leave()
-    irccmd_leave=irccmd_part
+    irccmd_leave = irccmd_part
 
 class LiveVellum(athena.LivePage):
     addSlash = True
