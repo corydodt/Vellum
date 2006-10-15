@@ -47,9 +47,11 @@ class AccountManager(baseaccount.AccountManager):
         if key in ACCOUNTS and ACCOUNTS[key].isOnline():
             self.disconnect(ACCOUNTS[key])
 
-        #If we make it so we use our own subclass of IRCAccount here, instead of the stock one,
-        #and set it up to use a custom subclass of IRCGroup as the _groupFactory, we can do
-        #protocol actions at the protocol.  Ooooh LA!
+        # If we make it so we use our own subclass of IRCAccount here, instead
+        # of the stock one, and set it up to use a custom subclass of IRCGroup
+        # as the _groupFactory, we can do protocol actions at the protocol.
+        # Ooooh LA!
+
         acct = ircsupport.IRCAccount('%s@%s' % key,
                                      1, username, password, 
                                      host, IRCPORT, channels)
