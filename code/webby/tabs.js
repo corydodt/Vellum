@@ -93,7 +93,7 @@ Tabby.TabsElement.methods(
         var panes = self.firstNodeByAttribute('class', 'panes');
         panes.removeChild(pane);
 
-        /*self._clicked();  There should be something here to make another window pop up.*/
+        self._clicked(handles.lastChild);
     },
 
     /* add a content string as nodes to the end of the tab pane */
