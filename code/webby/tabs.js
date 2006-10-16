@@ -7,24 +7,24 @@
 RT = Divmod.Runtime.theRuntime;
 
 Tabby.TabsElement = Nevow.Athena.Widget.subclass("Tabby.TabsElement");
-Tabby.TabsElement.methods(
-    function activeTabId(self)
+Tabby.TabsElement.methods( // {{{
+    function activeTabId(self) // {{{
     {
         return self._activeTabId;
-    },
+    }, // }}}
 
-    function clicked(self, node)
+    function clicked(self, node) // {{{
     {
         self._clicked(node);
-    },
+    }, // }}}
 
-    function show(self, id)
+    function show(self, id) // {{{
     {
         var handle = self.getHandleForId(id);
         self._clicked(handle);
-    },
+    }, // }}}
 
-    function _clicked(self, handle)
+    function _clicked(self, handle) // {{{
     {
         Divmod.debug("TabsElement", "clicked..." + handle.getAttribute("href"));
         var id = handle.getAttribute('href').substr(1);
@@ -51,9 +51,9 @@ Tabby.TabsElement.methods(
         self._activeTabId = id;
 
         return false;
-    },
+    }, // }}}
 
-    function addTab(self, id, label)
+    function addTab(self, id, label) // {{{
     {
         var handle = document.createElement('a');
         handle.setAttribute('href', '#' + id);
@@ -82,9 +82,9 @@ Tabby.TabsElement.methods(
 
         self._clicked(handle);
 
-    },
+    }, // }}}
 
-    function removeTab(self, id)
+    function removeTab(self, id) // {{{
     {
         var handle = self.getHandleForId(id);
         var handles = self.firstNodeByAttribute('class', 'handles');
@@ -95,20 +95,20 @@ Tabby.TabsElement.methods(
         panes.removeChild(pane);
 
         self._clicked(handles.lastChild);
-    },
+    }, // }}}
 
     /* add a content string as nodes to the end of the tab pane */
-    function appendToTab(self, id, content)
+    function appendToTab(self, id, content) // {{{
     {
         var pane = self.getPaneForId(id);
         RT.appendNodeContent(pane, content);
         pane.scrollTop = pane.scrollHeight; // FIXME - remove this when we start using TextAreas
-    },
+    }, // }}}
 
     /* make a widget a child of this widget, and add the widget node to the
        end of the tab pane
      */
-    function appendWidgetInfoToTab(self, id, info)
+    function appendWidgetInfoToTab(self, id, info) // {{{
     {
         var pane = self.getPaneForId(id);
         var d = self.addChildWidgetFromWidgetInfo(info);
@@ -119,9 +119,9 @@ Tabby.TabsElement.methods(
             debugger;
         });
         return d;
-    },
+    }, // }}}
 
-    function setTabBody(self, id, content)
+    function setTabBody(self, id, content) // {{{
     {
         if (content.markup !== undefined)
         {
@@ -131,19 +131,19 @@ Tabby.TabsElement.methods(
             // just some regular content.
             return Divmod.Defer.succeed(self.appendToTab(id, content));
         };
-    },
+    }, // }}}
 
-    function getPaneForId(self, id)
+    function getPaneForId(self, id) // {{{
     {
         return self.firstNodeByAttribute('id', id);
-    },
+    }, // }}}
 
-    function getHandleForId(self, id)
+    function getHandleForId(self, id) // {{{
     {
         return self.firstNodeByAttribute('href', '#' + id);
-    },
+    }, // }}}
 
-    function __init__(self, node, 
+    function __init__(self, node,  // {{{
                       /* optional */ initialTabId, initialTabLabel,
                       /* optional */ nodeContent)
     {
@@ -162,5 +162,7 @@ Tabby.TabsElement.methods(
                     "initialTabId provided to __init__ without initialTabLabel");
             }
         }
-    }
-);
+    } // }}}
+); // }}}
+
+// vi:foldmethod=marker
