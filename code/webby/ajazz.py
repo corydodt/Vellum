@@ -213,6 +213,9 @@ class ChatEntry(athena.LiveElement):
             group.leave()
     irccmd_leave = irccmd_part
 
+    def irccmd_raw(self, args, conv):
+        return conv.group.account.client.sendLine(args)
+
 class LiveVellum(athena.LivePage):
     addSlash = True
 
