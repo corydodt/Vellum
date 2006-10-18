@@ -65,6 +65,8 @@ class TextArea(athena.LiveElement):
     """A scrollable widget that displays mostly lines of text."""
     jsClass = u"Windowing.TextArea"
     docFactory = loaders.xmlfile(RESOURCE('elements/TextArea'))
+    widgetArgs = None
+
     def printClean(self, message):
         message = flattenMessageString(message)
         return self.callRemote('appendTo', message)
