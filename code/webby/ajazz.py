@@ -176,45 +176,60 @@ class ChatEntry(athena.LiveElement):
     def irccmd_join(self, args, conv):
         groups = args.split()
 
+        #acct = conv.group.account
+        #We're using this way to get the account because I can't figure out a way to make
+        #it so all conversations have access to the account.  I don't know if this will work.
+        #FIXME
+        acct = self.fragmentParent.fragmentParent.chatui.onlineClients[0].account
+
         if groups:
             args = args[len(groups[0])-1:].lstrip()
-            acct = conv.group.account
             groups = groups[0].split(',')
-            groups = [acct.getGroup(group.lstrip('#')) for group in groups]
 
-        for group in groups:
-            group.join()
+        acct.joinGroups(groups)
     irccmd_j = irccmd_join
 
     def irccmd_part(self, args, conv):
         groups = args.split()
-        ircgroups = []
+
+        #acct = conv.group.account
+        #We're using this way to get the account because I can't figure out a way to make
+        #it so all conversations have access to the account.  I don't know if this will work.
+        acct = self.fragmentParent.fragmentParent.chatui.onlineClients[0].account
 
         if groups:
             args = args[len(groups[0])-1:].lstrip()
             groups = groups[0].split(',')
-
-            for group in groups:
-                name = group.lstrip('#')
-                if name in conv.group.account.channels:
-                    ircgroups.append(conv.group.account.getGroup(name))
-                else:
-                    conv.sendText("Cannot /part from %s as it has not been joined." % group)
-
-        if len(ircgroups) == 0:
+        else:
             try:
-                ircgroups.append(conv.group.account.getGroup(conv.group.name))
+                groups.append(conv.group.name.lstrip('#'))
             except AttributeError:
-                conv.sendText("Cannot /part from the SERVER tab, it is not a channel.")
+                conv.sendText("Cannot /part from SERVER tab")
 
         # TODO: Find out how to support parting messages
-
-        for group in ircgroups:
-            group.leave()
+        acct.leaveGroups(groups)
     irccmd_leave = irccmd_part
 
     def irccmd_raw(self, args, conv):
-        return conv.group.account.client.sendLine(args)
+
+        #acct = conv.group.account
+        #We're using this way to get the account because I can't figure out a way to make
+        #it so all conversations have access to the account.  I don't know if this will work.
+        acct = self.fragmentParent.fragmentParent.chatui.onlineClients[0].account
+        return acct.client.sendLine(args)
+
+    def irccmd_query(self, args, conv):
+        try:
+            personName=args.split()[0]
+            mesg=args[len(personName):].lstrip()
+            chatui=self.fragmentParent.fragmentParent.chatui
+            client=chatui.onlineClients[0]
+            newConv=chatui.getConversation(chatui.getPerson(personName, client))
+            newConv.show()
+            if mesg:
+                newConv.sendText(mesg)
+        except:
+                conv.sendText("Problems with /query, bailing out.")
 
 class LiveVellum(athena.LivePage):
     addSlash = True

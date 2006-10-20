@@ -4,6 +4,7 @@ from twisted.words.im import basechat, baseaccount, ircsupport
 from twisted.internet import defer, protocol, reactor
 
 from zope.interface import Interface
+import proto#Using custom account, so as to use a custom protocol
 
 ACCOUNTS = {}
 
@@ -48,13 +49,12 @@ class AccountManager(baseaccount.AccountManager):
             self.disconnect(ACCOUNTS[key])
 
         # If we make it so we use our own subclass of IRCAccount here, instead
-        # of the stock one, and set it up to use a custom subclass of IRCGroup
-        # as the _groupFactory, we can do protocol actions at the protocol.
-        # Ooooh LA!
+        # of the stock one, and overload _startLogin, we can do protocol
+        # actions at the protocol.  Ooooh LA!
 
-        acct = ircsupport.IRCAccount('%s@%s' % key,
+        acct = proto.WebbyAccount('%s@%s' % key,
                                      1, username, password, 
-                                     host, IRCPORT, channels)
+                                     host, IRCPORT, channels)#custom account
         ACCOUNTS[key] = acct
         d = acct.logOn(self.chatui)
         def _addProto(proto, acct, key):
@@ -219,10 +219,13 @@ class MinChat(basechat.ChatUI):
         self.convoClass = lambda *a, **kw: MinConversation(widget, *a, **kw)
 
     def getGroupConversation(self, group, Class=None, stayHidden=0):
+        Class = Class or self.groupClass
         if not self.readyToChat:
             raise NoUIConnected()
-        conv = basechat.ChatUI.getGroupConversation(self, group, self.groupClass, 
-            stayHidden)
+        conv = self.groupConversations.get(group)
+        if not conv:
+            conv = Class(group, self)
+            self.groupConversations[group] = conv
         return conv
 
     def getConversation(self, person, Class=None, stayHidden=0):
