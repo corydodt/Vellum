@@ -70,7 +70,7 @@ Tabby.TabsElement.methods( // {{{
         DeanEdwards.addEvent(handle, 'click', _clickWrap);
 
         var pane = document.createElement('div');
-        pane.setAttribute('id', id);
+        pane.setAttribute('id', id); // FIXME - need a really unique ID!
         pane.className = 'tab';
         // pane is created empty initially.
 
@@ -110,10 +110,11 @@ Tabby.TabsElement.methods( // {{{
      */
     function appendWidgetInfoToTab(self, id, info) // {{{
     {
-        var pane = self.getPaneForId(id);
         var d = self.addChildWidgetFromWidgetInfo(info);
         d.addCallback(function _(w) {
+            var pane = self.getPaneForId(id);
             pane.appendChild(w.node);
+            // return null;
         });
         d.addErrback(function _(f) {
             debugger;
