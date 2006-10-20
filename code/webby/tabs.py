@@ -8,7 +8,7 @@ Supports callRemotes for:
 
     removeTab(id)
 
-    appendToTab(id, content) -> append content to the tab having id.  The
+    setTabBody(id, content) -> append content to the tab having id.  The
                                 content must be a single xhtml-namespaced node.
 
     show(id) -> bring tab id to the foreground.
@@ -27,6 +27,9 @@ class TabsElement(athena.LiveElement):
 
     def addTab(self, id, label):
         return self.callRemote('addTab', id, label)
+
+    def setTabBody(self, id, content):
+        return self.callRemote('setTabBody', id, content)
 
     def removeTab(self, id):
         return self.callRemote('removeTab', id)

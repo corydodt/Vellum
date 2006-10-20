@@ -16,6 +16,7 @@ class TestTabs(testcase.TestCase):
         w.setFragmentParent(self)
         w.setInitialArguments(*a)
         return w
+
     athena.expose(newTabWidget)
 
     def newTabWidgetContainingWidget(self, *a):
@@ -37,6 +38,7 @@ class TestTabs(testcase.TestCase):
 
         t.setInitialArguments(*a)
         return t
+
     athena.expose(newTabWidgetContainingWidget)
 
     def newVerySimpleWidget(self):
@@ -44,5 +46,23 @@ class TestTabs(testcase.TestCase):
         vsw = VerySimpleWidget()
         vsw.setFragmentParent(self)
         return vsw
+
     athena.expose(newVerySimpleWidget)
 
+    def driveAddTabSetTab(self):
+        """Make the s->c calls for the test_addTabSetTab nit.
+        Calls addTab and then setTabBody remotely.
+        """
+        vsw = VerySimpleWidget()
+        vsw.setFragmentParent(self)
+
+        d = self.callRemote('addTab', u'y', u'y')
+
+        def _added(ignored):
+            return self.callRemote('setTabBody', u'y', vsw)
+
+        d.addCallback(_added)
+
+        return d
+
+    athena.expose(driveAddTabSetTab)

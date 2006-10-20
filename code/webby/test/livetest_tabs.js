@@ -53,6 +53,32 @@ Tabby.Tests.TestTabs.methods( // {{{
         return d;
     }, // }}}
 
+    /* ask the server to call addTab and setTabBody on me */
+    function test_addTabSetTab(self) { // {{{
+        var d = self.setUp();
+        d.addCallback(
+            function _(tabs) {
+                self.addTabSetTabWidget = tabs;
+                d2 = self.callRemote('driveAddTabSetTab');
+                d2.addCallback(
+                    function _(ignored) {
+                        var n = tabs.node;
+                        Divmod.debug('test', n.innerHTML);
+                        self.assertEqual(n.innerHTML.search('Content</b>'), 297);
+                });
+                return d2;
+        });
+        return d;
+    }, // }}}
+
+    function addTab(self, id, label) { // {{{
+        return self.addTabSetTabWidget.addTab(id, label);
+    }, // }}}
+
+    function setTabBody(self, id, content) { // {{{
+        return self.addTabSetTabWidget.setTabBody(id, content);
+    }, // }}}
+
     function test_clicked(self) { // {{{
         var d = self.setUp();
         d.addCallback(

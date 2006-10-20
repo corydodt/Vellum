@@ -114,10 +114,7 @@ Tabby.TabsElement.methods( // {{{
         d.addCallback(function _(w) {
             var pane = self.getPaneForId(id);
             pane.appendChild(w.node);
-            // return null;
-        });
-        d.addErrback(function _(f) {
-            debugger;
+            return null;
         });
         return d;
     }, // }}}
