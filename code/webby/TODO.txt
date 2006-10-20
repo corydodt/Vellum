@@ -1,0 +1,22 @@
+- display channel names list
+
+    - but not in the server tab
+
+- /topic
+    
+- display a close widget that causes /part, e.g. [x] button
+
+    - it should not be possible to close the server tab
+
+- every s->c irc message causes a tab to come to the foreground. it should
+  display a marker or change color instead.
+
+- very long lines with no spaces cause horizontal scrolling in conv window;
+  break them.
+
+- scrollback length
+
+- automatic url conversion in chat window
+
+- persistence for channel states (modes, oplists, topics) - Axiom
+
