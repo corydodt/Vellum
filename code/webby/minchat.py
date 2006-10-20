@@ -4,7 +4,7 @@ from twisted.words.im import basechat, baseaccount, ircsupport
 from twisted.internet import defer, protocol, reactor
 
 from zope.interface import Interface
-import proto#Using custom account, so as to use a custom protocol
+import proto # Using custom account, so as to use a custom protocol
 
 ACCOUNTS = {}
 
@@ -54,7 +54,7 @@ class AccountManager(baseaccount.AccountManager):
 
         acct = proto.WebbyAccount('%s@%s' % key,
                                      1, username, password, 
-                                     host, IRCPORT, channels)#custom account
+                                     host, IRCPORT, channels) # custom account
         ACCOUNTS[key] = acct
         d = acct.logOn(self.chatui)
         def _addProto(proto, acct, key):
