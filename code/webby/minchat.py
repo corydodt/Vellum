@@ -77,8 +77,8 @@ class NullConversation:
     It should be used for things like server tabs in the UI.
     """
     def __init__(self, widget, name):
-        chatconv = IChatConversations(widget)
-        self.webPrint = lambda m: chatconv.printClean(m, name)
+        tabs = IChatConversations(widget)
+        self.webPrint = lambda m: tabs.printClean(m, name)
  
     def sendText(self, text, metadata=None):
         if metadata is None:
@@ -98,8 +98,8 @@ class MinConversation(basechat.Conversation):
     def __init__(self, widget, *a, **kw):
         basechat.Conversation.__init__(self, *a, **kw)
         self.widget = widget
-        chatconv = IChatConversations(widget)
-        self.webPrint = lambda m: chatconv.printClean(m, self.person.name) 
+        tabs = IChatConversations(widget)
+        self.webPrint = lambda m: tabs.printClean(m, self.person.name) 
 
     def show(self):
         """If you don't have a GUI, this is a no-op.
@@ -146,8 +146,8 @@ class MinGroupConversation(basechat.GroupConversation):
         basechat.GroupConversation.__init__(self, *a, **kw)
         self.widget = widget
         gn = '#' + self.group.name
-        chatconv = IChatConversations(widget)
-        self.webPrint = lambda m: chatconv.printClean(m, gn)
+        tabs = IChatConversations(widget)
+        self.webPrint = lambda m: tabs.printClean(m, gn)
 
     def show(self):
         """If you don't have a GUI, this is a no-op.
