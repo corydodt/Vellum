@@ -4,7 +4,7 @@ from twisted.words.im import basechat, baseaccount, ircsupport
 from twisted.internet import defer, protocol, reactor
 
 from zope.interface import Interface
-import proto # Using custom account, so as to use a custom protocol
+from webby import proto # Using custom account, so as to use a custom protocol
 
 ACCOUNTS = {}
 
@@ -102,14 +102,10 @@ class MinConversation(basechat.Conversation):
         self.webPrint = lambda m: tabs.printClean(m, self.person.name) 
 
     def show(self):
-        """If you don't have a GUI, this is a no-op.
-        """
         pname = unicode(self.person.name)
         IChatConversations(self.widget).showConversation(self, pname)
     
     def hide(self):
-        """If you don't have a GUI, this is a no-op.
-        """
         pname = unicode(self.person.name)
         IChatConversations(self.widget).hideConversation(self, pname)
     
@@ -150,14 +146,10 @@ class MinGroupConversation(basechat.GroupConversation):
         self.webPrint = lambda m: tabs.printClean(m, gn)
 
     def show(self):
-        """If you don't have a GUI, this is a no-op.
-        """
         groupname = unicode('#' + self.group.name)
         IChatConversations(self.widget).showConversation(self, groupname)
 
     def hide(self):
-        """If you don't have a GUI, this is a no-op.
-        """
         groupname = unicode('#' + self.group.name)
         IChatConversations(self.widget).hideConversation(self, groupname)
 
