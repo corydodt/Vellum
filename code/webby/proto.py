@@ -9,20 +9,20 @@ class WebbyProto(ircsupport.IRCProto):
 
     def joined(self, channel):
         print "Joining %s" % channel
-        conv=self.getGroupConversation(channel.lstrip('#'))
-        conv.show()
+        conv = self.getGroupConversation(channel.lstrip('#'))
+        return conv.show()
 
     def left(self, channel):
         print "Left %s" % channel
-        conv=self.getGroupConversation(channel.lstrip('#'), 1)
-        conv.hide()
+        conv = self.getGroupConversation(channel.lstrip('#'), 1)
+        return conv.hide()
 
     def userJoined(self, nickname, group):
         groupName = group.lstrip('#')
         try:
             self._ingroups[nickname].append(groupName)
         except:
-            self._ingroups[nickname]=[groupName]
+            self._ingroups[nickname] = [groupName]
         self.getGroupConversation(groupName).memberJoined(nickname)
 
     def userLeft(self, nickname, group):
@@ -37,7 +37,7 @@ class WebbyProto(ircsupport.IRCProto):
         if self._ingroups.has_key(nickname):
             for group in self._ingroups[nickname]:
                 self.getGroupConversation(group).memberLeft(nickname)
-            self._ingroups[nickname]=[]
+            self._ingroups[nickname] = []
         else:
             print '*** WARNING: ingroups had no such key %s' % nickname
 
