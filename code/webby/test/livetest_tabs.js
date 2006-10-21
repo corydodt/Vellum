@@ -6,6 +6,14 @@ XHTMLNS = "http://www.w3.org/1999/xhtml";
 
 RT = Divmod.Runtime.theRuntime;
 
+Tabby.Tests.VerySimpleWidget = Nevow.Athena.Test.TestCase.subclass("Tabby.Tests.VerySimpleWidget");
+Tabby.Tests.VerySimpleWidget.methods( // {{{
+    function something(self) {
+        return 'foo';
+    }
+); // }}}
+
+
 Tabby.Tests.TestTabs = Nevow.Athena.Test.TestCase.subclass("Tabby.Tests.TestTabs");
 Tabby.Tests.TestTabs.methods( // {{{
     /* get a new tabs widget with just a label and id */
@@ -48,7 +56,7 @@ Tabby.Tests.TestTabs.methods( // {{{
         });
         d.addCallback(function _(tabs) {
                 var pane = tabs.getPaneForId('woop');
-                self.assertEqual(pane.innerHTML.search('<b>Content</b>'), 140);
+                self.assertEqual(pane.innerHTML.search('<b>Content</b>'), 149);
         });
         return d;
     }, // }}}
@@ -63,8 +71,11 @@ Tabby.Tests.TestTabs.methods( // {{{
                 d2.addCallback(
                     function _(ignored) {
                         var n = tabs.node;
-                        self.assertEqual(n.innerHTML.search('Content</b>'), 297);
-                        d3 = tabs.childWidgets[0].callRemote('something');
+                        self.assertEqual(n.innerHTML.search('Content</b>'), 306);
+
+                        // make sure s->c calls work on the dynamically added
+                        // widget
+                        d3 = tabs.childWidgets[0].callRemote('serverToClient');
                         d3.addCallback(function _(res) {
                             self.assertEqual(res, 'foo');
                         });

@@ -7,11 +7,13 @@ class VerySimpleWidget(athena.LiveElement):
     docFactory = loaders.xmlstr(
 '''<span xmlns:n="http://nevow.com/ns/nevow/0.1"
          n:render="liveElement"><b>Content</b></span>''')
+    jsClass = u'Tabby.Tests.VerySimpleWidget'
 
-    def something(self):
-        return u'foo'
+    def serverToClient(self):
+        """Call a method s->c"""
+        return self.callRemote('something')
 
-    athena.expose(something)
+    athena.expose(serverToClient)
 
 class TestTabs(testcase.TestCase):
     jsClass = u'Tabby.Tests.TestTabs'
