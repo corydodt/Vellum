@@ -63,7 +63,6 @@ Tabby.Tests.TestTabs.methods( // {{{
                 d2.addCallback(
                     function _(ignored) {
                         var n = tabs.node;
-                        Divmod.debug('test', n.innerHTML);
                         self.assertEqual(n.innerHTML.search('Content</b>'), 297);
                 });
                 return d2;
