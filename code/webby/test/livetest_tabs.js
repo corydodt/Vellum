@@ -64,6 +64,11 @@ Tabby.Tests.TestTabs.methods( // {{{
                     function _(ignored) {
                         var n = tabs.node;
                         self.assertEqual(n.innerHTML.search('Content</b>'), 297);
+                        d3 = tabs.childWidgets[0].callRemote('something');
+                        d3.addCallback(function _(res) {
+                            self.assertEqual(res, 'foo');
+                        });
+                        return d3;
                 });
                 return d2;
         });

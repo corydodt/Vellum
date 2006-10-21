@@ -8,6 +8,11 @@ class VerySimpleWidget(athena.LiveElement):
 '''<span xmlns:n="http://nevow.com/ns/nevow/0.1"
          n:render="liveElement"><b>Content</b></span>''')
 
+    def something(self):
+        return u'foo'
+
+    athena.expose(something)
+
 class TestTabs(testcase.TestCase):
     jsClass = u'Tabby.Tests.TestTabs'
     def newTabWidget(self, *a):
