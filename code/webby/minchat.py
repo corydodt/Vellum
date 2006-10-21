@@ -4,7 +4,7 @@ from twisted.words.im import basechat, baseaccount, ircsupport
 from twisted.internet import defer, protocol, reactor
 
 from zope.interface import Interface
-from webby import proto # Using custom account, so as to use a custom protocol
+from webby.proto import WebbyAccount # Using custom account, so as to use a custom protocol
 
 ACCOUNTS = {}
 
@@ -52,7 +52,7 @@ class AccountManager(baseaccount.AccountManager):
         # of the stock one, and overload _startLogin, we can do protocol
         # actions at the protocol.  Ooooh LA!
 
-        acct = proto.WebbyAccount('%s@%s' % key,
+        acct = WebbyAccount('%s@%s' % key,
                                      1, username, password, 
                                      host, IRCPORT, channels) # custom account
         ACCOUNTS[key] = acct
