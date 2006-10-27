@@ -4,9 +4,9 @@ from twisted.internet import defer
 
 from zope.interface import implements
 
-from nevow import tags as T, rend, loaders, athena, url, static, flat
+from nevow import rend, loaders, athena, url, static
 
-from webby import minchat, tabs, parseirc, windowing
+from webby import minchat, tabs, parseirc, windowing, util
 from webby.minchat import IChatConversations, IChatEntry, IChatAccountManager
 
 RESOURCE = lambda f: sibpath(__file__, f)
@@ -39,7 +39,7 @@ class IRCContainer(windowing.Enclosure, components.Componentized):
         cw = ConversationTabs()
         cw.setFragmentParent(self)
         self.setComponent(IChatConversations, cw)
-        cw.setInitialArguments(u'**SERVER**', u'**SERVER**', GREETING)
+        cw.initServerTab()
 
         am = AccountManagerElement(self.accountManager, cw)
         am.setFragmentParent(self)
@@ -66,30 +66,71 @@ class ConversationTabs(tabs.TabsElement):
 
     def __init__(self, *a, **kw):
         super(ConversationTabs, self).__init__(*a, **kw)
-        self.conversations = {}
+        self.textareas = {}
 
     def getConversation(self, id, default=NODEFAULT):
+        """
+        Get the IRC conversation object by the tab id
+        """
         if default is NODEFAULT:
-            return self.conversations[id]
+            return self.textareas[id].conversation
         else:
-            return self.conversations.get(id, default)
+            return self.textareas.get(id, default).conversation
     
     def printClean(self, message, id):
-        id = webClean(id)
-        message = flattenMessageString(message)
-        return self.callRemote('appendToTab', id, message)
+        """
+        Dispatch a print to the correct textarea.
+        """
+        id = webClean(id) # TODO - this should be used everywhere; need a
+                          # better interface
+        ta = self.textareas[id]
+        return ta.printClean(message)
  
-    def setInitialArguments(self, initialId, initialLabel, initialContent):
-        super(ConversationTabs, self).setInitialArguments(
-                initialId, initialLabel, initialContent)
+    def initServerTab(self):
+        """
+        Boilerplate for setting up an IRC tabs widget.
+
+        This creates the server tab and null server conversation,
+        connects them together, and sets up things so all of that will be sent
+        together in the first render.
+        """
+        initialId = u'**SERVER**'
+
         nullconv = minchat.NullConversation(self.fragmentParent, initialId)
-        self.conversations[initialId] = nullconv
+
+        # create a textarea around the conversation
+        ta = IRCTextArea(nullconv)
+        ta.setFragmentParent(self)
+        ta.setInitialArguments(GREETING)
+
+        self.textareas[initialId] = ta
+
+        super(ConversationTabs, self).setInitialArguments(
+                initialId, initialId, ta)
+        ta.ready()
 
     def showConversation(self, conversation, conversationName):
+        """
+        Bring a conversation to the foreground.
+
+        This is called whenever someone says something in that conversation.
+        TODO: instead of bringing it to the foreground, display a 
+        highlight marker when the conversation exists already.
+        """
         cn = unicode(conversationName)
-        if cn not in self.conversations:
+        if cn not in self.textareas:
+            # create a textarea around the conversation
+            ta = IRCTextArea(conversation)
+            ta.setFragmentParent(self)
+
             d = self.addTab(cn, cn)
-            self.conversations[cn] = conversation
+            def _added(ignored, textarea):
+                d = self.setTabBody(cn, textarea)
+                d.addCallback(lambda _: textarea.ready())
+                return d
+            d.addCallback(_added, ta)
+
+            self.textareas[cn] = ta
         else:
             d = defer.succeed(None)
 
@@ -98,17 +139,20 @@ class ConversationTabs(tabs.TabsElement):
         d.addCallback(_conversationIsReady)
 
         def _conversationFailed(e):
-            del self.conversations[cn]
+            del self.textareas[cn]
             return e
         d.addErrback(_conversationFailed)
-        # FIXME - we do not return this deferred.  Need to see whether
-        # minchat deals with deferreds returned by this stack
+
+        return d
 
     def hideConversation(self, conversation, conversationName):
+        """
+        Make a conversation disappear.
+        """
         cn = unicode(conversationName)
-        if cn in self.conversations:
+        if cn in self.textareas:
             d = self.removeTab(cn)
-            del self.conversations[cn]
+            del self.textareas[cn]
         else:
             d = defer.succeed(None)
         # FIXME - we do not return this deferred.  Need to see whether
@@ -117,14 +161,9 @@ class ConversationTabs(tabs.TabsElement):
 def webClean(st):
     return unicode(st.replace('<','&lt;').replace('>','&gt;'))
 
-def flattenMessageString(st):
-    """Return a string suitable for serializing over to a tab pane."""
-    span = T.span(xmlns="http://www.w3.org/1999/xhtml")
-    for line in st.splitlines():
-        span[line, T.br]
-    return unicode(flat.flatten(span))
-
-GREETING = flattenMessageString(u'''Vellum IRC v0.0\nClick Log ON to connect.''')
+GREETING = util.flattenMessageString(
+u'''Vellum IRC v0.0
+Click Log ON to connect.''')
 
 class AccountManagerElement(athena.LiveElement):
     docFactory = loaders.xmlfile(RESOURCE('elements/AccountManagerElement'))

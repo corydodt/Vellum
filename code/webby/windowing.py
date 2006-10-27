@@ -35,6 +35,8 @@ from twisted.python.util import sibpath
 
 from nevow import loaders, athena
 
+from webby import util
+
 RESOURCE = lambda f: sibpath(__file__, f)
 
 class Enclosure(athena.LiveElement):
@@ -67,8 +69,31 @@ class TextArea(athena.LiveElement):
     docFactory = loaders.xmlfile(RESOURCE('elements/TextArea'))
     widgetArgs = None
 
+    readyToSend = False
+
+    def __init__(self, *a, **kw):
+        super(TextArea, self).__init__(*a, **kw)
+        self.messageQueue = []
+
+    def ready(self):
+        """Mark widget as ready to send data, and flush the pending queue"""
+        assert not self.readyToSend, "TextArea.ready() called twice"
+        self.readyToSend = True
+        for m in self.messageQueue:
+            self._reallyPrintClean(m)
+
     def printClean(self, message):
-        message = flattenMessageString(message)
+        """
+        Send text to the widget if it is ready; if not, queue text
+        for later.
+        """
+        message = util.flattenMessageString(message)
+        if self.readyToSend:
+            self._reallyPrintClean(message)
+        else:
+            self.messageQueue.append(message)
+
+    def _reallyPrintClean(self, message):
         return self.callRemote('appendTo', message)
 
     def setInitialArguments(self, *a, **kw): # FIXME - raped from tabs.py
