@@ -75,12 +75,13 @@ class TextArea(athena.LiveElement):
         super(TextArea, self).__init__(*a, **kw)
         self.messageQueue = []
 
-    def ready(self):
-        """Mark widget as ready to send data, and flush the pending queue"""
-        assert not self.readyToSend, "TextArea.ready() called twice"
+    def rend(self, *a, **kw):
+        r = super(TextArea, self).rend(*a, **kw)
         self.readyToSend = True
-        for m in self.messageQueue:
+        while len(self.messageQueue) > 0:
+            m = self.messageQueue.pop()
             self._reallyPrintClean(m)
+        return r
 
     def printClean(self, message):
         """

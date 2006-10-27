@@ -107,7 +107,6 @@ class ConversationTabs(tabs.TabsElement):
 
         super(ConversationTabs, self).setInitialArguments(
                 initialId, initialId, ta)
-        ta.ready()
 
     def showConversation(self, conversation, conversationName):
         """
@@ -124,10 +123,10 @@ class ConversationTabs(tabs.TabsElement):
             ta.setFragmentParent(self)
 
             d = self.addTab(cn, cn)
+
             def _added(ignored, textarea):
-                d = self.setTabBody(cn, textarea)
-                d.addCallback(lambda _: textarea.ready())
-                return d
+                return self.setTabBody(cn, textarea)
+
             d.addCallback(_added, ta)
 
             self.textareas[cn] = ta
