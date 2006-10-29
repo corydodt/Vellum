@@ -20,3 +20,10 @@
 
 - persistence for channel states (modes, oplists, topics) - Axiom
 
+- get _athenaID bug fixed in athen
+
+- get channel.lstrip('#') bug fixed in words
+
+- find a fix for this stuff.. acct = self.page.chatui.onlineClients[0].account
+
+- find a solution for the rend/readyToSend stuff.
