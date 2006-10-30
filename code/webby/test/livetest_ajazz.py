@@ -19,6 +19,7 @@ class TestIRCContainer(testcase.TestCase):
         convwin = IChatConversations(self.irc)
         nullconv = NullConversation(convwin, id)
         return convwin.showConversation(nullconv, id)
+
     athena.expose(generateConversation)
 
     def newContainer(self, ):
@@ -33,5 +34,18 @@ class TestIRCContainer(testcase.TestCase):
         self.irc = ajazz.IRCContainer(MockAccountManager())
         self.irc.setFragmentParent(self)
         return self.irc
+
     athena.expose(newContainer)
+
+class TestTopicBar(testcase.TestCase):
+    jsClass = u'WebbyVellum.Tests.TestTopicBar'
+    def newTopicBar(self, ):
+        """
+        Return a new Topic Bar
+        """
+        tb = ajazz.TopicBar()
+        tb.setFragmentParent(self)
+        return tb
+
+    athena.expose(newTopicBar)
 
