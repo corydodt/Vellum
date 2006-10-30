@@ -20,7 +20,7 @@
 
 - persistence for channel states (modes, oplists, topics) - Axiom
 
-- get _athenaID bug fixed in athen
+- get double render bug fixed in athena
 
 - get channel.lstrip('#') bug fixed in words
 
