@@ -70,9 +70,11 @@ class AccountManager(baseaccount.AccountManager):
                                      host, IRCPORT, channels) # custom account
         ACCOUNTS[key] = acct
         d = acct.logOn(self.chatui)
+
         def _addProto(proto, acct, key):
             PROTOS[key] = proto
             return acct
+
         d.addCallback(_addProto, acct, key)
 
         return d
@@ -184,17 +186,22 @@ class MinGroupConversation(
     def memberJoined(self, member):
         basechat.GroupConversation.memberJoined(self, member)
         event = "-!- %s joined %s" % (member, self.group.name)
+        INameSelect(self).addName(member, None)
         return ITextArea(self).printClean(event)
 
     def memberChangedNick(self, oldnick, newnick):
         basechat.GroupConversation.memberChangedNick(self, oldnick, newnick)
         event = "-!- %s is now known as %s in %s" % (oldnick, newnick,
             self.group.name)
+        namesel = INameSelect(self)
+        namesel.removeName(oldnick)
+        namesel.addName(newnick, None)
         return ITextArea(self).printClean(event)
 
     def memberLeft(self, member):
         basechat.GroupConversation.memberLeft(self, member)
         event = "-!- %s left %s" % (member, self.group.name)
+        INameSelect(self).removeName(member)
         return ITextArea(self).printClean(event)
 
     def sendText(self, text, metadata=None):

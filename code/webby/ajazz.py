@@ -71,7 +71,17 @@ class TopicBar(util.RenderWaitLiveElement):
 
 class NameSelect(athena.LiveElement):
     implements(INameSelect)
+    jsClass = u'WebbyVellum.NameSelect'
     docFactory = loaders.xmlfile(RESOURCE('elements/NameSelect'))
+
+    def addName(self, name, flags):
+        # TODO - parse flags
+        name = unicode(name)
+        return self.callRemote('addName', name, None)
+
+    def removeName(self, name):
+        name = unicode(name)
+        return self.callRemote('removeName', name)
 
 NODEFAULT = object()
 
@@ -211,8 +221,15 @@ class AccountManagerElement(athena.LiveElement):
         password = password.encode('utf8')
         channels = channels.encode('utf8')
         d = self.accountManager.doConnection(host, username, password, channels)
+
         def _gotAccount(acct):
+            # set up disconnection callback for browser close etc.
+            d = self.page.notifyOnDisconnect()
+            logOff = lambda _: self.accountManager.disconnect(acct)
+            d.addBoth(logOff)
+
             return u'connected %s:%s@%s and joined %s' % (username, password, host, channels)
+
         d.addCallback(_gotAccount)
         return d
     athena.expose(onLogOnSubmit)

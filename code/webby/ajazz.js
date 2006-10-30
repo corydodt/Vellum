@@ -2,11 +2,32 @@
 // import Windowing
 
 WebbyVellum.TopicBar = Nevow.Athena.Widget.subclass('WebbyVellum.TopicBar');
-WebbyVellum.TopicBar.methods(
+WebbyVellum.TopicBar.methods( // {{{
     function setTopic(self, topic) { // {{{
         self.node.value = topic;
     } // }}}
-);
+); // }}}
+
+WebbyVellum.NameSelect = Nevow.Athena.Widget.subclass('WebbyVellum.NameSelect');
+WebbyVellum.NameSelect.methods( // {{{
+    function addName(self, name, flags) { // {{{
+        var newName = document.createElement('option');
+        newName.innerHTML = name;
+        self.node.appendChild(newName);
+    }, // }}}
+
+    function removeName(self, name) { // {{{
+        var options = self.node.getElementsByTagName('option');
+        for (n=0; n<options.length; n++)
+        {
+            if (options[n].innerHTML == name)
+            {
+                self.node.removeChild(options[n]);
+                break;
+            }
+        }
+    } // }}}
+); // }}}
 
 WebbyVellum.AccountManager = Nevow.Athena.Widget.subclass('WebbyVellum.AccountManager');
 WebbyVellum.AccountManager.methods( // {{{
