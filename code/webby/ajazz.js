@@ -26,6 +26,14 @@ WebbyVellum.NameSelect.methods( // {{{
                 break;
             }
         }
+    }, // }}}
+
+    function setNames(self, names) { // {{{
+        self.node.innerHTML = '';
+        for (n=0; n<names.length; n++)
+        {
+            self.addName(names[n], null);
+        }
     } // }}}
 ); // }}}
 

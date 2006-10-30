@@ -41,6 +41,9 @@ class INameSelect(Interface):
     def removeName(self, name):
         """Remove a name from the list"""
 
+    def setNames(self, name):
+        """Set the name list, all at once (e.g. /NAMES reply)"""
+
 class IChatAccountManager(Interface):
     def onLogOnSubmit(self, username, password, channels):
         """Handler to process an attempt to log on from the UI"""
@@ -182,6 +185,9 @@ class MinGroupConversation(
         t = '%s (set by %s)' % (topic, author)
         ITopicBar(self).setTopic(t)
         return ITextArea(self).printClean(event)
+
+    def setGroupMembers(self, names):
+        return INameSelect(self).setNames(names)
 
     def memberJoined(self, member):
         basechat.GroupConversation.memberJoined(self, member)

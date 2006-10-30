@@ -69,7 +69,7 @@ class TopicBar(util.RenderWaitLiveElement):
         return self.callRemote('setTopic', topic)
 
 
-class NameSelect(athena.LiveElement):
+class NameSelect(util.RenderWaitLiveElement):
     implements(INameSelect)
     jsClass = u'WebbyVellum.NameSelect'
     docFactory = loaders.xmlfile(RESOURCE('elements/NameSelect'))
@@ -82,6 +82,10 @@ class NameSelect(athena.LiveElement):
     def removeName(self, name):
         name = unicode(name)
         return self.callRemote('removeName', name)
+
+    def setNames(self, names):
+        # TODO - flags?
+        return self.callRemote('setNames', map(unicode, names))
 
 NODEFAULT = object()
 
