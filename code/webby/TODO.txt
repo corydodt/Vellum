@@ -1,10 +1,14 @@
 - display channel names list
 
-    - but not in the server tab
-
 - display a close widget that causes /part, e.g. [x] button
 
     - it should not be possible to close the server tab
+
+- on duplicate login, kick old user out.  notify old client of removal.
+
+    - alternately refuse duplicate login without special procedure?
+
+- closing the browser should disconnect the irc user
 
 - every s->c irc message causes a tab to come to the foreground. it should
   display a marker or change color instead.
