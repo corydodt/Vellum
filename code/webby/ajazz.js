@@ -1,6 +1,13 @@
 // import Nevow.Athena
 // import Windowing
 
+WebbyVellum.TopicBar = Nevow.Athena.Widget.subclass('WebbyVellum.TopicBar');
+WebbyVellum.TopicBar.methods(
+    function setTopic(self, topic) { // {{{
+        self.node.value = topic;
+    } // }}}
+);
+
 WebbyVellum.AccountManager = Nevow.Athena.Widget.subclass('WebbyVellum.AccountManager');
 WebbyVellum.AccountManager.methods( // {{{
     function __init__(self, node) { // {{{

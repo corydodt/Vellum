@@ -2,6 +2,7 @@
 
 from twisted.words.im import basechat, baseaccount, ircsupport
 from twisted.internet import defer, protocol, reactor
+from twisted.python import components
 
 from zope.interface import Interface
 from webby.proto import WebbyAccount # Using custom account, so as to use a custom protocol
@@ -22,11 +23,23 @@ class IChatConversations(Interface):
     def hideConversation(self, conversation, conversationName):
         """Cause a conversation window to be hidden"""
 
-    def printClean(self, message, id):
-        """Send text to a conversation"""
-
     def getConversation(self, id, default):
         """Return a MinConversation object having the specified id"""
+
+class ITextArea(Interface):
+    def printClean(self, message):
+        """Send text to the widget."""
+
+class ITopicBar(Interface):
+    def setTopic(self, topic):
+        """Replace the topic."""
+
+class INameSelect(Interface):
+    def addName(self, name, flags=()):
+        """Add a name to the list with the specified flags"""
+
+    def removeName(self, name):
+        """Remove a name from the list"""
 
 class IChatAccountManager(Interface):
     def onLogOnSubmit(self, username, password, channels):
@@ -72,13 +85,12 @@ class AccountManager(baseaccount.AccountManager):
 
 
 
-class NullConversation:
+class NullConversation(components.Componentized):
     """This conversation is a placeholder without an actual interface to IRC.
     It should be used for things like server tabs in the UI.
     """
     def __init__(self, widget, name):
-        tabs = IChatConversations(widget)
-        self.webPrint = lambda m: tabs.printClean(m, name)
+        components.Componentized.__init__(self)
  
     def sendText(self, text, metadata=None):
         if metadata is None:
@@ -86,16 +98,19 @@ class NullConversation:
         else:
             style = u'(%s) ' % (metadata.get('style', ''),)
         text = unicode(style + text)
-        return self.webPrint(
+        return ITextArea(self).printClean(
                 '** Not in a channel or conversation: %s' % (text,))
 
 
-class MinConversation(basechat.Conversation):
+class MinConversation(
+        basechat.Conversation,
+        components.Componentized):
     """This class is a minimal implementation of the abstract Conversation class.
 
     This is all you need to override to receive one-on-one messages.
     """
     def __init__(self, widget, *a, **kw):
+        components.Componentized.__init__(self)
         basechat.Conversation.__init__(self, *a, **kw)
         self.widget = widget
         tabs = IChatConversations(widget)
@@ -132,18 +147,18 @@ class MinConversation(basechat.Conversation):
 
         return r
 
-class MinGroupConversation(basechat.GroupConversation):
+class MinGroupConversation(
+        basechat.GroupConversation,
+        components.Componentized):
     """This class is a minimal implementation of the abstract
     GroupConversation class.
 
     This is all you need to override to listen in on a group conversation.
     """
     def __init__(self, widget, *a, **kw):
+        components.Componentized.__init__(self)
         basechat.GroupConversation.__init__(self, *a, **kw)
         self.widget = widget
-        gn = '#' + self.group.name
-        tabs = IChatConversations(widget)
-        self.webPrint = lambda m: tabs.printClean(m, gn)
 
     def show(self):
         groupname = unicode('#' + self.group.name)
@@ -158,27 +173,29 @@ class MinGroupConversation(basechat.GroupConversation):
             t = '* %s %s' % (sender, text)
         else:
             t = "<%s> %s" % (sender, text)
-        return self.webPrint(t)
+        return ITextArea(self).printClean(t)
 
     def setTopic(self, topic, author):
         event = "-!- %s set the topic to: %s" % (author, topic)
-        return self.webPrint(event)
+        t = '%s (set by %s)' % (topic, author)
+        ITopicBar(self).setTopic(t)
+        return ITextArea(self).printClean(event)
 
     def memberJoined(self, member):
         basechat.GroupConversation.memberJoined(self, member)
         event = "-!- %s joined %s" % (member, self.group.name)
-        return self.webPrint(event)
+        return ITextArea(self).printClean(event)
 
     def memberChangedNick(self, oldnick, newnick):
         basechat.GroupConversation.memberChangedNick(self, oldnick, newnick)
         event = "-!- %s is now known as %s in %s" % (oldnick, newnick,
             self.group.name)
-        return self.webPrint(event)
+        return ITextArea(self).printClean(event)
 
     def memberLeft(self, member):
         basechat.GroupConversation.memberLeft(self, member)
         event = "-!- %s left %s" % (member, self.group.name)
-        return self.webPrint(event)
+        return ITextArea(self).printClean(event)
 
     def sendText(self, text, metadata=None):
         r = self.group.sendGroupMessage(text, metadata)
@@ -187,7 +204,7 @@ class MinGroupConversation(basechat.GroupConversation):
             out = u'* %s %s' % (me, text)
         else:
             out = u'<%s> %s' % (me, text)
-        self.webPrint(out)
+        ITextArea(self).printClean(out)
 
         return r
 

@@ -80,8 +80,26 @@ form { clear: both; }
     margin-top: 3pt;
     height: 22em;
     width: 406pt;
+}
+
+.nameSelect {
+    float: left;
+    width: 20%;
+    height: 100%;
+    background-color: #ddd;
+}
+
+.textArea {
+    float: left;
     font-family: monospace;
     color: #ccc;
     background-color: black;
     padding: 2pt;
+    height: 98%;
+    width: 79%;
+}
+
+.topicBar {
+    width: 98%;
+    clear: both;
 }

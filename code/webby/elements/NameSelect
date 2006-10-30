@@ -1,0 +1,5 @@
+<select xmlns:n="http://nevow.com/ns/nevow/0.1"
+    n:render="liveElement" 
+    class="nameSelect"
+    size="4">
+</select>

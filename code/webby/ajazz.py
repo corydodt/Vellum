@@ -7,7 +7,12 @@ from zope.interface import implements
 from nevow import rend, loaders, athena, url, static
 
 from webby import minchat, tabs, parseirc, windowing, util
-from webby.minchat import IChatConversations, IChatEntry, IChatAccountManager
+from webby.minchat import IChatConversations, \
+                          IChatEntry, \
+                          IChatAccountManager, \
+                          ITopicBar, \
+                          ITextArea, \
+                          INameSelect
 
 RESOURCE = lambda f: sibpath(__file__, f)
 
@@ -49,14 +54,24 @@ class IRCContainer(windowing.Enclosure, components.Componentized):
         ce.setFragmentParent(self)
         self.setComponent(IChatEntry, ce)
         return tag[am, cw, ce]
+
     athena.renderer(enclosedRegion)
 
 
-class IRCTextArea(windowing.TextArea):
-    docFactory = loaders.xmlfile(RESOURCE('elements/TextArea'))
-    def __init__(self, conversation, *a, **kw):
-        super(IRCTextArea, self).__init__(*a, **kw)
-        self.conversation = conversation
+
+class TopicBar(util.RenderWaitLiveElement):
+    implements(ITopicBar)
+    docFactory = loaders.xmlfile(RESOURCE('elements/TopicBar'))
+    jsClass = u'WebbyVellum.TopicBar'
+
+    def setTopic(self, topic):
+        topic = unicode(topic)
+        return self.callRemote('setTopic', topic)
+
+
+class NameSelect(athena.LiveElement):
+    implements(INameSelect)
+    docFactory = loaders.xmlfile(RESOURCE('elements/NameSelect'))
 
 NODEFAULT = object()
 
@@ -66,26 +81,17 @@ class ConversationTabs(tabs.TabsElement):
 
     def __init__(self, *a, **kw):
         super(ConversationTabs, self).__init__(*a, **kw)
-        self.textareas = {}
+        self.conversations = {}
 
     def getConversation(self, id, default=NODEFAULT):
         """
         Get the IRC conversation object by the tab id
         """
         if default is NODEFAULT:
-            return self.textareas[id].conversation
+            return self.conversations[id]
         else:
-            return self.textareas.get(id, default).conversation
+            return self.conversations.get(id, default)
     
-    def printClean(self, message, id):
-        """
-        Dispatch a print to the correct textarea.
-        """
-        id = webClean(id) # TODO - this should be used everywhere; need a
-                          # better interface
-        ta = self.textareas[id]
-        return ta.printClean(message)
- 
     def initServerTab(self):
         """
         Boilerplate for setting up an IRC tabs widget.
@@ -99,11 +105,14 @@ class ConversationTabs(tabs.TabsElement):
         nullconv = minchat.NullConversation(self.fragmentParent, initialId)
 
         # create a textarea around the conversation
-        ta = IRCTextArea(nullconv)
+        ta = windowing.TextArea()
         ta.setFragmentParent(self)
         ta.setInitialArguments(GREETING)
 
-        self.textareas[initialId] = ta
+        nullconv.setComponent(ITextArea, ta)
+
+
+        self.conversations[initialId] = nullconv
 
         super(ConversationTabs, self).setInitialArguments(
                 initialId, initialId, ta)
@@ -117,29 +126,52 @@ class ConversationTabs(tabs.TabsElement):
         highlight marker when the conversation exists already.
         """
         cn = unicode(conversationName)
-        if cn not in self.textareas:
+        if cn not in self.conversations:
+            # create a Container to hold the contents of the tab
+            co = windowing.Container()
+            co.setFragmentParent(self)
+
+            # space for the topic
+            tb = TopicBar()
+            tb.setFragmentParent(co)
+
+            # create the corresponding names list
+            ns = NameSelect()
+            ns.setFragmentParent(co)
+
             # create a textarea around the conversation
-            ta = IRCTextArea(conversation)
+            ta = windowing.TextArea()
             ta.setFragmentParent(self)
+
+            # assign components
+            conversation.setComponent(ITextArea, ta)
+            conversation.setComponent(ITopicBar, tb)
+            conversation.setComponent(INameSelect, ns)
+
+            co.addWidget(tb)
+            co.addWidget(ta)
+            co.addWidget(ns)
 
             d = self.addTab(cn, cn)
 
-            def _added(ignored, textarea):
-                return self.setTabBody(cn, textarea)
+            def _added(ignored):
+                return self.setTabBody(cn, co)
 
-            d.addCallback(_added, ta)
+            d.addCallback(_added)
 
-            self.textareas[cn] = ta
+            self.conversations[cn] = conversation
         else:
             d = defer.succeed(None)
 
         def _conversationIsReady(_):
             return self.callRemote("show", cn)
+
         d.addCallback(_conversationIsReady)
 
         def _conversationFailed(e):
-            del self.textareas[cn]
+            del self.conversations[cn]
             return e
+
         d.addErrback(_conversationFailed)
 
         return d
@@ -198,11 +230,20 @@ class ChatEntry(athena.LiveElement):
 
         parsed = parseirc.line.parseString(message)
         if parsed.command:
-            m = getattr(self, 'irccmd_%s' % (parsed.commandWord,))
+
+            def irccmdFallback(message, conv):
+                strCommand = parsed.commandWord.encode('utf8').upper()
+                message = '%s %s' % (strCommand, message)
+                return self.irccmd_raw(message, conv)
+                
+            m = getattr(self, 
+                        'irccmd_%s' % (parsed.commandWord,),
+                        irccmdFallback)
             m(parsed.commandArgs.encode('utf8'), conv)
         else:
             self.say(parsed.nonCommand[0].encode('utf8'), conv)
         return None
+
     athena.expose(chatMessage)
 
     def say(self, message, conv):
@@ -214,55 +255,86 @@ class ChatEntry(athena.LiveElement):
     def irccmd_join(self, args, conv):
         groups = args.split()
 
-        #acct = conv.group.account
-        #We're using this way to get the account because I can't figure out a way to make
-        #it so all conversations have access to the account.  I don't know if this will work.
-        #FIXME
-        acct = self.fragmentParent.fragmentParent.chatui.onlineClients[0].account
+        ## acct = conv.group.account
+        # We're using this way to get the account because I can't figure out a
+        # way to make it so all conversations have access to the account.  I
+        # don't know if this will work.  FIXME
+        acct = self.page.chatui.onlineClients[0].account
 
         if groups:
             args = args[len(groups[0])-1:].lstrip()
             groups = groups[0].split(',')
 
         acct.joinGroups(groups)
+
     irccmd_j = irccmd_join
+
+    def irccmd_topic(self, args, conv):
+        client = self.page.chatui.onlineClients[0]
+
+        channel = None
+
+        # see if the user is trying to see/set the topic for some other 
+        # channel.  This applies if the first word begins with a hash #.
+        if args.strip() != '':
+            firstArg = args.split()[0]
+            if firstArg[0] == '#':
+                # remove the channel.
+                args = args[len(firstArg):]
+                args = args.lstrip()
+                channel = firstArg
+
+        if channel is None:
+            if hasattr(conv, 'group'):
+                channel = conv.group.name
+            else:
+                return conv.sendText("Cannot set or view topic of SERVER tab")
+
+        channel = channel.lstrip('#')
+
+        if args.strip() == '':
+            args = None
+        
+        client.topic(channel, args)
 
     def irccmd_part(self, args, conv):
         groups = args.split()
 
-        #acct = conv.group.account
-        #We're using this way to get the account because I can't figure out a way to make
-        #it so all conversations have access to the account.  I don't know if this will work.
-        acct = self.fragmentParent.fragmentParent.chatui.onlineClients[0].account
+        ## acct = conv.group.account
+        # We're using this way to get the account because I can't figure out a
+        # way to make it so all conversations have access to the account.  I
+        # don't know if this will work.
+        acct = self.page.chatui.onlineClients[0].account
 
         if groups:
             args = args[len(groups[0])-1:].lstrip()
             groups = groups[0].split(',')
         else:
-            try:
+            if hasattr(conv, 'group'):
                 groups.append(conv.group.name.lstrip('#'))
-            except AttributeError:
-                conv.sendText("Cannot /part from SERVER tab")
+            else:
+                return conv.sendText("Cannot /part from SERVER tab")
 
         # TODO: Find out how to support parting messages
         acct.leaveGroups(groups)
+
     irccmd_leave = irccmd_part
 
     def irccmd_raw(self, args, conv):
-
-        #acct = conv.group.account
-        #We're using this way to get the account because I can't figure out a way to make
-        #it so all conversations have access to the account.  I don't know if this will work.
-        acct = self.fragmentParent.fragmentParent.chatui.onlineClients[0].account
+        ## acct = conv.group.account
+        # We're using this way to get the account because I can't figure out a
+        # way to make it so all conversations have access to the account.  I
+        # don't know if this will work.
+        acct = self.page.chatui.onlineClients[0].account
         return acct.client.sendLine(args)
 
     def irccmd_query(self, args, conv):
         try:
-            personName=args.split()[0]
-            mesg=args[len(personName):].lstrip()
-            chatui=self.fragmentParent.fragmentParent.chatui
-            client=chatui.onlineClients[0]
-            newConv=chatui.getConversation(chatui.getPerson(personName, client))
+            personName = args.split()[0]
+            mesg = args[len(personName):].lstrip()
+            chatui = self.page.chatui
+            client = chatui.onlineClients[0]
+            newConv = chatui.getConversation(chatui.getPerson(personName, client))
             newConv.show()
             if mesg:
                 newConv.sendText(mesg)

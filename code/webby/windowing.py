@@ -35,7 +35,9 @@ from twisted.python.util import sibpath
 
 from nevow import loaders, athena
 
-from webby import util
+from zope.interface import implements
+
+from webby import util, minchat
 
 RESOURCE = lambda f: sibpath(__file__, f)
 
@@ -62,26 +64,16 @@ class Enclosure(athena.LiveElement):
     athena.renderer(windowTitle)
 
 
-
-class TextArea(athena.LiveElement):
+class TextArea(util.RenderWaitLiveElement):
     """A scrollable widget that displays mostly lines of text."""
+    implements(minchat.ITextArea) # FIXME - move to here
     jsClass = u"Windowing.TextArea"
     docFactory = loaders.xmlfile(RESOURCE('elements/TextArea'))
     widgetArgs = None
 
-    readyToSend = False
-
     def __init__(self, *a, **kw):
         super(TextArea, self).__init__(*a, **kw)
         self.messageQueue = []
-
-    def rend(self, *a, **kw):
-        r = super(TextArea, self).rend(*a, **kw)
-        self.readyToSend = True
-        while len(self.messageQueue) > 0:
-            m = self.messageQueue.pop()
-            self._reallyPrintClean(m)
-        return r
 
     def printClean(self, message):
         """
@@ -89,12 +81,6 @@ class TextArea(athena.LiveElement):
         for later.
         """
         message = util.flattenMessageString(message)
-        if self.readyToSend:
-            self._reallyPrintClean(message)
-        else:
-            self.messageQueue.append(message)
-
-    def _reallyPrintClean(self, message):
         return self.callRemote('appendTo', message)
 
     def setInitialArguments(self, *a, **kw): # FIXME - raped from tabs.py
@@ -108,3 +94,23 @@ class TextArea(athena.LiveElement):
 
         return args
 
+
+class Container(athena.LiveElement):
+    """
+    A do-nothing widget you can use to group one or more other widgets
+    before sending them to the client.
+
+    TODO - combine with Enclosure?
+    """
+    docFactory = loaders.xmlfile(RESOURCE('elements/Container'))
+    def __init__(self, *a, **kw):
+        super(Container, self).__init__(*a, **kw)
+        self.widgets = []
+
+    def innerWidgets(self, req, tag):
+        return tag[self.widgets]
+
+    athena.renderer(innerWidgets)
+
+    def addWidget(self, widget):
+        self.widgets.append(widget)
