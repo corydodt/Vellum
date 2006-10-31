@@ -1,5 +1,3 @@
-- display channel names list on join by issuing a /names command
-
 - display a close widget that causes /part, e.g. [x] button
 
     - it should not be possible to close the server tab
