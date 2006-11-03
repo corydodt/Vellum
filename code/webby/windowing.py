@@ -48,10 +48,15 @@ class Enclosure(athena.LiveElement):
         super(Enclosure, self).__init__(*a, **kw)
         self.windowTitleStan = windowTitle
         self.userClassStan = userClass
+        self.children = []
 
     def enclosedRegion(self, request, tag):
-        return tag['']
+        return tag[self.children]
     athena.renderer(enclosedRegion)
+
+    def __getitem__(self, children):
+        self.children = children
+        return self
 
     def userClass(self, request, tag):
         tag.fillSlots('userClass', self.userClassStan)
