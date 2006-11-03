@@ -4,7 +4,7 @@ from twisted.internet import defer
 
 from zope.interface import implements
 
-from nevow import rend, loaders, athena, url, static
+from nevow import rend, loaders, athena, url, static, inevow
 
 from webby import minchat, tabs, parseirc, windowing, util
 from webby.minchat import IChatConversations, \
@@ -366,6 +366,12 @@ class LiveVellum(athena.LivePage):
     addSlash = True
 
     docFactory = loaders.xmlfile(RESOURCE('webby.xhtml'))
+
+    def renderHTTP(self, ctx):
+        req = inevow.IRequest(ctx)
+        req.setHeader('content-type', 'application/xhtml+xml')
+        return super(LiveVellum, self).renderHTTP(ctx)
+
     def __init__(self, *a, **kw):
         super(LiveVellum, self).__init__(*a, **kw)
         self.chatui = minchat.MinChat()
