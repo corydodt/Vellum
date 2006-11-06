@@ -1,25 +1,7 @@
-- display a close widget that causes /part, e.g. [x] button
-
-    - it should not be possible to close the server tab
-
 - on duplicate login, kick old user out.  notify old client of removal.
 
     - alternately refuse duplicate login without special procedure?
 
-- every s->c irc message causes a tab to come to the foreground. it should
-  display a marker or change color instead.
-
-- very long lines with no spaces cause horizontal scrolling in conv window;
-  break them.
-
-- scrollback length
-
-- automatic url conversion in chat window
-
-- persistence for channel states (modes, oplists, topics) - Axiom
-
-- get double render bug fixed in athena
-
-- get channel.lstrip('#') bug fixed in words
-
 - find a fix for this stuff.. acct = self.page.chatui.onlineClients[0].account
+
+http://spreadsheets.google.com/ccc?key=p1P43A77NkCmSsul4vIPpPA
