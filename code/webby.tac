@@ -6,6 +6,7 @@ from nevow import appserver
 
 from webby.ajazz import WVRoot
 from webby.ircserver import theIRCFactory
+from webby.data import DataService
 
 class STFUSite(appserver.NevowSite):
     """Website with <80 column logging"""
@@ -21,12 +22,15 @@ class STFUSite(appserver.NevowSite):
         log.msg('%s %s' % (code, uri))
 
 
+application = service.Application('WebbyVellum')
+
+datasvc = DataService(createData=False)
+datasvc.setServiceParent(application)
+
 ROOT = WVRoot()
 
-application = service.Application('WebbyVellum')
 websvc = internet.TCPServer(8080, STFUSite(ROOT))
 websvc.setServiceParent(application)
 
 ircsvc = internet.TCPServer(6667, theIRCFactory)
 ircsvc.setServiceParent(application)
-
