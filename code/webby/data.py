@@ -81,7 +81,7 @@ class Map(item.Item):
     schemaVersion = 1
     name = A.text(allowNone=False)
     path = A.path(allowNone=False, relative=True)
-    scale100px = A.point4decimal("Distance in meters of 100 map px @ 100% zoom")
+    scale100px = A.point4decimal() # Distance in meters of 100 map px @ 100% zoom
 
 
 class Character(item.Item, _ArticleMixin):
