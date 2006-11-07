@@ -38,7 +38,7 @@ class DataService(service.MultiService):
         map = Map(store=s, 
                   name=u"The Gnoll Huddle", 
                   path=s.filesdir.child('gnoll-huddle.jpg'),
-                  scale100px="30.48")
+                  scale100px=Decimal("30.48"))
         Character(store=s,
                   name=u"Shara",
                   path=s.filesdir.child('shara-kw.png'),
@@ -100,3 +100,5 @@ class User(item.Item):
     firstname = A.text()
     lastname = A.text()
     password = A.text()
+    confirmationKey = A.text()
+    enabled = A.boolean()
