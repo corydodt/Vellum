@@ -16,24 +16,6 @@ from webby.minchat import IChatConversations, \
 
 RESOURCE = lambda f: sibpath(__file__, f)
 
-class WVRoot(rend.Page):
-    addSlash = True
-    def child__(self, ctx, ):
-        return LiveVellum()
-
-    def child_css(self, ctx, ):
-        return static.File(RESOURCE('webby.css'))
-
-    def child_tabs_css(self, ctx, ):
-        return static.File(RESOURCE('tabs.css'))
-
-    def child_signup(self, ctx, ):
-        return signup.SignupPage()
-
-    def renderHTTP(self, ctx):
-        return url.root.child("_")
-
-
 
 class IRCContainer(windowing.Enclosure, components.Componentized):
     jsClass = u"WebbyVellum.IRCContainer"
