@@ -1,0 +1,4 @@
+"""Webtastic Vellum."""
+
+
+theGlobal = {}
