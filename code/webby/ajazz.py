@@ -6,7 +6,7 @@ from zope.interface import implements
 
 from nevow import rend, loaders, athena, url, static, inevow
 
-from webby import minchat, tabs, parseirc, windowing, util
+from webby import minchat, tabs, parseirc, windowing, util, signup
 from webby.minchat import IChatConversations, \
                           IChatEntry, \
                           IChatAccountManager, \
@@ -26,6 +26,10 @@ class WVRoot(rend.Page):
 
     def child_tabs_css(self, ctx, ):
         return static.File(RESOURCE('tabs.css'))
+
+    def child_signup(self, ctx, ):
+        return signup.SignupPage()
+
     def renderHTTP(self, ctx):
         return url.root.child("_")
 
@@ -376,17 +380,18 @@ class LiveVellum(athena.LivePage):
         super(LiveVellum, self).__init__(*a, **kw)
         self.chatui = minchat.MinChat()
 
-    def render_minimap(self, ctx, data):
+    def render_minimap(self, ctx, _):
         enc = windowing.Enclosure(windowTitle="Mini Map", userClass="minimap")
         enc.setFragmentParent(self)
         return ctx.tag[enc]
 
-    def render_mainmap(self, ctx, data):
+    def render_mainmap(self, ctx, _):
         enc = windowing.Enclosure(windowTitle="Main Map", userClass="mainmap")
         enc.setFragmentParent(self)
+
         return ctx.tag[enc]
 
-    def render_chat(self, ctx, data):
+    def render_chat(self, ctx, _):
         accountManager = minchat.AccountManager(self.chatui)
         irc = IRCContainer(accountManager)
         irc.setFragmentParent(self)

@@ -8,6 +8,8 @@ h1 { font-family: sans-serif; }
 
 form { clear: both; }
 
+.formLabel { float: left; width: 12em; }
+
 .irc { width: 424pt; }
 
 .irc .enclosedRegion { padding: 3pt; }

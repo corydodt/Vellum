@@ -1,0 +1,7 @@
+<form xmlns:n="http://nevow.com/ns/nevow/0.1" n:render="liveElement">
+    <p><span class="formLabel">Your email address: </span><input name="email" /></p>
+    <p><span class="formLabel">Password:</span><input type="password" name="password1" /></p>
+    <p><span class="formLabel">Password (again):</span><input type="password" name="password2" /></p>
+    <input type="submit" />
+    <p><em class="message" /></p>
+</form>
