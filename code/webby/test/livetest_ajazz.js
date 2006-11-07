@@ -129,21 +129,21 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
 ); // }}}
 
 WebbyVellum.Tests.TestTopicBar = Nevow.Athena.Test.TestCase.subclass("WebbyVellum.Tests.TestTopicBar");
-WebbyVellum.Tests.TestTopicBar.methods(
-    function test_initialize(self) {
+WebbyVellum.Tests.TestTopicBar.methods( // {{{
+    function test_initialize(self) { // {{{
         d = self.setUp();
         d.addCallback(function initialize(topicbar) {
             self.assertEqual(topicbar.node.value, '');
         });
-    },
+    }, // }}}
 
-    function test_setTopic(self) {
+    function test_setTopic(self) { // {{{
         d = self.setUp();
         d.addCallback(function _set(topicbar) {
             topicbar.setTopic('hello');
             self.assertEqual(topicbar.node.value, 'hello');
         });
-    },
+    }, // }}}
 
     function setUp(self) { // {{{
         var d = self.callRemote("newTopicBar");
@@ -152,5 +152,5 @@ WebbyVellum.Tests.TestTopicBar.methods(
             );
         return d;
     } // }}}
-);
+); // }}}
 // vi:foldmethod=marker
