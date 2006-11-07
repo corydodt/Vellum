@@ -5,7 +5,7 @@ from twisted.python import log
 
 from nevow import static, rend, url, appserver
 
-from webby.ajazz import LiveVellum
+from webby.ircweb import IRCPage 
 from webby.signup import SignupPage
 
 RESOURCE = lambda f: sibpath(__file__, f)
@@ -13,7 +13,7 @@ RESOURCE = lambda f: sibpath(__file__, f)
 class WVRoot(rend.Page):
     addSlash = True
     def child__(self, ctx, ):
-        return LiveVellum()
+        return IRCPage()
 
     def child_css(self, ctx, ):
         return static.File(RESOURCE('webby.css'))

@@ -3,7 +3,7 @@ from twisted.internet import defer
 from nevow import athena
 from nevow.livetrial import testcase
 
-from webby import ajazz, signup
+from webby import ircweb, signup
 from webby.minchat import IChatConversations, NullConversation
 
 class MockAccountManager:
@@ -31,7 +31,7 @@ class TestIRCContainer(testcase.TestCase):
         # method is called first from every test, life is fine, but if
         # generateConversation is called without calling this first,
         # behavior is UNDEFINED.
-        self.irc = ajazz.IRCContainer(MockAccountManager())
+        self.irc = ircweb.IRCContainer(MockAccountManager())
         self.irc.setFragmentParent(self)
         return self.irc
 
@@ -43,7 +43,7 @@ class TestTopicBar(testcase.TestCase):
         """
         Return a new Topic Bar
         """
-        tb = ajazz.TopicBar()
+        tb = ircweb.TopicBar()
         tb.setFragmentParent(self)
         return tb
 

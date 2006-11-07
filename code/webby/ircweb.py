@@ -348,7 +348,7 @@ class ChatEntry(athena.LiveElement):
         except:
                 conv.sendText("Problems with /query, bailing out.")
 
-class LiveVellum(athena.LivePage):
+class IRCPage(athena.LivePage):
     addSlash = True
 
     docFactory = loaders.xmlfile(RESOURCE('webby.xhtml'))
@@ -356,10 +356,10 @@ class LiveVellum(athena.LivePage):
     def renderHTTP(self, ctx):
         req = inevow.IRequest(ctx)
         req.setHeader('content-type', 'application/xhtml+xml')
-        return super(LiveVellum, self).renderHTTP(ctx)
+        return super(IRCPage, self).renderHTTP(ctx)
 
     def __init__(self, *a, **kw):
-        super(LiveVellum, self).__init__(*a, **kw)
+        super(IRCPage, self).__init__(*a, **kw)
         self.chatui = minchat.MinChat()
 
     def render_minimap(self, ctx, _):
