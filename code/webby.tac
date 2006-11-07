@@ -2,8 +2,6 @@
 from twisted.application import service, internet
 from twisted.python import log
 
-from nevow import appserver
-
 from webby.web import WVRoot, STFUSite
 from webby.ircserver import theIRCFactory
 from webby.data import DataService
