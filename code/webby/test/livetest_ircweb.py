@@ -1,14 +1,23 @@
 from twisted.internet import defer
 
+from axiom import store
+
 from nevow import athena
 from nevow.livetrial import testcase
 
-from webby import ircweb, signup
+from webby import ircweb, signup, data, theGlobal
 from webby.minchat import IChatConversations, NullConversation
 
 class MockAccountManager:
     def doConnection(self, host, username, password, channels):
         return defer.succeed(None)
+
+# define our in-memory test store
+testStore = store.Store()
+testUser = data.User(store=testStore, 
+        email=u'woot@woot.com', nick=u'woot', password=u'ninjas')
+theGlobal['dataService'] = data.DataService(testStore)
+
 
 class TestIRCContainer(testcase.TestCase):
     jsClass = u'WebbyVellum.Tests.TestIRCContainer'
@@ -31,8 +40,12 @@ class TestIRCContainer(testcase.TestCase):
         # method is called first from every test, life is fine, but if
         # generateConversation is called without calling this first,
         # behavior is UNDEFINED.
-        self.irc = ircweb.IRCContainer(MockAccountManager())
+        self.irc = ircweb.IRCContainer(MockAccountManager(), testUser)
         self.irc.setFragmentParent(self)
+
+        # reset the default nick between each test
+        testUser.nick = u'woot'
+
         return self.irc
 
     athena.expose(newContainer)

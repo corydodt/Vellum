@@ -1,0 +1,30 @@
+<!DOCTYPE html
+PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:n="http://nevow.com/ns/nevow/0.1">
+  <!-- vi:ft=html
+  -->
+  <head>
+    <title>Please Sign In to Vellum</title>
+    <link rel="stylesheet" type="text/css" href="/css"/>
+  </head>
+  <body n:render="form">
+    <form method="post">
+      <n:attr name="action"><n:slot name="action"/></n:attr>
+      <p>
+        <span class="formLabel">Email address:</span>
+        <input name="username"/>
+      </p>
+      <p>
+        <span class="formLabel">Password:</span>
+        <input name="password" type="password"/>
+      </p>
+      <input type="submit" name="signin" value="Sign In"/>
+    </form>
+    <hr />
+    <p>If you don't have a username/password, try <strong><a
+        href="/signup">signing up</a></strong>.</p>
+    <p>If you don't remember your username/password, try <strong><a
+        href="/forgotpassword">this link</a></strong>.</p>
+  </body>
+</html>

@@ -18,13 +18,18 @@ RESOURCE = lambda f: sibpath(__file__, f)
 
 
 class IRCContainer(windowing.Enclosure, components.Componentized):
+    """
+    Contains all the IRC components: AccountManagerElement, ConversationTabs,
+    ChatEntry.
+    """ 
     jsClass = u"WebbyVellum.IRCContainer"
 
-    def __init__(self, accountManager, *a, **kw):
+    def __init__(self, accountManager, user, *a, **kw):
         super(IRCContainer, self).__init__(
                 windowTitle="IRC", userClass="irc", *a, **kw)
         components.Componentized.__init__(self)
         self.accountManager = accountManager
+        self.user = user
 
     def enclosedRegion(self, request, tag):
         cw = ConversationTabs()
@@ -32,7 +37,7 @@ class IRCContainer(windowing.Enclosure, components.Componentized):
         self.setComponent(IChatConversations, cw)
         cw.initServerTab()
 
-        am = AccountManagerElement(self.accountManager, cw)
+        am = AccountManagerElement(self.accountManager, cw, self.user)
         am.setFragmentParent(self)
         self.setComponent(IChatAccountManager, am)
 
@@ -46,6 +51,10 @@ class IRCContainer(windowing.Enclosure, components.Componentized):
 
 
 class TopicBar(util.RenderWaitLiveElement):
+    """
+    Text widget that sits above the channel window in a tab and displays the
+    current channel topic.
+    """
     implements(ITopicBar)
     docFactory = loaders.xmlfile(RESOURCE('elements/TopicBar'))
     jsClass = u'WebbyVellum.TopicBar'
@@ -56,6 +65,9 @@ class TopicBar(util.RenderWaitLiveElement):
 
 
 class NameSelect(util.RenderWaitLiveElement):
+    """
+    <select> box that contains the list of names for a group conversation.
+    """
     implements(INameSelect)
     jsClass = u'WebbyVellum.NameSelect'
     docFactory = loaders.xmlfile(RESOURCE('elements/NameSelect'))
@@ -76,6 +88,9 @@ class NameSelect(util.RenderWaitLiveElement):
 NODEFAULT = object()
 
 class ConversationTabs(tabs.TabsElement):
+    """
+    UI element - For each conversation, one tab.
+    """
     ## jsClass = u"WebbyVellum.ConversationTabs"
     implements(IChatConversations)
 
@@ -193,22 +208,42 @@ def webClean(st):
     return unicode(st.replace('<','&lt;').replace('>','&gt;'))
 
 GREETING = util.flattenMessageString(
-u'''Vellum IRC v0.0
-Click Log ON to connect.''')
+u'''Vellum IRC v0.1
+Click "Join!" to connect.''')
 
 class AccountManagerElement(athena.LiveElement):
+    """
+    UI element that handles changing of the nick and processing a login to the
+    IRC server.
+    """
     docFactory = loaders.xmlfile(RESOURCE('elements/AccountManagerElement'))
     implements(IChatAccountManager)
 
-    def __init__(self, accountManager, conversationTabs, *a, **kw):
+    def __init__(self, accountManager, conversationTabs, user, *a, **kw):
         super(AccountManagerElement, self).__init__(*a, **kw)
         self.accountManager = accountManager
         self.conversationTabs = conversationTabs
+        self.user = user
 
-    def onLogOnSubmit(self, username, password, channels):
-        host = 'localhost'.encode('utf8') # TODO - get from config file
-        username = username.encode('utf8')
-        password = password.encode('utf8')
+    def getInitialArguments(self):
+        return (self.user.nick,)
+
+    def onLogOnSubmit(self, nick, channels):
+        """
+        Process by looking up the password for that nick and starting
+        a login process on the IRC protocol.
+        """
+        host = 'localhost'.encode('utf8')
+        password = self.user.password.encode('utf8')
+        username = nick.encode('utf8')
+
+        # SET the permanent nick to the nick we were provided, trust it.
+        # We can trust the nick because use of AccountManagerElement
+        # implies that the user is *already* authenticated, through
+        # the web.  Users visiting using a regular IRC client will 
+        # naturally have to supply their passwords the normal way.
+        self.user.nick = unicode(nick)
+
         channels = channels.encode('utf8')
         d = self.accountManager.doConnection(host, username, password, channels)
 
@@ -218,7 +253,7 @@ class AccountManagerElement(athena.LiveElement):
             logOff = lambda _: self.accountManager.disconnect(acct)
             d.addBoth(logOff)
 
-            return u'connected %s:%s@%s and joined %s' % (username, password, host, channels)
+            return u'connected %s@%s and joined %s' % (username, host, channels)
 
         d.addCallback(_gotAccount)
         return d
@@ -349,6 +384,9 @@ class ChatEntry(athena.LiveElement):
                 conv.sendText("Problems with /query, bailing out.")
 
 class IRCPage(athena.LivePage):
+    """
+    Page container for the IRC UI and the maps UI
+    """
     addSlash = True
 
     docFactory = loaders.xmlfile(RESOURCE('webby.xhtml'))
@@ -375,7 +413,8 @@ class IRCPage(athena.LivePage):
 
     def render_chat(self, ctx, _):
         accountManager = minchat.AccountManager(self.chatui)
-        irc = IRCContainer(accountManager)
+        ss = inevow.ISession(ctx)
+        irc = IRCContainer(accountManager, ss.user)
         irc.setFragmentParent(self)
 
         self.chatui.initUI(irc)

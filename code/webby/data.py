@@ -15,12 +15,15 @@ else:
     appdata = FilePath(os.path.join(os.environ['HOME'], '.vellum'))
 
 class DataService(service.MultiService):
-    def __init__(self, createData, *a, **kw):
+    def __init__(self, createData, defstore=None, *a, **kw):
         service.MultiService.__init__(self, *a, **kw)
         self.createData = createData
+        self.store = defstore
 
     def startService(self):
-        self.store = store.Store(appdata.child('glassvellum.axiom'))
+        if self.store is None:
+            self.store = store.Store(appdata.child('glassvellum.axiom'))
+
         log.msg("Starting service %r in %s" % (self, appdata,))
 
         # TODO - substores are going to be kept in zipfiles, which can

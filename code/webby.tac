@@ -2,7 +2,7 @@
 from twisted.application import service, internet
 from twisted.python import log
 
-from webby.web import WVRoot, STFUSite
+from webby.web import guardedRoot, STFUSite
 from webby.ircserver import theIRCFactory
 from webby.data import DataService
 from webby import theGlobal
@@ -29,7 +29,7 @@ datasvc = DataService(createData=createData)
 datasvc.setServiceParent(application)
 theGlobal['dataService'] = datasvc
 
-ROOT = WVRoot()
+ROOT = guardedRoot()
 
 websvc = internet.TCPServer(8080, STFUSite(ROOT))
 websvc.setServiceParent(application)

@@ -40,7 +40,7 @@ WebbyVellum.NameSelect.methods( // {{{
 
 WebbyVellum.AccountManager = Nevow.Athena.Widget.subclass('WebbyVellum.AccountManager');
 WebbyVellum.AccountManager.methods( // {{{
-    function __init__(self, node) { // {{{
+    function __init__(self, node, nick) { // {{{
         WebbyVellum.AccountManager.upcall(self, '__init__', node);
         // Do this stuff instead of using athena:handler because this 
         // is the only way we get access to the event, and having access
@@ -49,6 +49,8 @@ WebbyVellum.AccountManager.methods( // {{{
         // Mother of God but javascript can be awful.
         DeanEdwards.addEvent(node, 'submit', 
             function onLogOnSubmit(event) { return self.onLogOnSubmit(event) });
+
+        if (nick !== undefined) self.node.nick.value = nick;
     }, // }}}
 
     function onLogOnSubmit(self, event) { // {{{
@@ -60,11 +62,10 @@ WebbyVellum.AccountManager.methods( // {{{
         // by a keyboard "enter" press.  Use self.node for consistency.
         var node = self.node;
 
-        var username = node.username.value;
-        var password = node.password.value;
+        var nick = node.nick.value;
         var channels = node.channels.value;
-        var d = self.callRemote("onLogOnSubmit", 
-                username, password, channels);
+        // FIXME - handle blank
+        var d = self.callRemote("onLogOnSubmit", nick, channels);
         return d;
     } // }}}
 ); // }}}
@@ -114,15 +115,15 @@ WebbyVellum.Signup.methods( // {{{
         event.preventDefault();
         var message = self.firstNodeByAttribute('class', 'message');
 
-        var email = self.firstNodeByAttribute('name', 'email').value;
+        var email = self.node.email.value;
         if (email == '')
         {
             message.innerHTML = 'Please fill in your email address.';
             return null;
         }
 
-        var password1 = self.firstNodeByAttribute('name', 'password1').value;
-        var password2 = self.firstNodeByAttribute('name', 'password2').value;
+        var password1 = self.node.password1.value;
+        var password2 = self.node.password2.value;
         if (password1 == '' || password2 == '')
         {
             message.innerHTML = 'Please fill in your new password twice.';
@@ -134,7 +135,7 @@ WebbyVellum.Signup.methods( // {{{
             return null;
         }
 
-        var submit = self.firstNodeByAttribute('type', 'submit');
+        var submit = self.node.signup;
         submit.style['display'] = 'none';
         message.innerHTML = 'Sending email. (This may take a minute.) . . . .';
 

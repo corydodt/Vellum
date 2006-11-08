@@ -1,31 +1,18 @@
 """The core web server on which the Vellum application is based."""
+from zope.interface import implements
+ 
+from nevow import inevow, rend, tags, guard, loaders, static, url, appserver
 
+from twisted.cred import portal, checkers, credentials, error
 from twisted.python.util import sibpath
 from twisted.python import log
 
-from nevow import static, rend, url, appserver
-
 from webby.ircweb import IRCPage 
 from webby.signup import SignupPage
+from webby import theGlobal, data
+
 
 RESOURCE = lambda f: sibpath(__file__, f)
-
-class WVRoot(rend.Page):
-    addSlash = True
-    def child__(self, ctx, ):
-        return IRCPage()
-
-    def child_css(self, ctx, ):
-        return static.File(RESOURCE('webby.css'))
-
-    def child_tabs_css(self, ctx, ):
-        return static.File(RESOURCE('tabs.css'))
-
-    def child_signup(self, ctx, ):
-        return SignupPage()
-
-    def renderHTTP(self, ctx):
-        return url.root.child("_")
 
 
 class STFUSite(appserver.NevowSite):
@@ -40,4 +27,106 @@ class STFUSite(appserver.NevowSite):
             code = '!%s!' % (code, )
 
         log.msg('%s %s' % (code, uri))
+
+
+def noLogout():
+    return None
+
+class StaticRoot(rend.Page):
+    """
+    Adds child nodes for things common to anonymous and logged-in root
+    resources.
+
+    Must be subclassed as it has no docFactory of its own.
+    """
+    addSlash = True  # yeah, we really do need this, otherwise 404 on /
+    def child_css(self, ctx, ):
+        return static.File(RESOURCE('webby.css'))
+
+    def child_tabs_css(self, ctx, ):
+        return static.File(RESOURCE('tabs.css'))
+
+    def child_signup(self, ctx, ):
+        return SignupPage()
+
+ 
+ 
+class VellumRealm:
+    implements(portal.IRealm)
+    class LoginPage(StaticRoot):
+        """Page which asks for username/password."""
+        addSlash = True
+        docFactory = loaders.xmlfile(RESOURCE('login.xhtml'))
+     
+        def render_form(self, ctx, data):
+            ctx.tag.fillSlots('action', guard.LOGIN_AVATAR)
+            return ctx.tag
+     
+        def logout(self):
+            print "Bye"
+ 
+    class LoggedInRoot(StaticRoot):
+        """
+        This root will be available when the user has credentials (is
+        logged in).
+        """
+        def __init__(self, user, *a, **kw):
+            StaticRoot.__init__(self, *a, **kw)
+            self.user = user
+
+        def child_game(self, ctx, ):
+            inevow.ISession(ctx).user = self.user
+            return IRCPage()
+
+        def renderHTTP(self, ctx):
+            return url.root.child("game")
+
+        def logout(self):
+            """Does nothing right now."""
+
+    def requestAvatar(self, avatarId, mind, *interfaces):
+        for iface in interfaces:
+            if iface is inevow.IResource:
+                # do web stuff
+                if avatarId is checkers.ANONYMOUS:
+                    resc = VellumRealm.LoginPage()
+                    resc.realm = self
+                    return (inevow.IResource, resc, noLogout)
+                else:
+                    resc = VellumRealm.LoggedInRoot(avatarId)
+                    resc.realm = self
+                    return (inevow.IResource, resc, resc.logout)
+ 
+        raise NotImplementedError("Can't support that interface.")
+ 
+class AxiomEmailChecker(object):
+    implements(checkers.ICredentialsChecker)
+    credentialInterfaces = credentials.IUsernamePassword,
+
+    def requestAvatarId(self, credentials):
+        store = theGlobal['dataService'].store
+
+        username = unicode(credentials.username)
+        password = unicode(credentials.password)
+
+        u = store.findFirst(data.User, data.User.email==username)
+
+        if u is not None and u.password == password:
+            if u.enabled: # user must have clicked the emailed link before login
+                return u
+
+        return error.LoginFailed()
+
+def guardedRoot():
+    realm = VellumRealm()
+    port = portal.Portal(realm)
+
+    myChecker = AxiomEmailChecker()
+
+    port.registerChecker(checkers.AllowAnonymousAccess(), credentials.IAnonymous)
+    port.registerChecker(myChecker)
+
+    res = guard.SessionWrapper(port)
+    
+    return res
 

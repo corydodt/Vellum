@@ -34,6 +34,9 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
             // the server tab should be in the foreground
             self.assertEqual(fgtab.id, '**SERVER**');
 
+            // the nick field should be populated.
+            self.assertEqual(accountManager.node.nick.value, 'woot');
+
             // TODO - assert something about accountManager
         });
     }, // }}}
@@ -81,8 +84,7 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
             // try it with one channel
             var acctManager = irc.childWidgets[0];
             var amnode = acctManager.node;
-            amnode.username.value = 'MFen';
-            amnode.password.value = 'ninjas';
+            amnode.nick.value = 'MFen';
             amnode.channels.value = '#vellum';
             var event = new MockEvent(amnode);
 
@@ -90,7 +92,7 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
             d2.addCallback(function _(response) {
                 // check username/password/host are a match
                 self.assertEqual(response, 
-                    'connected MFen:ninjas@localhost and joined #vellum');
+                    'connected MFen@localhost and joined #vellum');
                 }
             );
 
@@ -101,7 +103,7 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
             d3.addCallback(function _(response) {
                 // check username/password/host are a match
                 self.assertEqual(response, 
-                    'connected MFen:ninjas@localhost and joined #vellum,#stuff');
+                    'connected MFen@localhost and joined #vellum,#stuff');
                 }
             );
 
@@ -159,9 +161,9 @@ WebbyVellum.Tests.TestSignup.methods( // {{{
     function test_initialize(self) { // {{{
         var d = self.setUp();
         d.addCallback(function _(signup) {
-            var email = signup.firstNodeByAttribute('name', 'email');
-            var password1 = signup.firstNodeByAttribute('name', 'password1');
-            var password2 = signup.firstNodeByAttribute('name', 'password2');
+            var email = signup.node.email;
+            var password1 = signup.node.password1;
+            var password2 = signup.node.password2;
             var message = signup.firstNodeByAttribute('class', 'message');
             self.assertEqual(email.value, '');
             self.assertEqual(password1.value, '');
