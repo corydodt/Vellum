@@ -118,8 +118,6 @@ class MinConversation(
         components.Componentized.__init__(self)
         basechat.Conversation.__init__(self, *a, **kw)
         self.widget = widget
-        tabs = IChatConversations(widget)
-        self.webPrint = lambda m: tabs.printClean(m, self.person.name) 
 
     def show(self):
         pname = unicode(self.person.name)
@@ -134,12 +132,12 @@ class MinConversation(
             t = '* %s %s' % (self.person.name, text)
         else:
             t = "<%s> %s" % (self.person.name, text)
-        return self.webPrint(t)
+        return ITextArea(self).printClean(t)
 
     def contactChangedNick(self, person, newnick):
         basechat.Conversation.contactChangedNick(self, person, newnick)
         event = "-!- %s is now known as %s" % (person.name, newnick)
-        return self.webPrint(event)
+        return ITextArea(self).printClean(event)
 
     def sendText(self, text, metadata=None):
         r = self.person.sendMessage(text, metadata)
@@ -148,7 +146,7 @@ class MinConversation(
             out = u'* %s %s' % (me, text)
         else:
             out = u'<%s> %s' % (me, text)
-        self.webPrint(out)
+        ITextArea(self).printClean(out)
 
         return r
 
