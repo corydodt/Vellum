@@ -78,7 +78,8 @@ class SignupPage(athena.LivePage):
             u = store.findFirst(data.User, data.User.confirmationKey==confirm)
             if u is not None:
                 u.enabled = True
-                return url.root.child('')
+                req.args.clear()
+                self.docFactory = loaders.xmlfile(RESOURCE('confirmed.xhtml'))
             else:
                 self.docFactory = loaders.stan(['Could not confirm that account.'])
         return super(SignupPage, self).renderHTTP(ctx)
