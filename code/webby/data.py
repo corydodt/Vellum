@@ -97,11 +97,11 @@ class Character(item.Item, _ArticleMixin):
     scale = A.point4decimal(allowNone=False)
 
 class User(item.Item):
-    schemaVersion = 1
+    schemaVersion = 2
     email = A.text("The username used to log in", allowNone=False)
     nick = A.text("The default nick to use in IRC")
     firstname = A.text()
     lastname = A.text()
     password = A.text()
     confirmationKey = A.text()
-    enabled = A.boolean()
+    unconfirmedPassword = A.text("Password is held here until confirmationKey is validated.")

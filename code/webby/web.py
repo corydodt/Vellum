@@ -100,6 +100,9 @@ class VellumRealm:
         raise NotImplementedError("Can't support that interface.")
  
 class AxiomEmailChecker(object):
+    """
+    This is also pasted over in webby.ircserver as AxiomNickChecker.
+    """
     implements(checkers.ICredentialsChecker)
     credentialInterfaces = credentials.IUsernamePassword,
 
@@ -111,11 +114,20 @@ class AxiomEmailChecker(object):
 
         u = store.findFirst(data.User, data.User.email==username)
 
+        # Note: If the account has not been confirmed from the email
+        # address, u.password will be None.
         if u is not None and u.password == password:
-            if u.enabled: # user must have clicked the emailed link before login
-                return u
+            # clear unconfirmedPassword here.  This is needed if either of the
+            # following occurs:
+            # a) user visits the forgot password page but subsequently
+            # remembers the original password
+            # b) malicious user visits the forgot password page but can't
+            # confirm the new password, and the real user logs in at some
+            # point.
+            u.unconfirmedPassword = None
+            return u
 
-        return error.LoginFailed()
+        raise error.LoginFailed()
 
 def guardedRoot():
     realm = VellumRealm()

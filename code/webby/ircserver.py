@@ -9,6 +9,9 @@ theRealm = service.InMemoryWordsRealm('vellumIRCserver')
 theRealm.createGroupOnRequest = True
 
 class AxiomNickChecker(object):
+    """
+    Mostly cloned from webby.web.AxiomEmailChecker
+    """
     implements(checkers.ICredentialsChecker)
     credentialInterfaces = credentials.IUsernamePassword,
 
@@ -20,12 +23,20 @@ class AxiomNickChecker(object):
 
         u = store.findFirst(data.User, data.User.nick==username)
 
+        # Note: If the account has not been confirmed from the email
+        # address, u.password will be None.
         if u is not None and u.password == password:
-            if u.enabled: # user must have clicked the emailed link before login
-                return credentials.username # 8-bit string username, not unicode
+            # clear unconfirmedPassword here.  This is needed if either of the
+            # following occurs:
+            # a) user visits the forgot password page but subsequently
+            # remembers the original password
+            # b) malicious user visits the forgot password page but can't
+            # confirm the new password, and the real user logs in at some
+            # point.
+            u.unconfirmedPassword = None
+            return credentials.username
 
-        return error.LoginFailed()
-
+        raise error.LoginFailed()
 
 checker = AxiomNickChecker()
 

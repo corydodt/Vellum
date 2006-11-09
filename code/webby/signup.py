@@ -12,9 +12,6 @@ from webby import theGlobal, data
 
 RESOURCE = lambda f: sibpath(__file__, f)
 
-class EmailAddressExists(Exception):
-    pass
-
 class Signup(athena.LiveElement):
     docFactory = loaders.xmlfile(RESOURCE('elements/Signup'))
     jsClass = u'WebbyVellum.Signup'
@@ -23,18 +20,23 @@ class Signup(athena.LiveElement):
         self.pageURL = pageURL
 
     def processSignup(self, email, password):
-        key = unicode(random.random() * 10000000)
+        # let's make this key very unique.
+        key_a = unicode(random.random() * 10000000)
+        key_b = unicode(random.random() * 10000000)
+        key = key_a + key_b 
         store = theGlobal['dataService'].store
         u = store.findFirst(data.User, data.User.email==email)
 
-        if u is not None:
-            raise EmailAddressExists()
+        if u is None:
+            u = data.User(store=store, 
+                          email=email,
+                          password=None,
+                          unconfirmedPassword=password,
+                          confirmationKey=key)
+        else:
+            u.unconfirmedPassword = password
+            u.confirmationKey = key
 
-        u = data.User(store=store, 
-                      email=email,
-                      password=password,
-                      enabled=False,
-                      confirmationKey=key)
         link = self.pageURL + '?confirm=%s' % (key,)
 
         d = sendEmail(email, "Confirm Vellum Signup", ## {{{
@@ -70,6 +72,12 @@ class SignupPage(athena.LivePage):
         return signup
 
     def renderHTTP(self, ctx):
+        """
+        Check for a confirmation being used from the email link.
+
+        If the user is confirming a login, move the password from
+        unconfirmedPassword into password, thus enabling the account.
+        """
         req = inevow.IRequest(ctx)
         confirm = req.args.get('confirm', None) 
         if confirm is not None:
@@ -77,7 +85,8 @@ class SignupPage(athena.LivePage):
             store = theGlobal['dataService'].store
             u = store.findFirst(data.User, data.User.confirmationKey==confirm)
             if u is not None:
-                u.enabled = True
+                u.password = u.unconfirmedPassword
+                u.unconfirmedPassword = None
                 req.args.clear()
                 self.docFactory = loaders.xmlfile(RESOURCE('confirmed.xhtml'))
             else:
