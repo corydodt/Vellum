@@ -14,11 +14,6 @@ form { clear: both; }
 
 .irc .enclosedRegion { padding: 3pt; }
 
-.minimap { 
-  width: 85pt;
-  height: 110pt;
-}
-
 .mainmap { 
   width: 255pt;
   height: 330pt;
