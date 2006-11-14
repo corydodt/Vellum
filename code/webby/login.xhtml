@@ -6,20 +6,20 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   -->
   <head>
     <title>Please Sign In to Vellum</title>
-    <link rel="stylesheet" type="text/css" href="/css"/>
+    <link rel="stylesheet" type="text/css" href="/css" />
   </head>
   <body n:render="form">
     <form method="post">
-      <n:attr name="action"><n:slot name="action"/></n:attr>
+      <n:attr name="action"><n:slot name="action" /></n:attr>
       <p>
         <span class="formLabel">Email address:</span>
-        <input name="username"/>
+        <input name="username" />
       </p>
       <p>
         <span class="formLabel">Password:</span>
-        <input name="password" type="password"/>
+        <input name="password" type="password" />
       </p>
-      <input type="submit" name="signin" value="Sign In"/>
+      <input type="submit" name="signin" value="Sign In" />
     </form>
     <hr />
     <p>If you don't have a username/password, try <strong><a
