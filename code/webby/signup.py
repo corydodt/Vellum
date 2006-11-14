@@ -1,14 +1,13 @@
 """Concept (not code) borrowed unrepentantly from Divmod Mantissa."""
 import rfc822
 from email.MIMEText import MIMEText
-import random
 
 from twisted.python.util import sibpath
 from twisted.mail import smtp
 
 from nevow import athena, loaders, url, flat, inevow
 
-from webby import theGlobal, data
+from webby import theGlobal, data, util
 
 RESOURCE = lambda f: sibpath(__file__, f)
 
@@ -20,10 +19,7 @@ class Signup(athena.LiveElement):
         self.pageURL = pageURL
 
     def processSignup(self, email, password):
-        # let's make this key very unique.
-        key_a = unicode(random.random() * 10000000)
-        key_b = unicode(random.random() * 10000000)
-        key = key_a + key_b 
+        key = util.label()
         store = theGlobal['dataService'].store
         u = store.findFirst(data.User, data.User.email==email)
 

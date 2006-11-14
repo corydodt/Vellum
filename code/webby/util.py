@@ -1,3 +1,5 @@
+import random
+
 from twisted.internet import defer
 
 from nevow import tags as T, flat, athena
@@ -40,3 +42,8 @@ class RenderWaitLiveElement(athena.LiveElement):
         return r
 
 
+def label():
+    """Make a pretty darn unique key."""
+    key_a = unicode(random.random() * 10000000)
+    key_b = unicode(random.random() * 10000000)
+    return key_a + key_b 
