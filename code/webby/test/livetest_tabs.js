@@ -16,22 +16,6 @@ Tabby.Tests.VerySimpleWidget.methods( // {{{
 
 Tabby.Tests.TestTabs = Nevow.Athena.Test.TestCase.subclass("Tabby.Tests.TestTabs");
 Tabby.Tests.TestTabs.methods( // {{{
-    /* get a new tabs widget with just a label and id */
-    function test_initialTabId(self) { // {{{
-        var d = self.callRemote("newTabWidget", 'woop', 'Woop');
-        d.addCallback(
-            function(wi) { return self.addChildWidgetFromWidgetInfo(wi); }
-            );
-        d.addCallback(
-            function(tabs) { 
-                self.assertEqual(tabs.activeTabId(), 'woop'); 
-                self.assertEqual(
-                        tabs.getHandleForId('woop').innerHTML, 'Woop'); 
-                }
-            );
-        return d;
-    }, // }}}
-
     /* get a new tabs widget with just a label and id, and XHTML content */
     function test_initialTabIdAndContent(self) { // {{{
         var d = self.callRemote("newTabWidget", 'woop', 'Woop', 

@@ -20,10 +20,12 @@ from nevow import loaders, athena
 
 RESOURCE = lambda f: sibpath(__file__, f)
 
+EMPTY = ()
+
 class TabsElement(athena.LiveElement):
     docFactory = loaders.xmlfile(RESOURCE('elements/Tabs'))
     jsClass = u"Tabby.TabsElement"
-    widgetArgs = None
+    widgetArgs = EMPTY
 
     def addTab(self, id, label):
         return self.callRemote('addTab', id, label)
@@ -34,14 +36,17 @@ class TabsElement(athena.LiveElement):
     def removeTab(self, id):
         return self.callRemote('removeTab', id)
 
-    def setInitialArguments(self, *a, **kw):
-        assert len(kw) == 0, "Cannot pass keyword arguments to a Widget"
-        self.widgetArgs = a
+    def addInitialTab(self, id, label, content):
+        """
+        Specify a tab that will be sent in the initial arguments.
+        Has no effect after the first time this widget gets rendered.
+        """
+        assert getattr(self, '_athenaID', None) is None, (
+                "Cannot call this after the widget has rendered.")
+        if self.widgetArgs is EMPTY:
+            self.widgetArgs = []
+        self.widgetArgs.append((id, label, content))
 
     def getInitialArguments(self):
-        args = ()
-        if self.widgetArgs is not None:
-            args = self.widgetArgs
-
-        return args
+        return self.widgetArgs
 

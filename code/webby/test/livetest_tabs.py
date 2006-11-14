@@ -21,7 +21,8 @@ class TestTabs(testcase.TestCase):
         """Return a new tab widget"""
         w = tabs.TabsElement()
         w.setFragmentParent(self)
-        w.setInitialArguments(*a)
+        if len(a) > 0:
+            w.addInitialTab(*a)
         return w
 
     athena.expose(newTabWidget)
@@ -43,7 +44,7 @@ class TestTabs(testcase.TestCase):
 
         a.append(vsw)
 
-        t.setInitialArguments(*a)
+        t.addInitialTab(*a)
         return t
 
     athena.expose(newTabWidgetContainingWidget)

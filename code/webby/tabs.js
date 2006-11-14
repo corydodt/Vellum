@@ -146,19 +146,13 @@ Tabby.TabsElement.methods( // {{{
                       /* optional */ nodeContent)
     {
         Tabby.TabsElement.upcall(self, '__init__', node);
-        if (initialTabId !== undefined)
-        {
-            if (initialTabLabel !== undefined)
-            {
-                self.addTab(initialTabId, initialTabLabel);
-                if (nodeContent !== undefined)
-                {
-                    self.setTabBody(initialTabId, nodeContent);
-                }
-            } else {
-                Divmod.debug("TabsElement", 
-                    "initialTabId provided to __init__ without initialTabLabel");
-            }
+        for (var i=2; i<arguments.length; i++) {
+            var tab = arguments[i];
+            var initialTabId = tab[0];
+            var initialTabLabel = tab[1];
+            var nodeContent = tab[2];
+            self.addTab(initialTabId, initialTabLabel);
+            self.setTabBody(initialTabId, nodeContent);
         }
     } // }}}
 ); // }}}

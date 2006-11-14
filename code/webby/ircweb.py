@@ -129,8 +129,7 @@ class ConversationTabs(tabs.TabsElement):
 
         self.conversations[initialId] = nullconv
 
-        super(ConversationTabs, self).setInitialArguments(
-                initialId, initialId, ta)
+        super(ConversationTabs, self).addInitialTab(initialId, initialId, ta)
 
     def showConversation(self, conversation, conversationName):
         """
