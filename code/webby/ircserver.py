@@ -1,7 +1,7 @@
 from zope.interface import implements
 
 from twisted.words import service
-from twisted.cred import checkers, portal, credentials
+from twisted.cred import checkers, portal, credentials, error
 
 from webby import theGlobal, data
 
@@ -36,7 +36,7 @@ class AxiomNickChecker(object):
             u.unconfirmedPassword = None
             return credentials.username
 
-        raise error.LoginFailed()
+        raise error.UnauthorizedLogin()
 
 checker = AxiomNickChecker()
 

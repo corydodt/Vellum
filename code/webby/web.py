@@ -59,6 +59,12 @@ class VellumRealm:
         docFactory = loaders.xmlfile(RESOURCE('login.xhtml'))
      
         def render_form(self, ctx, data):
+            req = inevow.IRequest(ctx)
+            if 'login-failure' in req.args:
+                ctx.tag.fillSlots('loginStatus', ctx.tag.onePattern('unauthorized'))
+            else:
+                ctx.tag.fillSlots('loginStatus', [])
+
             ctx.tag.fillSlots('action', guard.LOGIN_AVATAR)
             return ctx.tag
      
@@ -127,7 +133,7 @@ class AxiomEmailChecker(object):
             u.unconfirmedPassword = None
             return u
 
-        raise error.LoginFailed()
+        raise error.UnauthorizedLogin()
 
 def guardedRoot():
     realm = VellumRealm()

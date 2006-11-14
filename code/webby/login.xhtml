@@ -19,6 +19,10 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         <span class="formLabel">Password:</span>
         <input name="password" type="password" />
       </p>
+      <n:slot name="loginStatus">
+        <p n:pattern="unauthorized" class="error">Your username or password
+        was incorrect.</p>
+      </n:slot>
       <input type="submit" name="signin" value="Sign In" />
     </form>
     <hr />
