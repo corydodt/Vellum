@@ -37,6 +37,12 @@ class DataService(service.MultiService):
             log.msg("Created initial database.")
 
     def createInitialData(self):
+        s1 = self.store
+        user = User(store=s1,
+                    email=u'a@b.c',
+                    nick=u'MFen',
+                    password=u'abc'
+                    )
         s = self.substore
         map = Map(store=s, 
                   name=u"The Gnoll Huddle", 
@@ -105,3 +111,13 @@ class User(item.Item):
     password = A.text()
     confirmationKey = A.text()
     unconfirmedPassword = A.text("Password is held here until confirmationKey is validated.")
+
+class File(item.Item):
+    """A file that has been uploaded."""
+    schemaVersion = 5
+    data = A.bytes()
+    thumbnail = A.bytes()
+    filename = A.text()
+    mimeType = A.text()
+    md5 = A.text()
+    user = A.reference()
