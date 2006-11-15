@@ -16,6 +16,16 @@ h1 { font-family: sans-serif; }
 
 form { clear: both; }
 
+.corner { border: none; 
+border-right: 1px solid black; 
+border-bottom: 1px solid black;
+}
+
+.corner:hover {
+border: 1px solid black;
+background-color: #ddd;
+}
+
 .formLabel { float: left; width: 12em; }
 
 .irc { width: 424pt; }

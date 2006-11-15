@@ -27,11 +27,11 @@ a[name] { display: block; }
     overflow: auto;
 }
 
-
 .bg-tab { display: none; }
 
 .tabsElement { 
     display: block;
+    margin-top: 1em;
 }
 
 
