@@ -399,12 +399,6 @@ class IRCPage(athena.LivePage):
         super(IRCPage, self).__init__(*a, **kw)
         self.chatui = minchat.MinChat()
 
-    def render_mainmap(self, ctx, _):
-        enc = windowing.Enclosure(windowTitle="Main Map", userClass="mainmap")
-        enc.setFragmentParent(self)
-
-        return ctx.tag[enc]
-
     def render_chat(self, ctx, _):
         accountManager = minchat.AccountManager(self.chatui)
         ss = inevow.ISession(ctx)

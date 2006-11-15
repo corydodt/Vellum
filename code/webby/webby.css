@@ -22,11 +22,6 @@ form { clear: both; }
 
 .irc .enclosedRegion { padding: 3pt; }
 
-.mainmap { 
-  width: 255pt;
-  height: 330pt;
-}
-
 .chatentry {
     width: 410pt;
     border: 2px solid blue;
