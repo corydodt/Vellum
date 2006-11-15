@@ -1,0 +1,3 @@
+<iframe xmlns:n="http://nevow.com/ns/nevow/0.1"
+    n:render="liveElement" 
+    class="uploadBox" src="/upload/"></iframe>

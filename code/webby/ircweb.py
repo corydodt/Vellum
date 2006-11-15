@@ -6,7 +6,7 @@ from zope.interface import implements
 
 from nevow import rend, loaders, athena, url, static, inevow
 
-from webby import minchat, tabs, parseirc, windowing, util, signup
+from webby import minchat, tabs, parseirc, windowing, util, signup, gmtools
 from webby.minchat import IChatConversations, \
                           IChatEntry, \
                           IChatAccountManager, \
@@ -414,3 +414,13 @@ class IRCPage(athena.LivePage):
         self.chatui.initUI(irc)
 
         return ctx.tag[irc]
+
+    def render_gmtools(self, ctx, _):
+        ss = inevow.ISession(ctx)
+        gmt = gmtools.GMTools(ss.user)
+        enc = windowing.Enclosure(windowTitle="GM Tools", userClass="gmtools")
+        enc.setFragmentParent(self)
+        gmt.setFragmentParent(enc)
+
+        return ctx.tag[enc[gmt]]
+

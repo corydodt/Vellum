@@ -1,5 +1,11 @@
 @import url(/tabs_css);
 
+.chooserIcon { 
+    border: 1px outset black; 
+    float: left; 
+    margin: 3pt; 
+}
+
 .error { color: red; font-weight: bold; }
 
 body { font-size: 9pt; }
