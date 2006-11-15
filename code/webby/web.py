@@ -1,7 +1,9 @@
 """The core web server on which the Vellum application is based."""
 from zope.interface import implements
  
-from nevow import inevow, rend, tags, guard, loaders, static, url, appserver
+from nevow import inevow, rend, tags, guard, loaders, static, url, appserver, static
+
+from axiom import attributes as A
 
 from twisted.cred import portal, checkers, credentials, error
 from twisted.python.util import sibpath
@@ -9,7 +11,7 @@ from twisted.python import log
 
 from webby.ircweb import IRCPage 
 from webby.signup import SignupPage
-from webby import theGlobal, data
+from webby import theGlobal, data, gmtools
 
 
 RESOURCE = lambda f: sibpath(__file__, f)
@@ -32,6 +34,29 @@ class STFUSite(appserver.NevowSite):
 def noLogout():
     return None
 
+class FileTree(rend.Page):
+    """The /files url.
+
+    URLs of the form /files/<md5> will return the file with that md5sum for
+    the current user.  If /thumb is appended, return the thumbnail image
+    instead.
+    """
+    def __init__(self, user, *a, **kw):
+        rend.Page.__init__(self, *a, **kw)
+        self.user = user
+
+    def locateChild(self, ctx, segs):
+        md5 = segs[0]
+        db = theGlobal["dataService"].store
+        _filter = A.AND(data.File.md5==unicode(md5), data.File.user==self.user)
+        fileitem = db.findFirst(data.File, _filter)
+        if fileitem is None:
+            return None, ()
+        if segs[1] == 'thumb':
+            return static.Data(fileitem.thumbnail, 'image/png'), ()
+        else:
+            return static.Data(fileitem.data, fileitem.mimeType), ()
+
 class StaticRoot(rend.Page):
     """
     Adds child nodes for things common to anonymous and logged-in root
@@ -51,7 +76,6 @@ class StaticRoot(rend.Page):
 
     def child_images(self, ctx, ):
         return static.File(RESOURCE('images'))
- 
  
 class VellumRealm:
     implements(portal.IRealm)
@@ -81,6 +105,12 @@ class VellumRealm:
         def __init__(self, user, *a, **kw):
             StaticRoot.__init__(self, *a, **kw)
             self.user = user
+
+        def child_files(self, ctx, ):
+            return FileTree(self.user)
+
+        def child_upload(self, ctx, ):
+            return gmtools.UploadPage(self.user)
 
         def child_game(self, ctx, ):
             inevow.ISession(ctx).user = self.user
