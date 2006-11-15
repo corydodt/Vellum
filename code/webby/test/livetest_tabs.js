@@ -32,6 +32,23 @@ Tabby.Tests.TestTabs.methods( // {{{
         return d;
     }, // }}}
 
+    /* get a new tabs widget with more than one initial tab */
+    function test_multiTab(self) { // {{{
+        var d = self.callRemote("newMultiTabWidget");
+        d.addCallback(
+            function _(wi) { return self.addChildWidgetFromWidgetInfo(wi); }
+            );
+        d.addCallback(
+            function _(tabs) {
+                var pane1 = tabs.getPaneForId('1');
+                self.assertEqual(pane1.innerHTML.search('one'), 42);
+                var pane2 = tabs.getPaneForId('2');
+                self.assertEqual(pane2.innerHTML.search('two'), 42);
+                }
+            );
+        return d;
+    }, // }}}
+
     /* get a new tabs widget with just a label and id, and widget content */
     function test_initialTabIdAndWidget(self) { // {{{
         var d = self.callRemote("newTabWidgetContainingWidget", 'woop', 'Woop');

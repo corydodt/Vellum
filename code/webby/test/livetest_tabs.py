@@ -1,4 +1,4 @@
-from nevow import athena, loaders
+from nevow import athena, loaders, tags as T
 from nevow.livetrial import testcase
 
 from webby import tabs
@@ -26,6 +26,18 @@ class TestTabs(testcase.TestCase):
         return w
 
     athena.expose(newTabWidget)
+
+    def newMultiTabWidget(self):
+        """Return a tab widget initialized with more than one tab."""
+        w = tabs.TabsElement()
+        w.setFragmentParent(self)
+        w.addInitialTab(u'1',u'1',
+                u'<div xmlns="http://www.w3.org/1999/xhtml">one</div>')
+        w.addInitialTab(u'2',u'2',
+                u'<div xmlns="http://www.w3.org/1999/xhtml">two</div>')
+        return w
+
+    athena.expose(newMultiTabWidget)
 
     def newTabWidgetContainingWidget(self, *a):
         """Return a new tab widget, whose initial content is a widget"""
