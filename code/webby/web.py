@@ -49,6 +49,8 @@ class StaticRoot(rend.Page):
     def child_signup(self, ctx, ):
         return SignupPage()
 
+    def child_images(self, ctx, ):
+        return static.File(RESOURCE('images'))
  
  
 class VellumRealm:
