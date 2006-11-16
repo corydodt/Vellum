@@ -235,4 +235,55 @@ WebbyVellum.Tests.TestSignup.methods( // {{{
         return d;
     } // }}}
 ); // }}}
+
+WebbyVellum.Tests.TestFileChooser = Nevow.Athena.Test.TestCase.subclass("WebbyVellum.Tests.TestFileChooser");
+WebbyVellum.Tests.TestFileChooser.methods( // {{{
+    function test_initialize(self) { // {{{
+        var d = self.setUp();
+        d.addCallback(function _(chooser) {
+            /* verify that there is a New File icon present */
+            var newDocumentNode = chooser.firstNodeByAttribute('name', 
+                    'documentNew');
+            self.assertEqual(newDocumentNode.tagName, 'table');
+        });
+        return d
+    }, // }}}
+
+    function test_newDocumentClick(self) { // {{{
+        var d = self.setUp();
+        d.addCallback(function _(chooser) {
+            var ev = new MockEvent(chooser.node);
+            ev.clientX = 100;
+            ev.clientY = 100;
+
+            /* verify that, initially, there is no closeUploadFrame set */
+            self.failUnless(window.closeUploadFrame === undefined);
+
+            try {
+                chooser.handleNewDocument(ev);
+
+                var iframe = Nevow.Athena.FirstNodeByAttribute(document,
+                        'class', 'uploadBox');
+                self.assertEqual(iframe.style['top'], '100px');
+                self.assertEqual(iframe.style['left'], '100px');
+                self.failUnless(iframe.src.match(/^http:\/\/.*\/upload\/$/));
+
+                /* verify that a closeUploadFrame function has been set */
+                self.failIf(window.closeUploadFrame === undefined);
+            } finally {
+                /* clean up the iframe, since it will never be closed */
+                iframe.parentNode.removeChild(iframe);
+            }
+        });
+        return d;
+    }, // }}}
+
+    function setUp(self) { // {{{
+        var d = self.callRemote("newFileChooser");
+        d.addCallback(
+            function _(wi) { return self.addChildWidgetFromWidgetInfo(wi); }
+            );
+        return d;
+    } // }}}
+); // }}}
 // vi:foldmethod=marker

@@ -151,4 +151,43 @@ WebbyVellum.Signup.methods( // {{{
     } // }}}
 ); // }}}
 
+WebbyVellum.FileChooser = Nevow.Athena.Widget.subclass('WebbyVellum.FileChooser');
+WebbyVellum.FileChooser.methods( // {{{
+    function __init__(self, node) { // {{{
+        WebbyVellum.FileChooser.upcall(self, '__init__', node);
+        var newDocumentNode = self.firstNodeByAttribute('name', 'documentNew');
+        DeanEdwards.addEvent(newDocumentNode, 'click', 
+            function handleNewDocument(event) { 
+                return self.handleNewDocument(event) 
+        });
+    }, // }}}
+
+    function handleNewDocument(self, event) { // {{{
+        event.stopPropagation();
+        event.preventDefault();
+        self._newUploadFrame(event.clientX, event.clientY);
+
+        Divmod.debug("", "Clicked on FileChooser's documentNew icon");
+    }, // }}}
+
+    function _newUploadFrame(self, x, y) { // {{{
+        var iframe = document.createElement('iframe');
+        iframe.className = 'uploadBox';
+        iframe.style['top'] = y + 'px';
+        iframe.style['left'] = x + 'px';
+        var body = document.getElementsByTagName('body')[0];
+        iframe.src = '/upload/';
+        body.appendChild(iframe);
+        // when the iframe processing is done, refresh.
+        window.closeUploadFrame = function _() {
+            body.removeChild(iframe);
+            d = self.callRemote("refresh");
+            d.addCallback(function _(data) {
+                var span = self.firstNodeByAttribute('class', 'chooserArea');
+                span.innerHTML = data;
+            });
+        };
+    } // }}}
+); // }}}
+
 // vi:foldmethod=marker

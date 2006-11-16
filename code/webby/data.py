@@ -15,14 +15,16 @@ else:
     appdata = FilePath(os.path.join(os.environ['HOME'], '.vellum'))
 
 class DataService(service.MultiService):
-    def __init__(self, createData, defstore=None, *a, **kw):
+    def __init__(self, *a, **kw):
+        self.createData = kw.pop('createData', False)
+        self.debug = kw.pop('debug', None)
+        self.store = kw.pop('defaultStore', None) # the nits use this
         service.MultiService.__init__(self, *a, **kw)
-        self.createData = createData
-        self.store = defstore
 
     def startService(self):
         if self.store is None:
-            self.store = store.Store(appdata.child('glassvellum.axiom'))
+            self.store = store.Store(appdata.child('glassvellum.axiom'), 
+                    debug=self.debug)
 
         log.msg("Starting service %r in %s" % (self, appdata,))
 
@@ -112,12 +114,16 @@ class User(item.Item):
     confirmationKey = A.text()
     unconfirmedPassword = A.text("Password is held here until confirmationKey is validated.")
 
-class File(item.Item):
+class FileMeta(item.Item):
     """A file that has been uploaded."""
-    schemaVersion = 5
-    data = A.bytes()
-    thumbnail = A.bytes()
+    schemaVersion = 1
+    data = A.reference()
+    thumbnail = A.reference()
     filename = A.text()
     mimeType = A.text()
     md5 = A.text()
     user = A.reference()
+
+class FileData(item.Item):
+    schemaVersion = 1
+    data = A.bytes()

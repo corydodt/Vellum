@@ -13,11 +13,12 @@ except ImportError:
 from PIL import Image
 
 from twisted.python.util import sibpath
+from twisted.python import log
 
 from nevow import loaders, athena, rend, inevow, url, tags as T, flat, page
 
 from webby import tabs, util, theGlobal, data
-from webby.data import File
+from webby.data import FileMeta, FileData
 
 import formal
 
@@ -69,20 +70,48 @@ class ChooserIcon(page.Element):
 
     page.renderer(chooserIcon)
 
-class UploadBox(athena.LiveElement):
-    docFactory = loaders.xmlfile(RESOURCE('elements/UploadBox'))
+class FileChooser(athena.LiveElement):
+    jsClass = u'WebbyVellum.FileChooser'
+    docFactory = loaders.xmlfile(RESOURCE('elements/FileChooser'))
     def __init__(self, user, *a, **kw):
-        super(UploadBox, self).__init__(*a, **kw)
+        super(FileChooser, self).__init__(*a, **kw)
         self.user = user
+
+    def chooser(self, req, tag):
+        return tag[self._getIconsFromDatabase()]
+
+    page.renderer(chooser)
+
+    def _getIconsFromDatabase(self):
+        """
+        @return a list of the choosericons, pre-rendering.
+        """
+        db = theGlobal['dataService'].store
+        _fileitems = db.query(data.FileMeta, data.FileMeta.user==self.user, 
+                sort=data.FileMeta.filename.ascending)
+        return [ChooserIcon(self.user, fi) for fi in _fileitems]
+
+    def refresh(self):
+        """
+        @return a string of the icons we will display in the chooser
+        """
+        log.msg("Refreshing FileChooser")
+        return unicode(flat.flatten(self._getIconsFromDatabase()))
+
+    athena.expose(refresh)
 
 class GMTools(tabs.TabsElement):
     def __init__(self, user, *a, **kw):
         super(GMTools, self).__init__(*a, **kw)
         self.user = user
-        uploadbox = UploadBox(self.user)
-        uploadbox.setFragmentParent(self)
 
-        self.addInitialTab(u'images', u'Images & Sounds', uploadbox)
+        chooser = FileChooser(self.user)
+        chooser.setFragmentParent(self)
+
+        self.addInitialTab(u'files', u'Images & Sounds', chooser)
+
+class UploadDone(rend.Page):
+    docFactory = loaders.xmlfile(RESOURCE('uploaddone.xhtml'))
 
 class UploadPage(formal.ResourceMixin, rend.Page):
     """
@@ -98,7 +127,12 @@ class UploadPage(formal.ResourceMixin, rend.Page):
     def form_upload(self, ctx):
         f = formal.Form()
         f.addField('file', formal.File())
-        f.addAction(self.saveFile)
+        f.addAction(self.saveFile, name="submit", 
+                label="Upload File")
+        # FIXME!! - hitting this button causes the data to be uploaded (and
+        # ignored), even though you explicitly said you don't want it.
+        f.addAction(self.cancelFile, name="cancel", 
+                label='Cancel Upload', validate=False)
         return f
 
     def saveFile(self, ctx, form, data):
@@ -111,12 +145,14 @@ class UploadPage(formal.ResourceMixin, rend.Page):
             readdata = filedata.read()
             m = unicode(md5.md5(readdata).hexdigest())
             # make sure that a particular file can only be uploaded once
-            if db.findFirst(File, File.md5==m) is None:
+            if db.findFirst(FileMeta, FileMeta.md5==m) is None:
                 def _newFile():
                     mimeType = unicode(mimetypes.guess_type(filename)[0])
-                    newfile = File(store=db,
+                    newFileData = FileData(store=db,
+                            data=readdata)
+                    newfile = FileMeta(store=db,
                             filename=filename,
-                            data=readdata,
+                            data=newFileData,
                             md5=m,
                             mimeType=mimeType,
                             user=self.user,
@@ -133,14 +169,14 @@ class UploadPage(formal.ResourceMixin, rend.Page):
                             _tempfile = StringIO()
                             thumb.save(_tempfile, 'PNG')
                             _tempfile.seek(0)
-                            newfile.thumbnail = _tempfile.read()
+                            newThumbData = FileData(store=db,
+                                    data=_tempfile.read())
+                            newfile.thumbnail = newThumbData
                         except IOError:
                             pass
                 db.transact(_newFile)
 
+        return UploadDone()
 
-    def render_chooser(self, ctx, _):
-        db = theGlobal['dataService'].store
-        _fileitems = db.query(data.File, data.File.user==self.user, 
-                sort=data.File.filename.ascending)
-        return [ChooserIcon(self.user, fi) for fi in _fileitems]
+    def cancelFile(self, ctx, form, data):
+        return UploadDone()

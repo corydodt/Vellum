@@ -1,0 +1,12 @@
+<div xmlns:n="http://nevow.com/ns/nevow/0.1" n:render="liveElement"
+     class="fileChooser">
+    <table class="chooserIcon documentNew" name="documentNew">
+    <tr>
+      <td class="chooserIconIcon"> <img src="/images/document-new.png" /> </td>
+    </tr>
+    <tr>
+        <td><strong>Upload File...</strong></td>
+    </tr>
+    </table>
+    <span class="chooserArea" n:render="chooser" />
+</div>

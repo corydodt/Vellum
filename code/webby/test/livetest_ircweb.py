@@ -5,7 +5,7 @@ from axiom import store
 from nevow import athena
 from nevow.livetrial import testcase
 
-from webby import ircweb, signup, data, theGlobal
+from webby import ircweb, signup, data, theGlobal, gmtools
 from webby.minchat import IChatConversations, NullConversation
 
 class MockAccountManager:
@@ -16,7 +16,7 @@ class MockAccountManager:
 testStore = store.Store()
 testUser = data.User(store=testStore, 
         email=u'woot@woot.com', nick=u'woot', password=u'ninjas')
-theGlobal['dataService'] = data.DataService(testStore)
+theGlobal['dataService'] = data.DataService(defaultStore=testStore)
 
 
 class TestIRCContainer(testcase.TestCase):
@@ -88,3 +88,16 @@ class TestSignup(testcase.TestCase):
         return su
 
     athena.expose(newSignup)
+
+class TestFileChooser(testcase.TestCase):
+    jsClass = u'WebbyVellum.Tests.TestFileChooser'
+    def newFileChooser(self, ):
+        """
+        Return a new Signup widget
+        """
+        fc = gmtools.FileChooser(testUser)
+        fc.setFragmentParent(self)
+        return fc
+
+    athena.expose(newFileChooser)
+

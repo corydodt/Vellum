@@ -48,14 +48,15 @@ class FileTree(rend.Page):
     def locateChild(self, ctx, segs):
         md5 = segs[0]
         db = theGlobal["dataService"].store
-        _filter = A.AND(data.File.md5==unicode(md5), data.File.user==self.user)
-        fileitem = db.findFirst(data.File, _filter)
+        FM = data.FileMeta
+        _filter = A.AND(FM.md5==unicode(md5), FM.user==self.user)
+        fileitem = db.findFirst(FM, _filter)
         if fileitem is None:
             return None, ()
         if segs[1] == 'thumb':
-            return static.Data(fileitem.thumbnail, 'image/png'), ()
+            return static.Data(fileitem.thumbnail.data, 'image/png'), ()
         else:
-            return static.Data(fileitem.data, fileitem.mimeType), ()
+            return static.Data(fileitem.data.data, fileitem.mimeType), ()
 
 class StaticRoot(rend.Page):
     """

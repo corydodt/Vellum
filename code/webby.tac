@@ -18,6 +18,8 @@ theGlobal['smtpServer'] = 'smtp.comcast.net'
 
 createData = False
 
+debug = False ## CAUTION!! turning this on can cause failures when uploading a file
+
 #########
 #########
 #########
@@ -25,7 +27,7 @@ createData = False
 
 application = service.Application('WebbyVellum')
 
-datasvc = DataService(createData=createData)
+datasvc = DataService(createData=createData, debug=debug)
 datasvc.setServiceParent(application)
 theGlobal['dataService'] = datasvc
 

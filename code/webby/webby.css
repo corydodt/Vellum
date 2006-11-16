@@ -1,15 +1,28 @@
 @import url(/tabs_css);
 
 .chooserIcon { 
-    border: 1px outset black; 
     float: left; 
+    margin: 2pt;
+    text-align: center;
+}
+
+.chooserIconIconMiddle[class] {
+    vertical-align: middle; position: static; /* jakpsatweb */
     height: 60px;
-    margin: 10px;
-    overflow: hidden; 
+    border: 1px outset black; 
+}
+
+.chooserIconLabel {
+    width: 58pt;
+    overflow: hidden;
+}
+
+.chooserIconIconMiddle:hover, .chooserIconIcon:hover { 
+    background-color: gold;
 }
 
 .gmtools {
-    width: 380px;
+    width: 400px;
     height: 330px;
     float: left;
 }
@@ -25,15 +38,17 @@ h1 { font-family: sans-serif; }
 form { clear: both; }
 
 .uploadBox {
-    height: 250px;
-    width: 340px;
+    height: 64pt;
+    width: 230px;
+    position: absolute;
+    border: none;
 }
 
 caption { 
     overflow: hidden;
 }
 
-.tab#images { 
+.tab#files { 
     height: 260px;
 }
 
