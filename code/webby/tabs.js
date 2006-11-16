@@ -116,6 +116,9 @@ Tabby.TabsElement.methods( // {{{
             pane.appendChild(w.node);
             return null;
         });
+        d.addErrback(function _(failure) {
+            Divmod.debug("", "Could not add widget because " + failure);
+        });
         return d;
     }, // }}}
 
