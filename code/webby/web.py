@@ -8,12 +8,10 @@ from axiom import attributes as A, item
 from twisted.cred import portal, checkers, credentials, error
 from twisted.python.util import sibpath
 from twisted.python import log
-from twisted.application import internet, service
-from twisted.internet import reactor
 
 from webby.ircweb import IRCPage 
 from webby.signup import SignupPage
-from webby import theGlobal, data, gmtools
+from webby import theGlobal, data, gmtools, util
 
 
 RESOURCE = lambda f: sibpath(__file__, f)
@@ -183,26 +181,12 @@ def guardedRoot():
     
     return res
 
-
-class WebService(item.Item, internet.TCPServer, item.InstallableMixin):
+class WebService(item.Item, util.AxiomTCPServerMixin):
+    factory = STFUSite(guardedRoot())
     schemaVersion = 1
     portNumber = A.integer()
 
     port = A.inmemory()
     parent = A.inmemory()
     running = A.inmemory()
-
-    def privilegedStartService(self):
-        pass
-
-    def startService(self):
-        ROOT = guardedRoot()
-        site = STFUSite(ROOT)
-        self.port = reactor.listenTCP(self.portNumber, site)
-
-    def installOn(self, other):
-        super(WebService, self).installOn(other)
-        other.powerUp(self, service.IService)
-        if self.parent is None:
-            self.setServiceParent(other)
 

@@ -2,13 +2,10 @@ from zope.interface import implements
 
 from twisted.words.service import InMemoryWordsRealm, IRCFactory
 from twisted.cred import checkers, portal, credentials, error
-from twisted.application import internet
-from twisted.application.service import IService
-from twisted.internet import reactor
+
+from webby import theGlobal, data, util
 
 from axiom import item, attributes as A
-
-from webby import theGlobal, data
 
 theRealm = InMemoryWordsRealm('vellumIRCserver')
 theRealm.createGroupOnRequest = True
@@ -47,25 +44,12 @@ checker = AxiomNickChecker()
 
 thePortal = portal.Portal(theRealm, [checker])
 
-theIRCFactory = IRCFactory(theRealm, thePortal)
-
-class IRCService(item.Item, internet.TCPServer, item.InstallableMixin):
+class IRCService(item.Item, util.AxiomTCPServerMixin):
+    factory = IRCFactory(theRealm, thePortal)
     schemaVersion = 1
     portNumber = A.integer()
 
     port = A.inmemory()
     parent = A.inmemory()
     running = A.inmemory()
-
-    def privilegedStartService(self):
-        pass
-
-    def startService(self):
-        self.port = reactor.listenTCP(self.portNumber, theIRCFactory)
-
-    def installOn(self, other):
-        super(IRCService, self).installOn(other)
-        other.powerUp(self, IService)
-        if self.parent is None:
-            self.setServiceParent(other)
 

@@ -4,6 +4,12 @@ from twisted.internet import defer
 
 from nevow import tags as T, flat, athena
 
+from axiom import item, attributes as A
+
+from twisted.application.internet import TCPServer
+from twisted.application.service import IService
+from twisted.internet import reactor
+
 def flattenMessageString(st):
     """Return a string suitable for serializing over to a tab pane."""
     span = T.span(xmlns="http://www.w3.org/1999/xhtml")
@@ -47,3 +53,17 @@ def label():
     key_a = unicode(random.random() * 10000000)
     key_b = unicode(random.random() * 10000000)
     return key_a + key_b 
+
+class AxiomTCPServerMixin(TCPServer, item.InstallableMixin):
+    def privilegedStartService(self):
+        pass
+
+    def startService(self):
+        self.port = reactor.listenTCP(self.portNumber, self.factory)
+
+    def installOn(self, other):
+        super(AxiomTCPServerMixin, self).installOn(other)
+        other.powerUp(self, IService)
+        if self.parent is None:
+            self.setServiceParent(other)
+

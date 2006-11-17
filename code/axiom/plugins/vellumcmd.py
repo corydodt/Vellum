@@ -35,15 +35,13 @@ class Install(axiomatic.AxiomaticCommand):
                              )
         svc.installOn(s)
 
-        s.findOrCreate(ircserver.IRCService, portNumber=6667).installOn(s)
-        s.findOrCreate(web.WebService, portNumber=8080).installOn(s)
+        s.findOrCreate(ircserver.IRCService, portNumber=6667,).installOn(s)
+
+        s.findOrCreate(web.WebService, portNumber=8080,).installOn(s)
 
         if self['demodata']:
-            user = User(store=s,
-                        email=u'a@b.c',
-                        nick=u'MFen',
-                        password=u'abc'
-                        )
+            s.findOrCreate(User, email=u'a@b.c', nick=u'MFen', password=u'abc')
+
 '''
         map = Map(store=s, 
                   name=u"The Gnoll Huddle", 
