@@ -20,7 +20,7 @@ class Signup(athena.LiveElement):
 
     def processSignup(self, email, password):
         key = util.label()
-        store = theGlobal['dataService'].store
+        store = theGlobal['database']
         u = store.findFirst(data.User, data.User.email==email)
 
         if u is None:
@@ -78,7 +78,7 @@ class SignupPage(athena.LivePage):
         confirm = req.args.get('confirm', None) 
         if confirm is not None:
             confirm = unicode(confirm[0])
-            store = theGlobal['dataService'].store
+            store = theGlobal['database']
             u = store.findFirst(data.User, data.User.confirmationKey==confirm)
             if u is not None:
                 u.password = u.unconfirmedPassword

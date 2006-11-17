@@ -86,7 +86,7 @@ class FileChooser(athena.LiveElement):
         """
         @return a list of the choosericons, pre-rendering.
         """
-        db = theGlobal['dataService'].store
+        db = theGlobal['database']
         _fileitems = db.query(data.FileMeta, data.FileMeta.user==self.user, 
                 sort=data.FileMeta.filename.ascending)
         return [ChooserIcon(self.user, fi) for fi in _fileitems]
@@ -133,7 +133,7 @@ class UploadPage(formal.ResourceMixin, rend.Page):
 
     def saveFile(self, ctx, form, data):
         """Receive the file and drop it into the Axiom box."""
-        db = theGlobal['dataService'].store
+        db = theGlobal['database']
         filename, filedata = data['file']
 
         # when the file was not successfully uploaded, filename==u''

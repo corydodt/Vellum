@@ -14,64 +14,28 @@ if sys.platform == 'win32':
 else:
     appdata = FilePath(os.path.join(os.environ['HOME'], '.vellum'))
 
-class DataService(service.MultiService):
-    def __init__(self, *a, **kw):
-        self.createData = kw.pop('createData', False)
-        self.debug = kw.pop('debug', None)
-        self.store = kw.pop('defaultStore', None) # the nits use this
-        service.MultiService.__init__(self, *a, **kw)
+class DataService(item.Item, service.Service, item.InstallableMixin):
+    schemaVersion = 1
+    smtpFrom = A.text()
+    smtpServer = A.text()
+
+    parent = A.inmemory()
+    running = A.inmemory()
+
+    def installOn(self, other):
+        super(DataService, self).installOn(other)
+        other.powerUp(self, service.IService)
+        if self.parent is None:
+            self.setServiceParent(other)
 
     def startService(self):
-        if self.store is None:
-            self.store = store.Store(appdata.child('glassvellum.axiom'), 
-                    debug=self.debug)
-
         log.msg("Starting service %r in %s" % (self, appdata,))
 
         # TODO - substores are going to be kept in zipfiles, which can
         # be opened from anywhere you want and used as substores from
         # the temp directory where they will be unpacked.
         # Until that is implemented, this is hardcoded.
-        self.substore = store.Store(appdata.child('gnoll.axiom'))
-
-        if self.createData:
-            self.createInitialData()
-            log.msg("Created initial database.")
-
-    def createInitialData(self):
-        s1 = self.store
-        user = User(store=s1,
-                    email=u'a@b.c',
-                    nick=u'MFen',
-                    password=u'abc'
-                    )
-        s = self.substore
-        map = Map(store=s, 
-                  name=u"The Gnoll Huddle", 
-                  path=s.filesdir.child('gnoll-huddle.jpg'),
-                  scale100px=Decimal("30.48"))
-        Character(store=s,
-                  name=u"Shara",
-                  path=s.filesdir.child('shara-kw.png'),
-                  top=900, left=1000, scale=Decimal("1.0"),
-                  ).installOn(map)
-        Character(store=s,
-                  name=u"Halbren",
-                  path=s.filesdir.child('halbren.png'),
-                  top=1000, left=1020, scale=Decimal("1.0"),
-                  ).installOn(map)
-        Character(store=s, 
-                  name=u"Crom Grumdalsen", 
-                  path=s.filesdir.child('crom.png'),
-                  scale=Decimal("1.0"),
-                  ).installOn(map)
-
-"""
-    - TODO
-        name: The Gnoll Huddle (obscurement)
-        uri: images/gnoll-huddle_obm.png
-        type: mask/obscurement
-"""
+        ## self.substore = store.Store(appdata.child('gnoll.axiom'))
 
 class IArticle(Interface):
     """

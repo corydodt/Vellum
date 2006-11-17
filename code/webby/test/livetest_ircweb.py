@@ -16,7 +16,7 @@ class MockAccountManager:
 testStore = store.Store()
 testUser = data.User(store=testStore, 
         email=u'woot@woot.com', nick=u'woot', password=u'ninjas')
-theGlobal['dataService'] = data.DataService(defaultStore=testStore)
+theGlobal['database'] = testStore
 
 
 class TestIRCContainer(testcase.TestCase):

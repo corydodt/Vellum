@@ -3,11 +3,13 @@ from zope.interface import implements
  
 from nevow import inevow, rend, tags, guard, loaders, static, url, appserver, static
 
-from axiom import attributes as A
+from axiom import attributes as A, item
 
 from twisted.cred import portal, checkers, credentials, error
 from twisted.python.util import sibpath
 from twisted.python import log
+from twisted.application import internet, service
+from twisted.internet import reactor
 
 from webby.ircweb import IRCPage 
 from webby.signup import SignupPage
@@ -47,7 +49,7 @@ class FileTree(rend.Page):
 
     def locateChild(self, ctx, segs):
         md5 = segs[0]
-        db = theGlobal["dataService"].store
+        db = theGlobal["database"]
         FM = data.FileMeta
         _filter = A.AND(FM.md5==unicode(md5), FM.user==self.user)
         fileitem = db.findFirst(FM, _filter)
@@ -146,7 +148,7 @@ class AxiomEmailChecker(object):
     credentialInterfaces = credentials.IUsernamePassword,
 
     def requestAvatarId(self, credentials):
-        store = theGlobal['dataService'].store
+        store = theGlobal['database']
 
         username = unicode(credentials.username)
         password = unicode(credentials.password)
@@ -180,4 +182,27 @@ def guardedRoot():
     res = guard.SessionWrapper(port)
     
     return res
+
+
+class WebService(item.Item, internet.TCPServer, item.InstallableMixin):
+    schemaVersion = 1
+    portNumber = A.integer()
+
+    port = A.inmemory()
+    parent = A.inmemory()
+    running = A.inmemory()
+
+    def privilegedStartService(self):
+        pass
+
+    def startService(self):
+        ROOT = guardedRoot()
+        site = STFUSite(ROOT)
+        self.port = reactor.listenTCP(self.portNumber, site)
+
+    def installOn(self, other):
+        super(WebService, self).installOn(other)
+        other.powerUp(self, service.IService)
+        if self.parent is None:
+            self.setServiceParent(other)
 
