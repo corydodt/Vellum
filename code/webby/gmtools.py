@@ -129,10 +129,6 @@ class UploadPage(formal.ResourceMixin, rend.Page):
         f.addField('file', formal.File())
         f.addAction(self.saveFile, name="submit", 
                 label="Upload File")
-        # FIXME!! - hitting this button causes the data to be uploaded (and
-        # ignored), even though you explicitly said you don't want it.
-        f.addAction(self.cancelFile, name="cancel", 
-                label='Cancel Upload', validate=False)
         return f
 
     def saveFile(self, ctx, form, data):
@@ -146,7 +142,8 @@ class UploadPage(formal.ResourceMixin, rend.Page):
             m = unicode(md5.md5(readdata).hexdigest())
             # make sure that a particular file can only be uploaded once
             if db.findFirst(FileMeta, FileMeta.md5==m) is None:
-                def _newFile():
+
+                def txn():
                     mimeType = unicode(mimetypes.guess_type(filename)[0])
                     newFileData = FileData(store=db,
                             data=readdata)
@@ -174,9 +171,7 @@ class UploadPage(formal.ResourceMixin, rend.Page):
                             newfile.thumbnail = newThumbData
                         except IOError:
                             pass
-                db.transact(_newFile)
 
-        return UploadDone()
+                db.transact(txn)
 
-    def cancelFile(self, ctx, form, data):
         return UploadDone()

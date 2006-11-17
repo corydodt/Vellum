@@ -179,13 +179,15 @@ WebbyVellum.FileChooser.methods( // {{{
         iframe.src = '/upload/';
         body.appendChild(iframe);
         // when the iframe processing is done, refresh.
-        window.closeUploadFrame = function _() {
+        window.closeUploadFrame = function _(cancelled) {
             body.removeChild(iframe);
-            d = self.callRemote("refresh");
-            d.addCallback(function _(data) {
-                var span = self.firstNodeByAttribute('class', 'chooserArea');
-                span.innerHTML = data;
-            });
+            if (!cancelled) {
+                d = self.callRemote("refresh");
+                d.addCallback(function _(data) {
+                    var span = self.firstNodeByAttribute('class', 'chooserArea');
+                    span.innerHTML = data;
+                });
+            }
         };
     } // }}}
 ); // }}}

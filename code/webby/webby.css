@@ -38,7 +38,7 @@ h1 { font-family: sans-serif; }
 form { clear: both; }
 
 .uploadBox {
-    height: 64pt;
+    height: 80pt;
     width: 230px;
     position: absolute;
     border: none;
