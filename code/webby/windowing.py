@@ -52,6 +52,7 @@ class Enclosure(athena.LiveElement):
 
     def enclosedRegion(self, request, tag):
         return tag[self.children]
+
     athena.renderer(enclosedRegion)
 
     def __getitem__(self, children):
@@ -61,11 +62,13 @@ class Enclosure(athena.LiveElement):
     def userClass(self, request, tag):
         tag.fillSlots('userClass', self.userClassStan)
         return tag
+
     athena.renderer(userClass)
 
     def windowTitle(self, request, tag):
         tag.fillSlots('windowTitle', self.windowTitleStan)
         return tag
+
     athena.renderer(windowTitle)
 
 
