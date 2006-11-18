@@ -29,7 +29,7 @@ DeanEdwards.addEvent = function (element, type, handler) {
 // a counter used to create unique IDs
 DeanEdwards.addEvent.guid = 1;
 
-DeanEdwards.addEvent.removeElement = function (element, type, handler) {
+DeanEdwards.removeEvent = function (element, type, handler) {
     if (element.removeEventListener) {
         element.removeEventListener(type, handler, false);
     } else {
