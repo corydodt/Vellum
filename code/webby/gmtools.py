@@ -52,8 +52,9 @@ def iconForMimeType(mimeType):
             return filename
     assert 0, "The final pattern in mimeIcons should always match something, so we should not get here."
 
-class ChooserIcon(page.Element):
+class ChooserIcon(athena.LiveElement):
     docFactory = loaders.xmlfile(RESOURCE('elements/ChooserIcon'))
+    jsClass = u'WebbyVellum.ChooserIcon'
     def __init__(self, user, fileitem, *a, **kw):
         super(ChooserIcon, self).__init__(*a, **kw)
         self.fileitem = fileitem
@@ -89,7 +90,12 @@ class FileChooser(athena.LiveElement):
         db = theGlobal['database']
         _fileitems = db.query(data.FileMeta, data.FileMeta.user==self.user, 
                 sort=data.FileMeta.filename.ascending)
-        return [ChooserIcon(self.user, fi) for fi in _fileitems]
+        ret = []
+        for fi in _fileitems:
+            ch = ChooserIcon(self.user, fi)
+            ch.setFragmentParent(self)
+            ret.append(ch)
+        return ret
 
     def refresh(self):
         """

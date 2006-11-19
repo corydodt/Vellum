@@ -192,4 +192,13 @@ WebbyVellum.FileChooser.methods( // {{{
     } // }}}
 ); // }}}
 
+WebbyVellum.ChooserIcon = Nevow.Athena.Widget.subclass('WebbyVellum.ChooserIcon');
+WebbyVellum.ChooserIcon.methods( // {{{
+    function __init__(self, node) { // {{{
+        WebbyVellum.ChooserIcon.upcall(self, '__init__', node);
+        // TODO - when droppable (snap-back) behavior can be specified
+        // Windowing.draggable(node);
+    } // }}}
+); // }}}
+
 // vi:foldmethod=marker

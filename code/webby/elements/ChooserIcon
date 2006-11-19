@@ -1,15 +1,17 @@
-<table class="chooserIcon" 
-    xmlns:n="http://nevow.com/ns/nevow/0.1" n:render="chooserIcon">
-<tr>
-  <td class="chooserIconIconMiddle">
-    <div class="chooserIconIcon">
-      <img><n:attr name="src"><n:slot name="icon"/></n:attr></img>
-    </div>
-  </td>
-</tr>
-<tr>
-  <td>
-    <div class="chooserIconLabel"><n:slot name="filename"/></div>
-  </td>
-</tr>
+<table xmlns:n="http://nevow.com/ns/nevow/0.1" class="chooserIcon" 
+    n:render="liveElement">
+<n:invisible n:render="chooserIcon">
+  <tr>
+    <td class="chooserIconIconMiddle">
+      <div class="chooserIconIcon">
+        <img><n:attr name="src"><n:slot name="icon"/></n:attr></img>
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <div class="chooserIconLabel"><n:slot name="filename"/></div>
+    </td>
+  </tr>
+</n:invisible>
 </table>
