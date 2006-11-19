@@ -1,5 +1,9 @@
 @import url(/tabs_css);
 
+.draggable:hover .titlebar:hover {
+    background-color: green;
+}
+
 .chooserIcon { 
     float: left; 
     margin: 2pt;
@@ -10,6 +14,7 @@
     vertical-align: middle; position: static; /* jakpsatweb */
     height: 60px;
     border: 1px outset black; 
+    background-color: white;
 }
 
 .chooserIconLabel {
@@ -88,6 +93,7 @@ background-color: #ddd;
   margin: 5pt;
   border: 2px solid black;
   border-style: outset;
+  background-color: white;
 }
 
 .enclosure-hidden { display: none; }

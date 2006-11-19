@@ -412,7 +412,8 @@ class IRCPage(athena.LivePage):
     def render_gmtools(self, ctx, _):
         ss = inevow.ISession(ctx)
         gmt = gmtools.GMTools(ss.user)
-        enc = windowing.Enclosure(windowTitle="GM Tools", userClass="gmtools")
+        enc = windowing.Enclosure(windowTitle="GM Tools", 
+                userClass="gmtools draggable")
         enc.setFragmentParent(self)
         gmt.setFragmentParent(enc)
 
