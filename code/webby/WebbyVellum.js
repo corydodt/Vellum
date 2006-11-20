@@ -1,5 +1,5 @@
 // import Nevow.Athena
-// import Windowing
+// import Window
 // import DeanEdwards
 
 WebbyVellum.TopicBar = Nevow.Athena.Widget.subclass('WebbyVellum.TopicBar');
@@ -95,7 +95,7 @@ WebbyVellum.ChatEntry.methods( // {{{
     } // }}}
 ); // }}}
 
-WebbyVellum.IRCContainer = Windowing.Enclosure.subclass('WebbyVellum.IRCContainer');
+WebbyVellum.IRCContainer = Window.Enclosure.subclass('WebbyVellum.IRCContainer');
 WebbyVellum.IRCContainer.methods( // {{{
     function activeTabId(self) { // {{{
         return self.childWidgets[1].activeTabId();
@@ -197,7 +197,7 @@ WebbyVellum.ChooserIcon.methods( // {{{
     function __init__(self, node) { // {{{
         WebbyVellum.ChooserIcon.upcall(self, '__init__', node);
         // TODO - when droppable (snap-back) behavior can be specified
-        // Windowing.draggable(node);
+        // Window.draggable(node);
     } // }}}
 ); // }}}
 

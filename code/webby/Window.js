@@ -3,10 +3,10 @@
 RT = Divmod.Runtime.theRuntime;
 
 /* abstract class that implements the state associated with a drag operation.
- * Call Windowing.draggable(
+ * Call Window.draggable(
  */
-Windowing.DragState = Divmod.Class.subclass('Windowing.DragState');
-Windowing.DragState.methods( // {{{
+Window.DragState = Divmod.Class.subclass('Window.DragState');
+Window.DragState.methods( // {{{
     function _cleanupDragState(self) { // {{{
         DeanEdwards.removeEvent(window, 'mouseup', self.mouseup);
         DeanEdwards.removeEvent(window, 'mouseout', self.mouseout);
@@ -35,7 +35,7 @@ Windowing.DragState.methods( // {{{
     }, // }}}
 
     function startDragging(self, event) { // {{{
-        Divmod.debug("Windowing.DragState", "started dragging");
+        Divmod.debug("Window.DragState", "started dragging");
 
         // tables and things do weird stuff when you click and drag on them.
         // Don't let them do weird stuff.
@@ -72,7 +72,7 @@ Windowing.DragState.methods( // {{{
     }, // }}}
 
     function stopDragging(self, event) { // {{{
-        Divmod.debug("Windowing.DragState", "stopped dragging");
+        Divmod.debug("Window.DragState", "stopped dragging");
         self._cleanupDragState();
     }, // }}}
 
@@ -88,7 +88,7 @@ Windowing.DragState.methods( // {{{
          */
         if (event.target === document.documentElement &&
             event.explicitOriginalTarget === document.documentElement) {
-            Divmod.debug("Windowing.DragState", "cancelled dragging");
+            Divmod.debug("Window.DragState", "cancelled dragging");
             self._cleanupDragState()
             self._restoreOriginalState()
             /* restore the position to the original position */
@@ -109,8 +109,8 @@ Windowing.DragState.methods( // {{{
  * @arg vehicle: the node that will be moved around when you drag it
  * @arg handle: if specified, the node that you click on to move the vehicle
  */
-Windowing.draggable = function _(vehicle, handle) { // {{{
-    var dragBehavior = new Windowing.DragState();
+Window.draggable = function _(vehicle, handle) { // {{{
+    var dragBehavior = new Window.DragState();
 
     dragBehavior.node = vehicle;
 
@@ -126,10 +126,10 @@ Windowing.draggable = function _(vehicle, handle) { // {{{
     return vehicle;
 }; // }}}
 
-Windowing.Enclosure = Nevow.Athena.Widget.subclass('Windowing.Enclosure');
-Windowing.Enclosure.methods( // {{{
+Window.Enclosure = Nevow.Athena.Widget.subclass('Window.Enclosure');
+Window.Enclosure.methods( // {{{
     function __init__(self, node) { // {{{
-        Windowing.Enclosure.upcall(self, '__init__', node);
+        Window.Enclosure.upcall(self, '__init__', node);
         try {
             var minimizer = self.firstNodeByAttribute('class', 'minimizer', null);
             DeanEdwards.addEvent(minimizer, 'click', 
@@ -161,7 +161,7 @@ Windowing.Enclosure.methods( // {{{
         /* set up dragging */
         if (node.className.match(/.*\bdraggable\b.*/)) {
             var titlebar = self.firstNodeByAttribute('class', 'titlebar');
-            Windowing.draggable(self.node, titlebar);
+            Window.draggable(self.node, titlebar);
         }
 
     }, // }}}
@@ -181,12 +181,12 @@ Windowing.Enclosure.methods( // {{{
     } // }}}
 ); // }}}
 
-Windowing.TextArea = Nevow.Athena.Widget.subclass('Windowing.TextArea');
-Windowing.TextArea.methods( // {{{
+Window.TextArea = Nevow.Athena.Widget.subclass('Window.TextArea');
+Window.TextArea.methods( // {{{
     function __init__(self,  // {{{
                       node, 
                       /* OPTIONAL */ initialContent) {
-        Windowing.TextArea.upcall(self, '__init__', node);
+        Window.TextArea.upcall(self, '__init__', node);
 
         if (initialContent !== undefined)
             self.appendTo(initialContent);

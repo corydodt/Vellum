@@ -47,7 +47,7 @@ class Enclosure(athena.LiveElement):
     @ivar userClass: additional text to add at the end of the class=".." attribute
     @ivar decorated: if False, no decorations (border, titlebar, etc.)
     """
-    jsClass = u"Windowing.Enclosure"
+    jsClass = u"Window.Enclosure"
     docFactory = loaders.xmlfile(RESOURCE('elements/Enclosure'))
     def __init__(self, windowTitle='~', userClass='', decorated=True, *a, **kw):
         super(Enclosure, self).__init__(*a, **kw)
@@ -91,7 +91,7 @@ class Enclosure(athena.LiveElement):
 class TextArea(util.RenderWaitLiveElement):
     """A scrollable widget that displays mostly lines of text."""
     implements(minchat.ITextArea) # FIXME - move to here
-    jsClass = u"Windowing.TextArea"
+    jsClass = u"Window.TextArea"
     docFactory = loaders.xmlfile(RESOURCE('elements/TextArea'))
     widgetArgs = None
 
