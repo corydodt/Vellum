@@ -16,7 +16,7 @@ Windowing.Tests.TestEnclosure.methods( // {{{
             self.assertEqual(enc.iconified, pairedIcon);
 
             // make sure initial minimized/restored states are sane
-            self.assertEqual(enc.node.className, 'enclosure');
+            self.assertEqual(enc.node.className, 'enclosure decorated');
             self.assertEqual(pairedIcon.className, 'iconified-hidden');
 
             // make sure icon title matches main title
@@ -39,7 +39,7 @@ Windowing.Tests.TestEnclosure.methods( // {{{
                 var parentTitle = enc.firstNodeByAttribute(
                         'class', 'windowTitle');
                 self.assertEqual(parentTitle.innerHTML.search('Foobar'), 0);
-                self.assertEqual(enc.node.className, 'enclosure foobar');
+                self.assertEqual(enc.node.className, 'enclosure decorated foobar');
         });
         return d;
     }, // }}}
@@ -47,13 +47,13 @@ Windowing.Tests.TestEnclosure.methods( // {{{
     function test_minimizeRestore(self) { // {{{
         var d = self.setUp();
         d.addCallback(function _(enc) {
-            self.assertEqual(enc.node.className, 'enclosure');
+            self.assertEqual(enc.node.className, 'enclosure decorated');
             self.assertEqual(enc.iconified.className, 'iconified-hidden');
             enc.minimize();
-            self.assertEqual(enc.node.className, 'enclosure-hidden');
+            self.assertEqual(enc.node.className, 'enclosure-hidden decorated');
             self.assertEqual(enc.iconified.className, 'iconified');
             enc.restore();
-            self.assertEqual(enc.node.className, 'enclosure');
+            self.assertEqual(enc.node.className, 'enclosure decorated');
             self.assertEqual(enc.iconified.className, 'iconified-hidden');
         });
         return d;

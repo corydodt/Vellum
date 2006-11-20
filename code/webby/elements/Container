@@ -1,3 +1,0 @@
-<span xmlns:n="http://nevow.com/ns/nevow/0.1" n:render="liveElement">
-    <n:invisible n:render="innerWidgets" />
-</span>

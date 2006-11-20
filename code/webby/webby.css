@@ -1,5 +1,16 @@
 @import url(/tabs_css);
 
+.enclosure.gameTab {
+    padding: 0px; margin: 0px;
+    float: none;
+    border: none;
+    height: 13em;
+}
+
+.enclosedRegion {
+    height: 100%;
+}
+
 .draggable:hover .titlebar:hover {
     background-color: green;
 }
@@ -69,7 +80,7 @@ background-color: #ddd;
 
 .formLabel { float: left; width: 12em; }
 
-.irc .enclosedRegion { padding: 3pt; }
+.irc { padding: 3pt; }
 
 .chatentry {
     width: 95%;
@@ -90,10 +101,14 @@ background-color: #ddd;
 
 .enclosure {
   float: left;
-  margin: 5pt;
+  background-color: white;
+  margin: 0px; padding: 0px;
+}
+
+.enclosure.decorated {
   border: 2px solid black;
   border-style: outset;
-  background-color: white;
+  margin: 5pt;
 }
 
 .enclosure-hidden { display: none; }
@@ -123,13 +138,16 @@ background-color: #ddd;
     height: 15pt;
     background-color: blue;
     padding: 1pt;
+    margin-bottom: 2pt;
 }
 
 
 .tab {
     margin-top: 3pt;
-    height: 10em;
+    height: 14em;
     width: 95%;
+    overflow: hidden;
+    padding-bottom: 3pt;
 }
 
 .nameSelect {
@@ -147,6 +165,7 @@ background-color: #ddd;
     padding: 2pt;
     height: 98%;
     width: 79%;
+    overflow: auto;
 }
 
 .topicBar {

@@ -42,13 +42,19 @@ from webby import util, minchat
 RESOURCE = lambda f: sibpath(__file__, f)
 
 class Enclosure(athena.LiveElement):
+    """
+    @ivar windowTitle: A title that will be shown at the top of the widget
+    @ivar userClass: additional text to add at the end of the class=".." attribute
+    @ivar decorated: if False, no decorations (border, titlebar, etc.)
+    """
     jsClass = u"Windowing.Enclosure"
     docFactory = loaders.xmlfile(RESOURCE('elements/Enclosure'))
-    def __init__(self, windowTitle='~', userClass='', *a, **kw):
+    def __init__(self, windowTitle='~', userClass='', decorated=True, *a, **kw):
         super(Enclosure, self).__init__(*a, **kw)
         self.windowTitleStan = windowTitle
         self.userClassStan = userClass
         self.children = []
+        self.decorated = decorated
 
     def enclosedRegion(self, request, tag):
         return tag[self.children]
@@ -59,11 +65,15 @@ class Enclosure(athena.LiveElement):
         self.children = children
         return self
 
-    def userClass(self, request, tag):
+    def extraClasses(self, request, tag):
         tag.fillSlots('userClass', self.userClassStan)
+        if self.decorated:
+            tag.fillSlots('decorationClass', 'decorated')
+        else:
+            tag.fillSlots('decorationClass', '')
         return tag
 
-    athena.renderer(userClass)
+    athena.renderer(extraClasses)
 
     def windowTitle(self, request, tag):
         tag.fillSlots('windowTitle', self.windowTitleStan)
@@ -71,6 +81,12 @@ class Enclosure(athena.LiveElement):
 
     athena.renderer(windowTitle)
 
+    def decorations(self, req, tag):
+        if self.decorated:
+            return tag
+        return []
+
+    athena.renderer(decorations)
 
 class TextArea(util.RenderWaitLiveElement):
     """A scrollable widget that displays mostly lines of text."""
@@ -102,23 +118,3 @@ class TextArea(util.RenderWaitLiveElement):
 
         return args
 
-
-class Container(athena.LiveElement):
-    """
-    A do-nothing widget you can use to group one or more other widgets
-    before sending them to the client.
-
-    TODO - combine with Enclosure?
-    """
-    docFactory = loaders.xmlfile(RESOURCE('elements/Container'))
-    def __init__(self, *a, **kw):
-        super(Container, self).__init__(*a, **kw)
-        self.widgets = []
-
-    def innerWidgets(self, req, tag):
-        return tag[self.widgets]
-
-    athena.renderer(innerWidgets)
-
-    def addWidget(self, widget):
-        self.widgets.append(widget)

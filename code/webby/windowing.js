@@ -130,9 +130,33 @@ Windowing.Enclosure = Nevow.Athena.Widget.subclass('Windowing.Enclosure');
 Windowing.Enclosure.methods( // {{{
     function __init__(self, node) { // {{{
         Windowing.Enclosure.upcall(self, '__init__', node);
-        var minimizer = self.firstNodeByAttribute('class', 'minimizer');
-        DeanEdwards.addEvent(minimizer, 'click', 
-            function onMinimize(event) { return self.minimize() });
+        try {
+            var minimizer = self.firstNodeByAttribute('class', 'minimizer', null);
+            DeanEdwards.addEvent(minimizer, 'click', 
+                function onMinimize(event) { return self.minimize() });
+            // Create an iconified node at the end of the widget's parent.
+            // The iconfied version is what is shown when the widget minimizes.
+            self.iconified = document.createElement('div');
+            self.iconified.className = 'iconified-hidden';
+            var titleParent = self.firstNodeByAttribute('class', 'windowTitle');
+            var title = titleParent.innerHTML;
+            self.iconified.innerHTML = '<div class="titlebar">' +
+                                         '<div class="windowTitle">' +
+                                            title + 
+                                         '</div>' + 
+                                         '<a class="minimizer">^</a>' + 
+                                       '</div>';
+
+            var restore = RT.firstNodeByAttribute(self.iconified, 'class', 
+                    'minimizer');
+            DeanEdwards.addEvent(restore, 'click', 
+                    function onRestore(event) { return self.restore() 
+            });
+
+            node.parentNode.appendChild(self.iconified);
+        } catch (e if e.toString().match(/Failed to discover .*minimizer.*/)) {
+            // nothing
+        }
 
         /* set up dragging */
         if (node.className.match(/.*\bdraggable\b.*/)) {
@@ -140,22 +164,6 @@ Windowing.Enclosure.methods( // {{{
             Windowing.draggable(self.node, titlebar);
         }
 
-        // Create an iconified node at the end of the widget's parent.
-        // The iconfied version is what is shown when the widget minimizes.
-        self.iconified = document.createElement('div');
-        self.iconified.className = 'iconified-hidden';
-        var titleParent = self.firstNodeByAttribute('class', 'windowTitle');
-        var title = titleParent.innerHTML;
-        self.iconified.innerHTML = '<div class="titlebar">' +
-                                     '<div class="windowTitle">' +title+ '</div>' + 
-                                     '<a class="minimizer">^</a>' + 
-                                   '</div>';
-
-        var restore = RT.firstNodeByAttribute(self.iconified, 'class', 'minimizer');
-        DeanEdwards.addEvent(restore, 'click', 
-            function onRestore(event) { return self.restore() });
-
-        node.parentNode.appendChild(self.iconified);
     }, // }}}
 
     function minimize(self) { // {{{

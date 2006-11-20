@@ -126,7 +126,6 @@ class ConversationTabs(tabs.TabsElement):
 
         nullconv.setComponent(ITextArea, ta)
 
-
         self.conversations[initialId] = nullconv
 
         super(ConversationTabs, self).addInitialTab(initialId, initialId, ta)
@@ -141,17 +140,17 @@ class ConversationTabs(tabs.TabsElement):
         """
         cn = unicode(conversationName)
         if cn not in self.conversations:
-            # create a Container to hold the contents of the tab
-            co = windowing.Container()
-            co.setFragmentParent(self)
+            # create an Enclosure to hold the contents of the tab
+            enc = windowing.Enclosure(userClass="gameTab", decorated=False)
+            enc.setFragmentParent(self)
 
             # space for the topic
             tb = TopicBar()
-            tb.setFragmentParent(co)
+            tb.setFragmentParent(enc)
 
             # create the corresponding names list
             ns = NameSelect()
-            ns.setFragmentParent(co)
+            ns.setFragmentParent(enc)
 
             # create a textarea around the conversation
             ta = windowing.TextArea()
@@ -162,14 +161,13 @@ class ConversationTabs(tabs.TabsElement):
             conversation.setComponent(ITopicBar, tb)
             conversation.setComponent(INameSelect, ns)
 
-            co.addWidget(tb)
-            co.addWidget(ta)
-            co.addWidget(ns)
+            # put the little widgets into the stan tree of the container
+            enc = enc[tb, ta, ns]
 
             d = self.addTab(cn, cn)
 
             def _added(ignored):
-                return self.setTabBody(cn, co)
+                return self.setTabBody(cn, enc)
 
             d.addCallback(_added)
 
