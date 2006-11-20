@@ -89,7 +89,6 @@ class AccountManager(baseaccount.AccountManager):
         del ACCOUNTS[key]
 
 
-
 class NullConversation(components.Componentized):
     """This conversation is a placeholder without an actual interface to IRC.
     It should be used for things like server tabs in the UI.
