@@ -154,7 +154,11 @@ class ConversationTabs(tabs.TabsElement):
 
             # create a textarea around the conversation
             ta = windowing.TextArea()
-            ta.setFragmentParent(self)
+            ta.setFragmentParent(enc)
+
+            # the MAP
+            ## map = svg.Map()
+            ## map.setFragmentParent(enc)
 
             # assign components
             conversation.setComponent(ITextArea, ta)
