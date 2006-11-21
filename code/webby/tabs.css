@@ -1,38 +1,14 @@
 
 /* for tabs.py */
-.bg-tab-handle {
-  background-color: #aaf;
-}
+.bg-tab-handle, .tab-handle { text-decoration: none; }
 
-.bg-tab-handle, .tab-handle
-{
-  margin: 6pt;
-  text-decoration: none;
-  padding: 3pt;
-  border: thin solid black;
-  color: white;
-}
+.tab-handle { text-decoration: underline; }
 
-.tab-handle
-{
-  color: blue;
-  text-decoration: underline;
-}
-
-a[name] { display: block; }
-
-.tab { 
-    border: thin solid blue; 
-    display: block; 
-    overflow: auto;
-}
+.tab { display: block; }
 
 .bg-tab { display: none; }
 
-.tabsElement { 
-    display: block;
-    margin-top: 1em;
-}
+.tabsElement { display: block; }
 
 
 /* ... */

@@ -1,117 +1,34 @@
 @import url(/tabs_css);
 
-.enclosure.gameTab {
-    padding: 0px; margin: 0px;
-    float: none;
-    border: none;
-    height: 13em;
-}
-
-.enclosedRegion {
-    height: 100%;
-}
-
-.draggable:hover .titlebar:hover {
-    background-color: green;
-}
-
-.chooserIcon { 
-    float: left; 
-    margin: 2pt;
-    text-align: center;
-}
-
-.chooserIconIconMiddle[class] {
-    vertical-align: middle; position: static; /* jakpsatweb */
-    height: 60px;
-    border: 1px outset black; 
-    background-color: white;
-}
-
-.chooserIconLabel {
-    width: 58pt;
-    overflow: hidden;
-}
-
-.chooserIconIconMiddle:hover, .chooserIconIcon:hover { 
-    background-color: gold;
-}
-
-.gmtools {
-    width: 400px;
-    height: 330px;
-    float: left;
-}
-
 .error { color: red; font-weight: bold; }
-
-body { font-size: 9pt; padding: 0px; margin: 0px; }
-
-input { font-size: 8pt; }
-
-h1 { font-family: sans-serif; } 
-
-form { clear: both; }
-
-.uploadBox {
-    height: 80pt;
-    width: 230px;
-    position: absolute;
-    border: none;
-}
-
-caption { 
-    overflow: hidden;
-}
-
-.tab#files { 
-    height: 260px;
-}
-
-.corner { border: none; 
-border-right: 1px solid black; 
-border-bottom: 1px solid black;
-}
-
-.corner:hover {
-border: 1px solid black;
-background-color: #ddd;
-}
 
 .formLabel { float: left; width: 12em; }
 
-.irc { padding: 3pt; }
 
-.chatentry {
-    width: 95%;
-    border: 2px solid blue;
-    background-color: #f0f0ff;
-    margin-top: 4px;
+h1 { font-family: sans-serif; } 
+
+body { 
+  padding: 0px; 
+  margin: 0px; 
+  font-size: 9pt; 
 }
 
-.restore, .minimizer {
-    float: right;
-    border: thin solid gray;
+.tab {
+    border-top: 1px outset black;
+}
+
+.panes { clear: left; 
+}
+
+.bg-tab-handle, .tab-handle {
+    display: block;
+    float: left;
+    margin-left: 3pt;
     padding: 1pt;
-    background-color: white;
-    margin: 1pt;
-    font-size: 7pt;
-    cursor: pointer;
+    border-top: 1px outset black;
+    border-left: 1px outset black;
+    border-right: 1px outset black;
 }
-
-.enclosure {
-  float: left;
-  background-color: white;
-  margin: 0px; padding: 0px;
-}
-
-.enclosure.decorated {
-  border: 2px solid black;
-  border-style: outset;
-  margin: 5pt;
-}
-
-.enclosure-hidden { display: none; }
 
 .iconified { 
   float: left;
@@ -122,53 +39,142 @@ background-color: #ddd;
   margin: 2pt;
 }
 
-.iconified .titlebar { height: 30pt; }
+.iconified-hidden {
+    display: none;
+}
 
-.iconified-hidden { display: none; }
+.iconified .titlebar {
+    height: 30pt;
+}
 
+.enclosure-hidden {
+    display: none;
+}
+
+.enclosure {
+    border: 2px outset blue;
+    background-color: white;
+    margin: 2pt;
+}
+
+
+
+.draggable:hover .titlebar:hover {
+    background-color: green;
+    cursor: pointer;
+}
+
+
+
+.titlebar {
+    background-color: #33c;
+    padding: 1pt;
+    height: 15pt;
+}
 
 .windowTitle {
     float: left;
     color: white;
     font-weight: bold;
+    font-family: sans-serif;
 }
 
-
-.titlebar {
-    height: 15pt;
-    background-color: blue;
+.restore, .minimizer { 
+    float: right;
+    border: thin solid gray;
     padding: 1pt;
-    margin-bottom: 2pt;
+    background-color: white;
+    margin: 1pt;
+    font-size: 7pt;
+    cursor: pointer;
 }
 
+input.topicBar {
+    width: 100%;
+}
 
-.tab {
-    margin-top: 3pt;
-    height: 14em;
-    width: 95%;
-    overflow: hidden;
-    padding-bottom: 3pt;
+.irc .tab {
+    height: 550px;
+}
+
+.irc {
+    width: 1000px;
+}
+
+.gameTab {
+}
+
+.irc .textArea {
+    color: #aaa;
+    background-color: black;
+    font-family: monospace;
+    font-size: 8pt;
+    overflow: auto;
+    height: 100%;
 }
 
 .nameSelect {
     float: left;
-    width: 20%;
-    height: 100%;
-    background-color: #ddd;
+    clear: right;
+    width: 12em;
+    height: 10em;
 }
 
-.textArea {
+.channel .textArea {
+    width: 60em;
+    height: 10em;
     float: left;
-    font-family: monospace;
-    color: #ccc;
-    background-color: black;
-    padding: 2pt;
-    height: 98%;
-    width: 79%;
-    overflow: auto;
+    clear: left;
 }
 
-.topicBar {
-    width: 98%;
-    clear: both;
+input.chatentry {
+    display: block;
+    width: 100%;
 }
+
+
+
+.gmtools {
+    width: 400px;
+    height: 330px;
+    float: left;
+}
+
+.uploadBox {
+    height: 80pt;
+    width: 230px;
+    position: absolute;
+    border: none;
+}
+
+.chooserIcon { 
+    float: left; 
+    margin: 2pt;
+    text-align: center;
+}
+.chooserIconIconMiddle[class] {
+    vertical-align: middle; position: static; /* jakpsatweb */
+    height: 60px;
+    border: 1px outset black; 
+    background-color: white;
+}
+ 
+.chooserIconLabel {
+    width: 58pt;
+    overflow: hidden;
+}
+ 
+.chooserIconIconMiddle:hover, .chooserIconIcon:hover { 
+    background-color: gold;
+}
+
+/* TEMP */
+/* UNCOMMENT THESE when debugging CSS! You will be glad. */
+/* .enclosedRegion { border: 5px dashed blue; } */
+/* .tab { border: 5px solid green; } */
+/* .enclosure { border: 5px solid red; } */
+/* .iconified-hidden { border: 5px dotted red; } */
+/*
+body:before { 
+    content: "dashed blue=enclosedRegion, green=tab, red=enclosure, dotted red=iconified-hidden" }
+*/
