@@ -1,6 +1,16 @@
 // import Nevow.Athena
-// import Window
+// import StainedGlass
 // import DeanEdwards
+// import Divmod
+
+// FIXME -- if i do not import SVGMap here, I get 
+// nevow.athena.JSException: Error: nodeByDOM passed node with no containing Athena Ref ID
+// ... on EVERY remote call.  I can't think of a reason why it would matter
+// whether this gets imported at render time, or later, and I'm too annoyed to
+// debug it.  
+
+// import SVGMap
+
 
 WebbyVellum.TopicBar = Nevow.Athena.Widget.subclass('WebbyVellum.TopicBar');
 WebbyVellum.TopicBar.methods( // {{{
@@ -95,7 +105,7 @@ WebbyVellum.ChatEntry.methods( // {{{
     } // }}}
 ); // }}}
 
-WebbyVellum.IRCContainer = Window.Enclosure.subclass('WebbyVellum.IRCContainer');
+WebbyVellum.IRCContainer = StainedGlass.Enclosure.subclass('WebbyVellum.IRCContainer');
 WebbyVellum.IRCContainer.methods( // {{{
     function activeTabId(self) { // {{{
         return self.childWidgets[1].activeTabId();
@@ -197,7 +207,7 @@ WebbyVellum.ChooserIcon.methods( // {{{
     function __init__(self, node) { // {{{
         WebbyVellum.ChooserIcon.upcall(self, '__init__', node);
         // TODO - when droppable (snap-back) behavior can be specified
-        // Window.draggable(node);
+        // StainedGlass.draggable(node);
     } // }}}
 ); // }}}
 

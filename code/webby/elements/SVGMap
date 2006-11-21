@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="420"
+    xmlns:n="http://nevow.com/ns/nevow/0.1" n:render="liveElement">
+    <rect x="0" y="0" width="1000" height="420" stroke-width="2" stroke="black"
+    rx="20" ry="20" fill="white" />
+    <text x="20" y="20">Drop a map image here for interestings.</text>
+</svg>

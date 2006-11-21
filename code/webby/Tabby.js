@@ -118,6 +118,7 @@ Tabby.TabsElement.methods( // {{{
         });
         d.addErrback(function _(failure) {
             Divmod.debug("", "Could not add widget because " + failure);
+            return failure;
         });
         return d;
     }, // }}}
@@ -153,7 +154,7 @@ Tabby.TabsElement.methods( // {{{
             var initialTabLabel = tab[1];
             var nodeContent = tab[2];
             self.addTab(initialTabId, initialTabLabel);
-            self.setTabBody(initialTabId, nodeContent);
+            var d = self.setTabBody(initialTabId, nodeContent);
         }
     } // }}}
 ); // }}}

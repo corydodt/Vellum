@@ -3,10 +3,10 @@
 RT = Divmod.Runtime.theRuntime;
 
 /* abstract class that implements the state associated with a drag operation.
- * Call Window.draggable(
+ * Call StainedGlass.draggable(
  */
-Window.DragState = Divmod.Class.subclass('Window.DragState');
-Window.DragState.methods( // {{{
+StainedGlass.DragState = Divmod.Class.subclass('StainedGlass.DragState');
+StainedGlass.DragState.methods( // {{{
     function _cleanupDragState(self) { // {{{
         DeanEdwards.removeEvent(window, 'mouseup', self.mouseup);
         DeanEdwards.removeEvent(window, 'mouseout', self.mouseout);
@@ -35,7 +35,7 @@ Window.DragState.methods( // {{{
     }, // }}}
 
     function startDragging(self, event) { // {{{
-        Divmod.debug("Window.DragState", "started dragging");
+        Divmod.debug("StainedGlass.DragState", "started dragging");
 
         // tables and things do weird stuff when you click and drag on them.
         // Don't let them do weird stuff.
@@ -72,7 +72,7 @@ Window.DragState.methods( // {{{
     }, // }}}
 
     function stopDragging(self, event) { // {{{
-        Divmod.debug("Window.DragState", "stopped dragging");
+        Divmod.debug("StainedGlass.DragState", "stopped dragging");
         self._cleanupDragState();
     }, // }}}
 
@@ -88,7 +88,7 @@ Window.DragState.methods( // {{{
          */
         if (event.target === document.documentElement &&
             event.explicitOriginalTarget === document.documentElement) {
-            Divmod.debug("Window.DragState", "cancelled dragging");
+            Divmod.debug("StainedGlass.DragState", "cancelled dragging");
             self._cleanupDragState()
             self._restoreOriginalState()
             /* restore the position to the original position */
@@ -109,8 +109,8 @@ Window.DragState.methods( // {{{
  * @arg vehicle: the node that will be moved around when you drag it
  * @arg handle: if specified, the node that you click on to move the vehicle
  */
-Window.draggable = function _(vehicle, handle) { // {{{
-    var dragBehavior = new Window.DragState();
+StainedGlass.draggable = function _(vehicle, handle) { // {{{
+    var dragBehavior = new StainedGlass.DragState();
 
     dragBehavior.node = vehicle;
 
@@ -126,10 +126,10 @@ Window.draggable = function _(vehicle, handle) { // {{{
     return vehicle;
 }; // }}}
 
-Window.Enclosure = Nevow.Athena.Widget.subclass('Window.Enclosure');
-Window.Enclosure.methods( // {{{
+StainedGlass.Enclosure = Nevow.Athena.Widget.subclass('StainedGlass.Enclosure');
+StainedGlass.Enclosure.methods( // {{{
     function __init__(self, node) { // {{{
-        Window.Enclosure.upcall(self, '__init__', node);
+        StainedGlass.Enclosure.upcall(self, '__init__', node);
         try {
             var minimizer = self.firstNodeByAttribute('class', 'minimizer', null);
             DeanEdwards.addEvent(minimizer, 'click', 
@@ -161,7 +161,7 @@ Window.Enclosure.methods( // {{{
         /* set up dragging */
         if (node.className.match(/.*\bdraggable\b.*/)) {
             var titlebar = self.firstNodeByAttribute('class', 'titlebar');
-            Window.draggable(self.node, titlebar);
+            StainedGlass.draggable(self.node, titlebar);
         }
 
     }, // }}}
@@ -181,12 +181,12 @@ Window.Enclosure.methods( // {{{
     } // }}}
 ); // }}}
 
-Window.TextArea = Nevow.Athena.Widget.subclass('Window.TextArea');
-Window.TextArea.methods( // {{{
+StainedGlass.TextArea = Nevow.Athena.Widget.subclass('StainedGlass.TextArea');
+StainedGlass.TextArea.methods( // {{{
     function __init__(self,  // {{{
                       node, 
                       /* OPTIONAL */ initialContent) {
-        Window.TextArea.upcall(self, '__init__', node);
+        StainedGlass.TextArea.upcall(self, '__init__', node);
 
         if (initialContent !== undefined)
             self.appendTo(initialContent);

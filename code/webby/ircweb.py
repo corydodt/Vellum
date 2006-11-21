@@ -6,7 +6,8 @@ from zope.interface import implements
 
 from nevow import rend, loaders, athena, url, static, inevow, tags as T
 
-from webby import minchat, tabs, parseirc, windowing, util, signup, gmtools
+from webby import minchat, svgmap, parseirc, stainedglass, util, signup, gmtools, \
+                          tabs
 from webby.minchat import IChatConversations, \
                           IChatEntry, \
                           IChatAccountManager, \
@@ -17,7 +18,7 @@ from webby.minchat import IChatConversations, \
 RESOURCE = lambda f: sibpath(__file__, f)
 
 
-class IRCContainer(windowing.Enclosure, components.Componentized):
+class IRCContainer(stainedglass.Enclosure, components.Componentized):
     """
     Contains all the IRC components: AccountManagerElement, ConversationTabs,
     ChatEntry.
@@ -120,7 +121,7 @@ class ConversationTabs(tabs.TabsElement):
         nullconv = minchat.NullConversation(self.fragmentParent, initialId)
 
         # create a textarea around the conversation
-        ta = windowing.TextArea()
+        ta = stainedglass.TextArea()
         ta.setFragmentParent(self)
         ta.setInitialArguments(GREETING)
 
@@ -141,7 +142,7 @@ class ConversationTabs(tabs.TabsElement):
         cn = unicode(conversationName)
         if cn not in self.conversations:
             # create an Enclosure to hold the contents of the tab
-            enc = windowing.Enclosure(userClass="gameTab", decorated=False)
+            enc = stainedglass.Enclosure(userClass="gameTab", decorated=False)
             enc.setFragmentParent(self)
 
             # space for the topic
@@ -153,12 +154,12 @@ class ConversationTabs(tabs.TabsElement):
             ns.setFragmentParent(enc)
 
             # create a textarea around the conversation
-            ta = windowing.TextArea()
+            ta = stainedglass.TextArea()
             ta.setFragmentParent(enc)
 
             # the MAP
-            ## map = svg.Map()
-            ## map.setFragmentParent(enc)
+            mapw = svgmap.MapWidget()
+            mapw.setFragmentParent(enc)
 
             # assign components
             conversation.setComponent(ITextArea, ta)
@@ -416,7 +417,7 @@ class IRCPage(athena.LivePage):
     def render_gmtools(self, ctx, _):
         ss = inevow.ISession(ctx)
         gmt = gmtools.GMTools(ss.user)
-        enc = windowing.Enclosure(windowTitle="GM Tools", 
+        enc = stainedglass.Enclosure(windowTitle="GM Tools", 
                 userClass="gmtools draggable")
         enc.setFragmentParent(self)
         gmt.setFragmentParent(enc)

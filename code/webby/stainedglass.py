@@ -13,7 +13,7 @@ Has no callRemotes, but it supports inheritance so you can do things like
 notify the iconified window when something on the server generates an event.
 (These callRemotes may be added in the future.)
 
->>> Enclosure(windowTitle="My Window", userClass="someWindowOfMine")
+>>> Enclosure(windowTitle="My StainedGlass", userClass="someWindowOfMine")
 
 The "userClass" init arg will be inserted into the 'class' attribute of the
 node.
@@ -47,7 +47,7 @@ class Enclosure(athena.LiveElement):
     @ivar userClass: additional text to add at the end of the class=".." attribute
     @ivar decorated: if False, no decorations (border, titlebar, etc.)
     """
-    jsClass = u"Window.Enclosure"
+    jsClass = u"StainedGlass.Enclosure"
     docFactory = loaders.xmlfile(RESOURCE('elements/Enclosure'))
     def __init__(self, windowTitle='~', userClass='', decorated=True, *a, **kw):
         super(Enclosure, self).__init__(*a, **kw)
@@ -91,7 +91,7 @@ class Enclosure(athena.LiveElement):
 class TextArea(util.RenderWaitLiveElement):
     """A scrollable widget that displays mostly lines of text."""
     implements(minchat.ITextArea) # FIXME - move to here
-    jsClass = u"Window.TextArea"
+    jsClass = u"StainedGlass.TextArea"
     docFactory = loaders.xmlfile(RESOURCE('elements/TextArea'))
     widgetArgs = None
 
