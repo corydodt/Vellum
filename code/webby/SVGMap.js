@@ -15,6 +15,10 @@ SVGMap.MapWidget.methods( // {{{
     /* if a node is being dropped here, do something about it */
     function checkForDrop(self, event) { // {{{
         Divmod.debug("SVGMap.MapWidget", "Mouse was upped here.");
+        if (window.droppable) {
+            var cl = window.droppable.className;
+            Divmod.debug("SVGMap.MapWidget", "Droppable " + cl);
+        }
     } // }}}
 ); // }}}
 

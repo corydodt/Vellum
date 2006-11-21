@@ -2,6 +2,27 @@
 
 RT = Divmod.Runtime.theRuntime;
 
+
+/* fucking fucking javascript DOM -- this is the only goddamn way to get
+   the absolute position of an element
+ */
+StainedGlass.getPosition = function _(node) {
+	var left = 0;
+	var top  = 0;
+
+	while (node.offsetParent){
+		left += node.offsetLeft;
+		top  += node.offsetTop;
+		node = node.offsetParent;
+	}
+
+	left += node.offsetLeft;
+	top  += node.offsetTop;
+
+	return {x:left, y:top};
+}
+
+
 /* abstract class that implements the state associated with a drag operation.
  * Call StainedGlass.draggable(
  */
@@ -14,8 +35,8 @@ StainedGlass.DragState.methods( // {{{
         self.mouseup = null;
         self.mouseout = null;
         self.mousemove = null;
-        self.dragStartOffsetLeft = null;
-        self.dragStartOffsetTop = null;
+        self.dragStartOffset = null; 
+        window.droppable = null;
     }, // }}}
 
     function _restoreOriginalState(self) { /// {{{
@@ -43,12 +64,20 @@ StainedGlass.DragState.methods( // {{{
 
         self._saveOriginalState();
 
-        /* figure out the offset of the mouseclick from the top left of the
-         * widget
+        /* droppable nodes get saved in a window-global, so the drop consumers
+         * can find them.
          */
-        var n = self.node;
-        self.dragStartOffsetLeft = event.clientX - n.offsetLeft;
-        self.dragStartOffsetTop = event.clientY - n.offsetTop;
+        if (self.droppable) {
+            self.dragStartOffset = {'x': 10, 'y': 0};
+            window.droppable = self.node;
+        } else {
+            /* figure out the offset of the mouseclick from the top left of the
+             * widget
+             */
+            var nodeCoords = StainedGlass.getPosition(self.node);
+            self.dragStartOffset = {'x': event.pageX - nodeCoords['x'],
+                                    'y': event.pageY - nodeCoords['y']};
+        }
 
         /* set up mousemove event to follow the movement of the mouse */
         self.mousemove = function _(event) { return self.whileDragging(event) };
@@ -67,13 +96,27 @@ StainedGlass.DragState.methods( // {{{
         var n = self.node;
         n.style['position'] = 'absolute';
         n.style['float'] = 'none';
-        n.style['left'] = (event.clientX - self.dragStartOffsetLeft) + 'px';
-        n.style['top'] = (event.clientY - self.dragStartOffsetTop) + 'px';
+        /* absolutely positioned nodes are positioned *RELATIVE TO THEIR
+           offsetParent*.  This is <body> unless the node is, itself, inside
+           an absolutely positioned node.  Either way, call
+           getPosition(n.offsetParent) and adjust.
+         */
+        var offsetParentCoords = StainedGlass.getPosition(n.offsetParent);
+        var l = (event.pageX - self.dragStartOffset['x'] - offsetParentCoords['x']);
+        var t = (event.pageY - self.dragStartOffset['y'] - offsetParentCoords['y']);
+        n.style['left'] = l + 'px';
+        n.style['top'] = t + 'px';
     }, // }}}
 
     function stopDragging(self, event) { // {{{
         Divmod.debug("StainedGlass.DragState", "stopped dragging");
         self._cleanupDragState();
+        /* droppable nodes don't really want to be moved.. snap them back when
+         * released.
+         */
+        if (self.droppable) {
+            self._restoreOriginalState();
+        }
     }, // }}}
 
     function cancelDragging(self, event) { // {{{
@@ -108,21 +151,25 @@ StainedGlass.DragState.methods( // {{{
 /* Create the necessary events for a node to be draggable 
  * @arg vehicle: the node that will be moved around when you drag it
  * @arg handle: if specified, the node that you click on to move the vehicle
+ * @arg droppable: if specified, dropstate will be attached as well.
  */
-StainedGlass.draggable = function _(vehicle, handle) { // {{{
+StainedGlass.draggable = function _(vehicle, handle, droppable) { // {{{
     var dragBehavior = new StainedGlass.DragState();
 
     dragBehavior.node = vehicle;
 
     vehicle.dragBehavior = dragBehavior; // keep dragBehavior from being gc'd
 
-    if (handle !== undefined) {
+    if (handle) {
         // dragging the handle drags the node
         dragBehavior.setDragHandle(handle);
     } else {
         // dragging anywhere in the node drags the node
         dragBehavior.setDragHandle(vehicle);
     }
+
+    dragBehavior.droppable = droppable;
+
     return vehicle;
 }; // }}}
 
