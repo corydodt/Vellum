@@ -3,8 +3,8 @@
 
 RT = Divmod.Runtime.theRuntime;
 
-Windowing.Tests.TestEnclosure = Nevow.Athena.Test.TestCase.subclass("Windowing.Tests.TestEnclosure");
-Windowing.Tests.TestEnclosure.methods( // {{{
+StainedGlass.Tests.TestEnclosure = Nevow.Athena.Test.TestCase.subclass("StainedGlass.Tests.TestEnclosure");
+StainedGlass.Tests.TestEnclosure.methods( // {{{
     function test_initialize(self) {  // {{{
         var d = self.setUp();
         d.addCallback(function _(enc) {
@@ -68,8 +68,8 @@ Windowing.Tests.TestEnclosure.methods( // {{{
     } // }}}
 ); // }}}
 
-Windowing.Tests.TestTextArea = Nevow.Athena.Test.TestCase.subclass("Windowing.Tests.TestTextArea");
-Windowing.Tests.TestTextArea.methods( // {{{
+StainedGlass.Tests.TestTextArea = Nevow.Athena.Test.TestCase.subclass("StainedGlass.Tests.TestTextArea");
+StainedGlass.Tests.TestTextArea.methods( // {{{
     function test_initialContent(self) { // {{{
         var d = self.callRemote("newTextArea", 
             '<div xmlns="' + XHTMLNS + '"><b>Content</b></div>');
