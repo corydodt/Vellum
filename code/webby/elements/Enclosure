@@ -9,5 +9,5 @@
           <a class="minimizer">_</a>
         </div>
     </n:invisible>
-<div n:render="enclosedRegion" class="enclosedRegion"/>
+    <div class="enclosedRegion" n:render="enclosedRegion" />
 </div>

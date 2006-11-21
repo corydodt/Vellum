@@ -4,7 +4,7 @@ from twisted.internet import defer
 
 from zope.interface import implements
 
-from nevow import rend, loaders, athena, url, static, inevow
+from nevow import rend, loaders, athena, url, static, inevow, tags as T
 
 from webby import minchat, tabs, parseirc, windowing, util, signup, gmtools
 from webby.minchat import IChatConversations, \
@@ -166,7 +166,9 @@ class ConversationTabs(tabs.TabsElement):
             conversation.setComponent(INameSelect, ns)
 
             # put the little widgets into the stan tree of the container
-            enc = enc[tb, ta, ns]
+            enc = enc[tb, mapw, 
+                      T.div(_class="channel")[ta, ns]
+                      ]
 
             d = self.addTab(cn, cn)
 
