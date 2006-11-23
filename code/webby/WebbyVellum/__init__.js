@@ -195,6 +195,7 @@ WebbyVellum.FileChooser.methods( // {{{
                 d = self.callRemote("refresh");
                 d.addCallback(function _(data) {
                     var span = self.firstNodeByAttribute('class', 'chooserArea');
+                    // FIXME! instead, we should be rendering the widgets
                     span.innerHTML = data;
                 });
             }
