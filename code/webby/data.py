@@ -87,7 +87,12 @@ class FileMeta(item.Item):
     mimeType = A.text()
     md5 = A.text()
     user = A.reference()
+    width = A.integer()
+    height = A.integer()
 
 class FileData(item.Item):
     schemaVersion = 1
     data = A.bytes()
+
+    def __repr__(self):
+        return '<FileData @%x>' % (id(self),)
