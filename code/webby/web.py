@@ -53,10 +53,11 @@ class FileTree(rend.Page):
         fileitem = db.findFirst(FM, _filter)
         if fileitem is None:
             return None, ()
-        if segs[1] == 'thumb':
+        if len(segs) > 1 and segs[1] == 'thumb':
             return static.Data(fileitem.thumbnail.data, 'image/png'), ()
         else:
-            return static.Data(fileitem.data.data, fileitem.mimeType), ()
+            mimeType = fileitem.mimeType.encode('utf-8')
+            return static.Data(fileitem.data.data, mimeType), ()
 
 class StaticRoot(rend.Page):
     """
