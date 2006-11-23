@@ -165,7 +165,7 @@ WebbyVellum.FileChooser = Nevow.Athena.Widget.subclass('WebbyVellum.FileChooser'
 WebbyVellum.FileChooser.methods( // {{{
     function __init__(self, node) { // {{{
         WebbyVellum.FileChooser.upcall(self, '__init__', node);
-        var newDocumentNode = self.firstNodeByAttribute('name', 'documentNew');
+        var newDocumentNode = self.firstNodeByAttribute('vellum:name', 'documentNew');
         DeanEdwards.addEvent(newDocumentNode, 'click', 
             function handleNewDocument(event) { 
                 return self.handleNewDocument(event) 

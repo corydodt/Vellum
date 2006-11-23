@@ -242,7 +242,7 @@ WebbyVellum.Tests.TestFileChooser.methods( // {{{
         var d = self.setUp();
         d.addCallback(function _(chooser) {
             /* verify that there is a New File icon present */
-            var newDocumentNode = chooser.firstNodeByAttribute('name', 
+            var newDocumentNode = chooser.firstNodeByAttribute('vellum:name', 
                     'documentNew');
             self.assertEqual(newDocumentNode.tagName, 'table');
         });
@@ -253,8 +253,8 @@ WebbyVellum.Tests.TestFileChooser.methods( // {{{
         var d = self.setUp();
         d.addCallback(function _(chooser) {
             var ev = new MockEvent(chooser.node);
-            ev.clientX = 100;
-            ev.clientY = 100;
+            ev.pageX = 100;
+            ev.pageY = 100;
 
             /* verify that, initially, there is no closeUploadFrame set */
             self.failUnless(window.closeUploadFrame === undefined);
