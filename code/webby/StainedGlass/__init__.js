@@ -1,4 +1,5 @@
 // import Divmod
+// import Nevow.Athena
 
 RT = Divmod.Runtime.theRuntime;
 
@@ -6,7 +7,7 @@ RT = Divmod.Runtime.theRuntime;
 /* fucking fucking javascript DOM -- this is the only goddamn way to get
    the absolute position of an element
  */
-StainedGlass.getPosition = function _(node) {
+StainedGlass.getPosition = function _(node) { // {{{
 	var left = 0;
 	var top  = 0;
 
@@ -20,7 +21,7 @@ StainedGlass.getPosition = function _(node) {
 	top  += node.offsetTop;
 
 	return {x:left, y:top};
-}
+} // }}}
 
 
 /* abstract class that implements the state associated with a drag operation.
@@ -201,8 +202,12 @@ StainedGlass.Enclosure.methods( // {{{
             });
 
             node.parentNode.appendChild(self.iconified);
-        } catch (e if e.toString().match(/Failed to discover .*minimizer.*/)) {
-            // nothing
+        } catch (e) { 
+            if (!e.toString().match(/Failed to discover .*minimizer.*/)) {
+                throw e;
+            } else {
+                // nothing
+            }
         }
 
         /* set up dragging */
