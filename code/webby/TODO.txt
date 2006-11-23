@@ -9,3 +9,5 @@ http://spreadsheets.google.com/ccc?key=p1P43A77NkCmSsul4vIPpPA
 - very long insert time uploading large files.
 
 - a very long list in the chooser will send a lot of data.. pager?
+
+- after you upload a file, the ChooserIcons don't remain draggable
