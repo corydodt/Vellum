@@ -128,6 +128,12 @@ input.topicBar {
     clear: left;
 }
 
+.mapbox {
+    width: 1000px;
+    height: 420px;
+    overflow: auto;
+}
+
 input.chatentry {
     display: block;
     width: 100%;

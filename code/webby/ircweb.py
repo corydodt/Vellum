@@ -167,7 +167,7 @@ class ConversationTabs(tabs.TabsElement):
             conversation.setComponent(INameSelect, ns)
 
             # put the little widgets into the stan tree of the container
-            enc = enc[tb, mapw, 
+            enc = enc[tb, T.div(_class="mapbox")[mapw], 
                       T.div(_class="channel")[ta, ns]
                       ]
 
@@ -396,6 +396,7 @@ class IRCPage(athena.LivePage):
     docFactory = loaders.xmlfile(RESOURCE('webby.xhtml'))
 
     def renderHTTP(self, ctx):
+        """Set XHTML as the mime type so SVG can be rendered."""
         req = inevow.IRequest(ctx)
         req.setHeader('content-type', 'application/xhtml+xml')
         return super(IRCPage, self).renderHTTP(ctx)
