@@ -102,6 +102,9 @@ class FileChooser(athena.LiveElement):
         @return a string of the icons we will display in the chooser
         """
         log.msg("Refreshing FileChooser")
+        # FIXME - returning them flattened like this instead of returning the
+        # widgets means they do not get __init__ called and they are not
+        # draggable.
         return unicode(flat.flatten(self._getIconsFromDatabase()))
 
     athena.expose(refresh)
@@ -161,13 +164,14 @@ class UploadPage(formal.ResourceMixin, rend.Page):
                             user=self.user,
                             )
 
-                    # now thumbnail it
+                    # now thumbnail it and store image metas
                     if mimeType.startswith('image/'):
                         # PIL can't thumbnail every identifiable kind of
                         # image, so just punt if it fails to update.
                         try:
                             filedata.seek(0)
-                            thumb = Image.open(filedata)
+                            original = Image.open(filedata)
+                            thumb = original.copy()
                             thumb.thumbnail((48,48), Image.ANTIALIAS)
                             _tempfile = StringIO()
                             thumb.save(_tempfile, 'PNG')
@@ -175,6 +179,8 @@ class UploadPage(formal.ResourceMixin, rend.Page):
                             newThumbData = FileData(store=db,
                                     data=_tempfile.read())
                             newfile.thumbnail = newThumbData
+
+                            newfile.width, newfile.height = original.size
                         except IOError:
                             pass
 
