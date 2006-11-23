@@ -175,7 +175,7 @@ WebbyVellum.FileChooser.methods( // {{{
     function handleNewDocument(self, event) { // {{{
         event.stopPropagation();
         event.preventDefault();
-        self._newUploadFrame(event.clientX, event.clientY);
+        self._newUploadFrame(event.pageX, event.pageY);
 
         Divmod.debug("", "Clicked on FileChooser's documentNew icon");
     }, // }}}
