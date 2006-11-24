@@ -94,10 +94,11 @@ class SignupPage(athena.LivePage):
 def sendEmail(toAddr, subject, body):
     """Send email, return Deferred of result."""
     msg = MIMEText(body)
+    db = theGlobal['database']
+    svc = db.findFirst(data.DataService)
     msg["To"] = toAddr
-    msg["From"] = theGlobal['smtpFrom']
+    msg["From"] = svc.smtpFrom
     msg["Subject"] = subject or "Message from Vellum"
     msg["Date"] = rfc822.formatdate()
-    d = smtp.sendmail(theGlobal['smtpServer'], theGlobal['smtpFrom'], [toAddr], 
-            msg.as_string())
+    d = smtp.sendmail(svc.smtpServer, svc.smtpFrom, [toAddr], msg.as_string())
     return d
