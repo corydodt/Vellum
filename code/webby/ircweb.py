@@ -374,6 +374,13 @@ class ChatEntry(athena.LiveElement):
         acct = self.page.chatui.onlineClients[0].account
         return acct.client.sendLine(args)
 
+    def irccmd_notice(self, args, conv):
+        client = self.page.chatui.onlineClients[0]
+        recipient, rest = args.split(None, 1)
+        r = client.notice(recipient, rest)
+        ITextArea(conv).printClean(u'>%s< %s' % (recipient, rest))
+        return r
+
     def irccmd_query(self, args, conv):
         try:
             personName = args.split()[0]

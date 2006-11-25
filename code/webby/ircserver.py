@@ -1,14 +1,101 @@
+from time import time
+
 from zope.interface import implements
 
-from twisted.words.service import InMemoryWordsRealm, IRCFactory
+from twisted.internet import defer
+from twisted.words.service import InMemoryWordsRealm, IRCFactory, IRCUser, \
+                                  User, Group
+from twisted.words import iwords
+from twisted.words.protocols import irc
 from twisted.cred import checkers, portal, credentials, error
 
 from webby import theGlobal, data, util
 
 from axiom import item, attributes as A
 
-theRealm = InMemoryWordsRealm('vellumIRCserver')
+class VellumIRCUser(User):
+    def sendNotice(self, recipient, message):
+        self.lastMessage = time()
+        return recipient.receiveNotice(self.mind, recipient, message)
+
+
+class VellumIRCGroup(Group):
+    def receiveNotice(self, sender, recipient, message):
+        # raped n pasted from irc.py Group.receive()
+        assert recipient is self
+        receives = []
+        for p in self.users.itervalues():
+            if p is not sender:
+                d = defer.maybeDeferred(p.receiveNotice, sender, self, message)
+                d.addErrback(self._ebUserCall, p=p)
+                receives.append(d)
+        defer.DeferredList(receives).addCallback(self._cbUserCall)
+        return defer.succeed(None)
+
+
+class VellumWordsRealm(InMemoryWordsRealm):
+    def userFactory(self, name):
+        return VellumIRCUser(name)
+
+    def groupFactory(self, name):
+        return VellumIRCGroup(name)
+
+
+theRealm = VellumWordsRealm('vellumIRCserver')
 theRealm.createGroupOnRequest = True
+
+
+class VellumIRCServerProtocol(IRCUser):
+    def receiveNotice(self, sender, recipient, message):
+        # raped n pasted from irc.py receive()
+        if iwords.IGroup.providedBy(recipient):
+            recipientName = '#' + recipient.name
+        else:
+            recipientName = recipient.name
+
+        text = message.get('text', '<an unrepresentable message>')
+        for L in text.splitlines():
+            self.notice(
+                '%s!%s@%s' % (sender.name, sender.name, self.hostname),
+                recipientName,
+                L)
+
+    def irc_NOTICE(self, prefix, params):
+        """Process a NOTICE.
+
+        Parameters: <msgtarget> <text to be sent>
+
+        RAPED AND PASTED from IRCUser.irc_PRIVMSG
+        """
+        try:
+            targetName = params[0].decode(self.encoding)
+        except UnicodeDecodeError:
+            self.sendMessage(
+                irc.ERR_NOSUCHNICK, targetName,
+                ":No such nick/channel (could not decode your unicode!)")
+            return
+
+        messageText = params[-1]
+        if targetName.startswith('#'):
+            target = self.realm.lookupGroup(targetName[1:])
+        else:
+            target = self.realm.lookupUser(targetName).addCallback(lambda user: user.mind)
+
+        def cbTarget(targ):
+            if targ is not None:
+                return self.avatar.sendNotice(targ, {"text": messageText})
+
+        def ebTarget(err):
+            self.sendMessage(
+                irc.ERR_NOSUCHNICK, targetName,
+                ":No such nick/channel.")
+
+        target.addCallbacks(cbTarget, ebTarget)
+
+
+class VellumIRCFactory(IRCFactory):
+    protocol = VellumIRCServerProtocol
+
 
 class AxiomNickChecker(object):
     """
@@ -40,12 +127,12 @@ class AxiomNickChecker(object):
 
         raise error.UnauthorizedLogin()
 
-checker = AxiomNickChecker()
 
+checker = AxiomNickChecker()
 thePortal = portal.Portal(theRealm, [checker])
 
 class IRCService(item.Item, util.AxiomTCPServerMixin):
-    factory = IRCFactory(theRealm, thePortal)
+    factory = VellumIRCFactory(theRealm, thePortal)
     schemaVersion = 1
     portNumber = A.integer()
 

@@ -127,10 +127,16 @@ class MinConversation(
         IChatConversations(self.widget).hideConversation(self, pname)
     
     def showMessage(self, text, metadata=None):
-        if metadata and metadata.get("style", None) == "emote":
+        if metadata is None: metadata = {}
+
+        if metadata.get("style", None) == "emote":
             t = '* %s %s' % (self.person.name, text)
         else:
             t = "<%s> %s" % (self.person.name, text)
+
+        if metadata.get('dontAutoRespond', None):
+            t = "- %s -" % (t,)
+
         return ITextArea(self).printClean(t)
 
     def contactChangedNick(self, person, newnick):
@@ -171,10 +177,16 @@ class MinGroupConversation(
         IChatConversations(self.widget).hideConversation(self, groupname)
 
     def showGroupMessage(self, sender, text, metadata=None):
-        if metadata and metadata.get("style", None) == "emote":
+        if metadata is None: metadata = {}
+
+        if metadata.get("style", None) == "emote":
             t = '* %s %s' % (sender, text)
         else:
             t = "<%s> %s" % (sender, text)
+
+        if metadata.get('dontAutoRespond', None):
+            t = "- %s -" % (t,)
+
         return ITextArea(self).printClean(t)
 
     def setTopic(self, topic, author):
