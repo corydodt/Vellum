@@ -1,17 +1,23 @@
 from time import time
 
-from zope.interface import implements
+from zope.interface import implements, Interface
 
-from twisted.internet import defer
+from twisted.internet import defer, reactor
+from twisted.python import log, failure
 from twisted.words.service import InMemoryWordsRealm, IRCFactory, IRCUser, \
                                   User, Group
 from twisted.words import iwords
 from twisted.words.protocols import irc
 from twisted.cred import checkers, portal, credentials, error
+from twisted.test import proto_helpers
 
 from webby import theGlobal, data, util
 
 from axiom import item, attributes as A
+
+
+VELLUMTALK = u"VellumTalk!vellumtalk@vellum.berlios.de"
+VTNICK = VELLUMTALK.split('!', 1)[0]
 
 class VellumIRCUser(User):
     def sendNotice(self, recipient, message):
@@ -19,7 +25,127 @@ class VellumIRCUser(User):
         return recipient.receiveNotice(self.mind, recipient, message)
 
 
+class VellumIRCServerProtocol(IRCUser):
+    def receiveNotice(self, sender, recipient, message):
+        # raped n pasted from irc.py receive()
+        if iwords.IGroup.providedBy(recipient):
+            recipientName = '#' + recipient.name
+        else:
+            recipientName = recipient.name
+
+        text = message.get('text', '<an unrepresentable message>')
+        for L in text.splitlines():
+            self.notice(
+                '%s!%s@%s' % (sender.name, sender.name, self.hostname),
+                recipientName,
+                L)
+
+    def getTarget(self, params):
+        """
+        Parse params for the target and messageText, and return the
+        actual target
+        """
+        try:
+            targetName = params[0].decode(self.encoding)
+        except UnicodeDecodeError, e:
+            self.sendMessage(
+                irc.ERR_NOSUCHNICK, targetName,
+                ":No such nick/channel (could not decode your unicode!)")
+            return failure.Failure(e)
+
+        messageText = params[-1]
+
+        if targetName.startswith('#'):
+            d = self.realm.lookupGroup(targetName[1:])
+        else:
+            d = self.realm.lookupUser(targetName).addCallback(lambda u: u.mind)
+
+        def cbTarget(targetobj):
+            return targetobj, messageText
+
+        def ebTarget(err):
+            self.sendMessage(
+                irc.ERR_NOSUCHNICK, targetName,
+                ":No such nick/channel.")
+            return err
+
+        d.addCallbacks(cbTarget, ebTarget)
+
+        return d
+
+    def irc_NOTICE(self, prefix, params):
+        """Process a NOTICE.
+
+        Parameters: <msgtarget> <text to be sent>
+        """
+        return self.getTarget(params).addCallback(self.irctarget_NOTICE, prefix)
+
+    def irctarget_NOTICE(self, (target, messageText), prefix):
+        if targ is not None:
+            return self.avatar.sendNotice(targ, {"text": messageText})
+
+    def irc_AWAY(self, prefix, params):
+        """Ignore away messages sent by wayward clients, for now."""
+
+    def irc_BACKGROUND(self, prefix, params):
+        """
+        /BACKGROUND #channel md5key
+
+        Set the channel map's background. This will also resize the map.
+        """
+        return self.getTarget(params).addCallback(self.irctarget_BACKGROUND, prefix)
+
+    def irctarget_BACKGROUND(self, (target, messageText), prefix, ):
+        messageText = u'BACKGROUND %s' % (messageText,)
+
+        assert iwords.IGroup.providedBy(target), "Target must be a group"
+
+        d = theRealm.lookupUser(u'vellumtalk')
+        def cbUser(client):
+            message = {'text': messageText}
+            client.sendNotice(target, message)
+        d.addCallback(cbUser)
+
+
+    """
+    /NEWMAP #channel
+        clean the channel map of all tokens, drawings, obscurement and
+        background
+
+    /MAPSCALE #channel distance
+        Set the map's scale so that 100px==distance.  Resize tokens
+        appropriately.
+
+    /ADDTOKEN #channel protoid (TBD...)
+        Create a new token from the prototype, ...
+
+    /DELTOKEN #channel tokenid
+        Remove the token from the map.
+
+    /MOVETOKEN #channel tokenid destx desty
+        Move the token to a new location.
+
+    /OBSCUREMENT #channel (TBD...)
+        Update the map obscurement ...
+
+    /ADDDRAWING #channel (TBD...)
+        Add an SVG drawing to the map ...
+
+    /DELDRAWING #channel (TBD...)
+        Remove the drawing from the map
+
+    (TBD ... time commands)
+    """
+
+
 class VellumIRCGroup(Group):
+    def __init__(self, *a, **kw):
+        Group.__init__(self, *a, **kw)
+        d = theRealm.lookupUser(VTNICK)
+        def cbLookup(user):
+            self.users[VTNICK] = user.mind
+        d.addCallback(cbLookup)
+
     def receiveNotice(self, sender, recipient, message):
         # raped n pasted from irc.py Group.receive()
         assert recipient is self
@@ -43,58 +169,6 @@ class VellumWordsRealm(InMemoryWordsRealm):
 
 theRealm = VellumWordsRealm('vellumIRCserver')
 theRealm.createGroupOnRequest = True
-
-
-class VellumIRCServerProtocol(IRCUser):
-    def receiveNotice(self, sender, recipient, message):
-        # raped n pasted from irc.py receive()
-        if iwords.IGroup.providedBy(recipient):
-            recipientName = '#' + recipient.name
-        else:
-            recipientName = recipient.name
-
-        text = message.get('text', '<an unrepresentable message>')
-        for L in text.splitlines():
-            self.notice(
-                '%s!%s@%s' % (sender.name, sender.name, self.hostname),
-                recipientName,
-                L)
-
-    def irc_NOTICE(self, prefix, params):
-        """Process a NOTICE.
-
-        Parameters: <msgtarget> <text to be sent>
-
-        RAPED AND PASTED from IRCUser.irc_PRIVMSG
-        """
-        try:
-            targetName = params[0].decode(self.encoding)
-        except UnicodeDecodeError:
-            self.sendMessage(
-                irc.ERR_NOSUCHNICK, targetName,
-                ":No such nick/channel (could not decode your unicode!)")
-            return
-
-        messageText = params[-1]
-        if targetName.startswith('#'):
-            target = self.realm.lookupGroup(targetName[1:])
-        else:
-            target = self.realm.lookupUser(targetName).addCallback(lambda user: user.mind)
-
-        def cbTarget(targ):
-            if targ is not None:
-                return self.avatar.sendNotice(targ, {"text": messageText})
-
-        def ebTarget(err):
-            self.sendMessage(
-                irc.ERR_NOSUCHNICK, targetName,
-                ":No such nick/channel.")
-
-        target.addCallbacks(cbTarget, ebTarget)
-
-
-class VellumIRCFactory(IRCFactory):
-    protocol = VellumIRCServerProtocol
 
 
 class AxiomNickChecker(object):
@@ -131,12 +205,42 @@ class AxiomNickChecker(object):
 checker = AxiomNickChecker()
 thePortal = portal.Portal(theRealm, [checker])
 
+
+class DummyStringTransport(proto_helpers.StringTransport):
+    def write(self, data):
+        pass
+
+    def writeSequence(self, data):
+        pass
+
+    def value(self):
+        raise NotImplementedError()
+
+
 class IRCService(item.Item, util.AxiomTCPServerMixin):
-    factory = VellumIRCFactory(theRealm, thePortal)
+    factory = IRCFactory(theRealm, thePortal)
+    factory.protocol = VellumIRCServerProtocol
+
     schemaVersion = 1
     portNumber = A.integer()
 
     port = A.inmemory()
     parent = A.inmemory()
     running = A.inmemory()
+
+    def startService(self):
+        super(IRCService, self).startService()
+        # create VellumTalk, a default User
+        d = theRealm.createUser(VTNICK)
+        def _created(user):
+            # set up vellumtalk's mind and misc. attributes
+            user.mind = VellumIRCServerProtocol()
+            user.mind.makeConnection(DummyStringTransport())
+            user.mind.avatar = user
+            user.mind.name = VTNICK
+            # need a signOn for whois
+            user.signOn = time()
+            return user
+        d.addCallback(_created)
+        d.addCallback(lambda u: log.msg("Created user %r" % (u.name,)))
 
