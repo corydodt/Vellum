@@ -1,8 +1,8 @@
 from time import time
 
-from zope.interface import implements, Interface
+from zope.interface import implements
 
-from twisted.internet import defer, reactor
+from twisted.internet import defer
 from twisted.python import log, failure
 from twisted.words.service import InMemoryWordsRealm, IRCFactory, IRCUser, \
                                   User, Group
