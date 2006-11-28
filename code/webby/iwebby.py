@@ -40,3 +40,14 @@ class IChatAccountManager(Interface):
 class IMapWidget(Interface):
     def setMapBackground(self, md5key):
         """Send an image file to the remote side."""
+
+
+class IChatFormatter(Interface):
+    """
+    Process chat messages, returning them formatted according to sender,
+    target and metadata.
+    """
+    def format(self, text, sender, target, metadata):
+        """
+        Return a formatted string for sending to the channel.
+        """
