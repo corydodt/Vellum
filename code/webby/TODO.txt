@@ -11,3 +11,7 @@ http://spreadsheets.google.com/ccc?key=p1P43A77NkCmSsul4vIPpPA
 - a very long list in the chooser will send a lot of data.. pager?
 
 - after you upload a file, the ChooserIcons don't remain draggable
+
+- Need an initial state summary for the map so someone joining the channel
+  gets it.
+
