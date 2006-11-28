@@ -35,8 +35,3 @@ class INameSelect(Interface):
 class IChatAccountManager(Interface):
     def onLogOnSubmit(self, username, password, channels):
         """Handler to process an attempt to log on from the UI"""
-
-
-class IMapWidget(Interface):
-    def setMapBackground(self, md5key):
-        """Send an image file to the remote side."""
