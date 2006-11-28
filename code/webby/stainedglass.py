@@ -37,7 +37,7 @@ from nevow import loaders, athena
 
 from zope.interface import implements
 
-from webby import util, minchat
+from webby import util, iwebby
 
 RESOURCE = lambda f: sibpath(__file__, f)
 
@@ -90,7 +90,7 @@ class Enclosure(athena.LiveElement):
 
 class TextArea(util.RenderWaitLiveElement):
     """A scrollable widget that displays mostly lines of text."""
-    implements(minchat.ITextArea) # FIXME - move to here
+    implements(iwebby.ITextArea) # FIXME - move to here
     jsClass = u"StainedGlass.TextArea"
     docFactory = loaders.xmlfile(RESOURCE('elements/TextArea'))
     widgetArgs = None
