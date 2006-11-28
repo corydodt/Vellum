@@ -8,12 +8,7 @@ from nevow import rend, loaders, athena, url, static, inevow, tags as T
 
 from webby import minchat, svgmap, parseirc, stainedglass, util, signup, gmtools, \
                           tabs
-from webby.minchat import IChatConversations, \
-                          IChatEntry, \
-                          IChatAccountManager, \
-                          ITopicBar, \
-                          ITextArea, \
-                          INameSelect
+from webby import iwebby
 
 RESOURCE = lambda f: sibpath(__file__, f)
 
@@ -35,16 +30,16 @@ class IRCContainer(stainedglass.Enclosure, components.Componentized):
     def enclosedRegion(self, request, tag):
         cw = ConversationTabs()
         cw.setFragmentParent(self)
-        self.setComponent(IChatConversations, cw)
+        self.setComponent(iwebby.IChatConversations, cw)
         cw.initServerTab()
 
         am = AccountManagerElement(self.accountManager, cw, self.user)
         am.setFragmentParent(self)
-        self.setComponent(IChatAccountManager, am)
+        self.setComponent(iwebby.IChatAccountManager, am)
 
         ce = ChatEntry()
         ce.setFragmentParent(self)
-        self.setComponent(IChatEntry, ce)
+        self.setComponent(iwebby.IChatEntry, ce)
         return tag[am, cw, ce]
 
     athena.renderer(enclosedRegion)
@@ -56,7 +51,7 @@ class TopicBar(util.RenderWaitLiveElement):
     Text widget that sits above the channel window in a tab and displays the
     current channel topic.
     """
-    implements(ITopicBar)
+    implements(iwebby.ITopicBar)
     docFactory = loaders.xmlfile(RESOURCE('elements/TopicBar'))
     jsClass = u'WebbyVellum.TopicBar'
 
@@ -69,7 +64,7 @@ class NameSelect(util.RenderWaitLiveElement):
     """
     <select> box that contains the list of names for a group conversation.
     """
-    implements(INameSelect)
+    implements(iwebby.INameSelect)
     jsClass = u'WebbyVellum.NameSelect'
     docFactory = loaders.xmlfile(RESOURCE('elements/NameSelect'))
 
@@ -93,7 +88,7 @@ class ConversationTabs(tabs.TabsElement):
     UI element - For each conversation, one tab.
     """
     ## jsClass = u"WebbyVellum.ConversationTabs"
-    implements(IChatConversations)
+    implements(iwebby.IChatConversations)
 
     def __init__(self, *a, **kw):
         super(ConversationTabs, self).__init__(*a, **kw)
@@ -125,7 +120,7 @@ class ConversationTabs(tabs.TabsElement):
         ta.setFragmentParent(self)
         ta.setInitialArguments(GREETING)
 
-        nullconv.setComponent(ITextArea, ta)
+        nullconv.setComponent(iwebby.ITextArea, ta)
 
         self.conversations[initialId] = nullconv
 
@@ -162,9 +157,10 @@ class ConversationTabs(tabs.TabsElement):
             mapw.setFragmentParent(enc)
 
             # assign components
-            conversation.setComponent(ITextArea, ta)
-            conversation.setComponent(ITopicBar, tb)
-            conversation.setComponent(INameSelect, ns)
+            conversation.setComponent(iwebby.ITextArea, ta)
+            conversation.setComponent(iwebby.ITopicBar, tb)
+            conversation.setComponent(iwebby.INameSelect, ns)
+            conversation.setComponent(iwebby.IMapWidget, mapw)
 
             # put the little widgets into the stan tree of the container
             enc = enc[tb, T.div(_class="mapbox")[mapw], 
@@ -221,7 +217,7 @@ class AccountManagerElement(athena.LiveElement):
     IRC server.
     """
     docFactory = loaders.xmlfile(RESOURCE('elements/AccountManagerElement'))
-    implements(IChatAccountManager)
+    implements(iwebby.IChatAccountManager)
 
     def __init__(self, accountManager, conversationTabs, user, *a, **kw):
         super(AccountManagerElement, self).__init__(*a, **kw)
@@ -267,12 +263,12 @@ class AccountManagerElement(athena.LiveElement):
 
 class ChatEntry(athena.LiveElement):
     docFactory = loaders.xmlfile(RESOURCE('elements/ChatEntry'))
-    implements(IChatEntry)
+    implements(iwebby.IChatEntry)
 
     jsClass = u"WebbyVellum.ChatEntry"
 
     def chatMessage(self, message, tabid):
-        conv = IChatConversations(self.fragmentParent).getConversation(tabid)
+        conv = iwebby.IChatConversations(self.fragmentParent).getConversation(tabid)
 
         parsed = parseirc.line.parseString(message)
         if parsed.command:
@@ -378,7 +374,7 @@ class ChatEntry(athena.LiveElement):
         client = self.page.chatui.onlineClients[0]
         recipient, rest = args.split(None, 1)
         r = client.notice(recipient, rest)
-        ITextArea(conv).printClean(u'>%s< %s' % (recipient, rest))
+        iwebby.ITextArea(conv).printClean(u'>%s< %s' % (recipient, rest))
         return r
 
     def irccmd_query(self, args, conv):

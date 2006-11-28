@@ -6,7 +6,6 @@ from twisted.python import components
 
 from webby.proto import WebbyAccount # Using custom account, so as to use a custom protocol
 from webby import iwebby
-from webby.iwebby import * # TODO - remove this and fix importers from minchat
 
 ACCOUNTS = {}
 
