@@ -81,8 +81,8 @@ class VellumIRCServerProtocol(IRCUser):
         return self.getTarget(params).addCallback(self.irctarget_NOTICE, prefix)
 
     def irctarget_NOTICE(self, (target, messageText), prefix):
-        if targ is not None:
-            return self.avatar.sendNotice(targ, {"text": messageText})
+        if target is not None:
+            return self.avatar.sendNotice(target, {"text": messageText})
 
     def irc_AWAY(self, prefix, params):
         """Ignore away messages sent by wayward clients, for now."""
