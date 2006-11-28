@@ -4,6 +4,8 @@ from twisted.words.im import basechat, baseaccount, ircsupport
 from twisted.internet import defer, protocol, reactor
 from twisted.python import components
 
+from zope.interface import implements
+
 from webby.proto import WebbyAccount # Using custom account, so as to use a custom protocol
 from webby import iwebby
 
@@ -53,6 +55,37 @@ class AccountManager(baseaccount.AccountManager):
         del ACCOUNTS[key]
 
 
+class UnformattableMessage(Exception):
+    pass
+
+
+IChatFormatter = iwebby.IChatFormatter
+
+
+class ChatFormatter(object):
+    implements(IChatFormatter)
+
+    def format(self, text, sender=None, target=None, metadata=None):
+        if metadata is None: metadata = {}
+
+        if not sender and not target:
+            raise UnformattableMessage("sender=%r,target=%r" % (sender, target))
+
+        name = sender or target
+
+        # TODO - when target is given instead of sender, use different
+        # formatting (e.g. >Nick< )
+
+        if metadata.get("style", None) == "emote":
+            t = '* %s %s' % (name, text)
+        elif metadata.get('dontAutoRespond', None):
+            t = "-%s- %s" % (name, text)
+        else:
+            t = "<%s> %s" % (name, text)
+
+        return t
+
+
 class NullConversation(components.Componentized):
     """This conversation is a placeholder without an actual interface to IRC.
     It should be used for things like server tabs in the UI.
@@ -82,6 +115,8 @@ class MinConversation(
         basechat.Conversation.__init__(self, *a, **kw)
         self.widget = widget
 
+        self.setComponent(IChatFormatter, ChatFormatter())
+
     def show(self):
         pname = unicode(self.person.name)
         iwebby.IChatConversations(self.widget).showConversation(self, pname)
@@ -91,24 +126,15 @@ class MinConversation(
         iwebby.IChatConversations(self.widget).hideConversation(self, pname)
     
     def showMessage(self, text, metadata=None):
-        return self._reallyShowMessage(self.person.name, text, metadata)
-
-    def _reallyShowMessage(self, name, text, metadata):
-        if metadata is None: metadata = {}
-
-        if metadata.get("style", None) == "emote":
-            t = '* %s %s' % (name, text)
-        elif metadata.get('dontAutoRespond', None):
-            t = "-%s- %s" % (name, text)
-        else:
-            t = "<%s> %s" % (name, text)
-
-        return iwebby.ITextArea(self).printClean(t)
+        fmtd = IChatFormatter(self).format(text, sender=self.person.name,
+                metadata=metadata)
+        return iwebby.ITextArea(self).printClean(fmtd)
 
     def sendText(self, text, metadata=None):
         r = self.person.sendMessage(text, metadata)
         me = self.person.account.client.name
-        self._reallyShowMessage(me, text, metadata)
+        fmtd = IChatFormatter(self).format(text, sender=me, metadata=metadata)
+        iwebby.ITextArea(self).printClean(fmtd)
 
         return r
 
@@ -116,6 +142,7 @@ class MinConversation(
         basechat.Conversation.contactChangedNick(self, person, newnick)
         event = "-!- %s is now known as %s" % (person.name, newnick)
         return iwebby.ITextArea(self).printClean(event)
+
 
 class MinGroupConversation(
         basechat.GroupConversation,
@@ -130,6 +157,8 @@ class MinGroupConversation(
         basechat.GroupConversation.__init__(self, *a, **kw)
         self.widget = widget
 
+        self.setComponent(IChatFormatter, ChatFormatter())
+
     def show(self):
         groupname = unicode('#' + self.group.name)
         iwebby.IChatConversations(self.widget).showConversation(self, groupname)
@@ -139,25 +168,15 @@ class MinGroupConversation(
         iwebby.IChatConversations(self.widget).hideConversation(self, groupname)
 
     def showGroupMessage(self, sender, text, metadata=None):
-        return self._reallyShowMessage(sender, text, metadata)
-
-    def _reallyShowMessage(self, name, text, metadata):
-        if metadata is None: metadata = {}
-
-        if metadata.get("style", None) == "emote":
-            t = '* %s %s' % (name, text)
-        elif metadata.get('dontAutoRespond', None):
-            t = "-%s- %s" % (name, text)
-        else:
-            t = "<%s> %s" % (name, text)
-
-        return iwebby.ITextArea(self).printClean(t)
+        fmtd = IChatFormatter(self).format(text, sender=sender,
+                metadata=metadata)
+        return iwebby.ITextArea(self).printClean(fmtd)
 
     def sendText(self, text, metadata=None):
         r = self.group.sendGroupMessage(text, metadata)
         me = self.group.account.client.name
-        self._reallyShowMessage(me, text, metadata)
-
+        fmtd = IChatFormatter(self).format(text, sender=me, metadata=metadata)
+        iwebby.ITextArea(self).printClean(fmtd)
         return r
 
     def setTopic(self, topic, author):
@@ -190,8 +209,10 @@ class MinGroupConversation(
         iwebby.INameSelect(self).removeName(member)
         return iwebby.ITextArea(self).printClean(event)
 
+
 class NoUIConnected(Exception):
     pass
+
     
 class MinChat(basechat.ChatUI):
     """This class is a minimal implementation of the abstract ChatUI class.
