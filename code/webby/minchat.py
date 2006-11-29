@@ -143,6 +143,23 @@ class MinConversation(
         event = "-!- %s is now known as %s" % (person.name, newnick)
         return iwebby.ITextArea(self).printClean(event)
 
+class ReceivedNoticeParser(object):
+    def __init__(self, widget):
+        self.widget = widget
+
+    def parse(self, sender, text, metadata):
+        if not metadata.get('dontAutoRespond', False):
+            return
+
+        if sender.lower() != 'vellumtalk':
+            return None
+
+        command, args = text.split(None, 1)
+        return getattr(self, 'command_%s' % (command.upper(),))(command, args)
+                
+    def command_BACKGROUND(self, command, args):
+        return self.widget.setMapBackground(args)
+
 
 class MinGroupConversation(
         basechat.GroupConversation,
@@ -168,6 +185,12 @@ class MinGroupConversation(
         iwebby.IChatConversations(self.widget).hideConversation(self, groupname)
 
     def showGroupMessage(self, sender, text, metadata=None):
+        # irc notices from vellumtalk are special commands
+        noticeParser = ReceivedNoticeParser(iwebby.IMapWidget(self))
+        parseDeferred = noticeParser.parse(sender, text, metadata)
+        if parseDeferred:
+            return parseDeferred
+
         fmtd = IChatFormatter(self).format(text, sender=sender,
                 metadata=metadata)
         return iwebby.ITextArea(self).printClean(fmtd)
