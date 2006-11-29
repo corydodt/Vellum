@@ -5,8 +5,8 @@ from axiom import store
 from nevow import athena
 from nevow.livetrial import testcase
 
-from webby import ircweb, signup, data, theGlobal, gmtools
-from webby.minchat import IChatConversations, NullConversation
+from webby import ircweb, signup, data, theGlobal, gmtools, iwebby
+from webby.minchat import NullConversation
 
 class MockAccountManager:
     def doConnection(self, host, username, password, channels):
@@ -25,7 +25,7 @@ class TestIRCContainer(testcase.TestCase):
         """
         Hook up a new (fake) conversation so tests can play with the tab.
         """
-        convwin = IChatConversations(self.irc)
+        convwin = iwebby.IChatConversations(self.irc)
         nullconv = NullConversation(convwin, id)
         return convwin.showConversation(nullconv, id)
 
