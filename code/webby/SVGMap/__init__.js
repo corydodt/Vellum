@@ -81,6 +81,7 @@ SVGMap.MapWidget.methods( // {{{
             // set the href again.
             background.node.setAttributeNS(XLINKNS, 'href', 
                     background.node.href.baseVal);
+            return null;
         });
         return d;
     }, // }}}
