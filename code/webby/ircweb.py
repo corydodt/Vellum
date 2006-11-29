@@ -196,9 +196,9 @@ class ConversationTabs(tabs.TabsElement):
         Make a conversation disappear.
         """
         cn = unicode(conversationName)
-        if cn in self.textareas:
+        if cn in self.conversations:
             d = self.removeTab(cn)
-            del self.textareas[cn]
+            del self.conversations[cn]
         else:
             d = defer.succeed(None)
         # FIXME - we do not return this deferred.  Need to see whether
@@ -284,7 +284,7 @@ class ChatEntry(athena.LiveElement):
             m(parsed.commandArgs.encode('utf8'), conv)
         else:
             self.say(parsed.nonCommand[0].encode('utf8'), conv)
-        return None
+        return u'ok'
 
     athena.expose(chatMessage)
 
