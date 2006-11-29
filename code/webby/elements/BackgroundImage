@@ -1,0 +1,5 @@
+<image xmlns:vellum="http://vellum.berlios.de/2006/vellum" vellum:name="map-background" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:n="http://nevow.com/ns/nevow/0.1" n:render="imageLiveElement">
+<n:attr name="xlink:href"><n:slot name="href"/></n:attr>
+<n:attr name="width"><n:slot name="width"/></n:attr>
+<n:attr name="height"><n:slot name="height"/></n:attr>
+</image>
