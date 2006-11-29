@@ -39,6 +39,7 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
 
             // TODO - assert something about accountManager
         });
+        return d;
     }, // }}}
 
     function test_conversationTabs(self) { // {{{
@@ -92,7 +93,8 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
             });
             return d2;
         });
-    },
+        return d;
+    }, // }}}
 
     function test_logOn(self) { // {{{
         var d = self.setUp();
@@ -162,6 +164,7 @@ WebbyVellum.Tests.TestTopicBar.methods( // {{{
         d.addCallback(function initialize(topicbar) {
             self.assertEqual(topicbar.node.value, '');
         });
+        return d;
     }, // }}}
 
     function test_setTopic(self) { // {{{
@@ -170,6 +173,7 @@ WebbyVellum.Tests.TestTopicBar.methods( // {{{
             topicbar.setTopic('hello');
             self.assertEqual(topicbar.node.value, 'hello');
         });
+        return d;
     }, // }}}
 
     function setUp(self) { // {{{
@@ -311,4 +315,32 @@ WebbyVellum.Tests.TestFileChooser.methods( // {{{
         return d;
     } // }}}
 ); // }}}
+
+WebbyVellum.Tests.TestNameSelect = Nevow.Athena.Test.TestCase.subclass("WebbyVellum.Tests.NameSelect");
+WebbyVellum.Tests.TestNameSelect.methods( // {{{
+    function test_initialize(self) { // {{{
+        d = self.setUp();
+        d.addCallback(function initialize(nameselect) {
+            self.assertEqual(nameselect.node.className, 'nameSelect');
+        });
+        return d;
+    }, // }}}
+
+    function test_addSetRemoveNames(self) { // {{{
+        d = self.setUp();
+        d.addCallback(function _set(nameselect) {
+            self.assertEqual(nameselect.node.value, 'hello');
+        });
+        return d;
+    }, // }}}
+
+    function setUp(self) { // {{{
+        var d = self.callRemote("newNameSelect");
+        d.addCallback(
+            function _(wi) { return self.addChildWidgetFromWidgetInfo(wi); }
+            );
+        return d;
+    } // }}}
+); // }}}
+
 // vi:foldmethod=marker

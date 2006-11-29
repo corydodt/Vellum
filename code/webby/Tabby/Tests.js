@@ -106,6 +106,7 @@ Tabby.Tests.TestTabs.methods( // {{{
                 tabs.clicked(onehandle);
                 self.assertEqual(tabs.activeTabId(), '1');
             });
+        return d;
     }, // }}}
 
     function test_show(self) { // {{{

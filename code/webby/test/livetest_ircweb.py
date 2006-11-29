@@ -101,3 +101,15 @@ class TestFileChooser(testcase.TestCase):
 
     athena.expose(newFileChooser)
 
+class TestNameSelect(testcase.TestCase):
+    jsClass = u'WebbyVellum.Tests.TestNameSelect'
+    def newNameSelect(self, ):
+        """
+        Return a new NameSelect
+        """
+        ns = ircweb.NameSelect()
+        ns.setFragmentParent(self)
+        return ns
+
+    athena.expose(newNameSelect)
+
