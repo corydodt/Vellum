@@ -97,10 +97,15 @@ WebbyVellum.ChatEntry.methods( // {{{
     function submit(self, event) { // {{{
         event.stopPropagation();
         event.preventDefault();
-        var active = self.widgetParent.activeTabId();
         var input = self.firstNodeByAttribute('class', 'chatentry');
-        var d = self.callRemote("chatMessage", input.value, active);
+        var ret = self.sendChatText(input.value);
         input.value = "";
+        return ret;
+    }, // }}}
+
+    function sendChatText(self, text) { // {{{
+        var active = self.widgetParent.activeTabId();
+        var d = self.callRemote("chatMessage", text, active);
         return d;
     } // }}}
 ); // }}}
@@ -109,6 +114,10 @@ WebbyVellum.IRCContainer = StainedGlass.Enclosure.subclass('WebbyVellum.IRCConta
 WebbyVellum.IRCContainer.methods( // {{{
     function activeTabId(self) { // {{{
         return self.childWidgets[1].activeTabId();
+    }, // }}}
+
+    function getChatEntry(self) { // {{{
+        return self.childWidgets[2];
     } // }}}
 ); // }}}
 

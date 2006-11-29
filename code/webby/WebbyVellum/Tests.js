@@ -58,7 +58,7 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
     function test_submitText(self) { // {{{
         var d = self.setUp();
         d.addCallback(function _(irc) {
-            var chat = irc.childWidgets[2];
+            var chat = irc.getChatEntry();
             var chatentry = chat.firstNodeByAttribute('class', 'chatentry');
 
             chatentry.value = 'hello';
@@ -77,6 +77,22 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
         });
         return d;
     }, // }}}
+
+    /* test that we can send a string without the event around it */
+    function test_sendChatText(self) { // {{{
+        var d = self.setUp();
+        d.addCallback(function _(irc) {
+            var ce = irc.getChatEntry();
+            var d2 = ce.sendChatText('hello2');
+            d2.addCallback(function (_) {
+                var fgtab = irc.firstNodeByAttribute('class', 'tab');
+
+                // the server tab should contain a span with the text
+                self.assertEqual(fgtab.innerHTML.search('hello2') > 0, true);
+            });
+            return d2;
+        });
+    },
 
     function test_logOn(self) { // {{{
         var d = self.setUp();
@@ -113,6 +129,15 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
         return d;
     }, // }}}
 
+    /* test that getChatEntry returns a ChatEntry widget */
+    function test_getChatEntry(self) { // {{{
+        d = self.setUp();
+        d.addCallback(function _(irc) {
+            var ce = irc.getChatEntry();
+            self.failUnless(ce.firstNodeByAttribute('class', 'chatentry'));
+        });
+        return d;
+    }, // }}}
 
     // TODO - test keyboard login submit vs. click button submit?
 
