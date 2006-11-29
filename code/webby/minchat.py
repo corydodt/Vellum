@@ -78,7 +78,7 @@ class ChatFormatter(object):
 
         if metadata.get("style", None) == "emote":
             t = '* %s %s' % (name, text)
-        elif metadata.get('dontAutoRespond', None):
+        elif metadata.get('dontAutoRespond', False):
             t = "-%s- %s" % (name, text)
         else:
             t = "<%s> %s" % (name, text)
