@@ -49,7 +49,9 @@ class FileTree(rend.Page):
         md5 = segs[0]
         db = theGlobal["database"]
         FM = data.FileMeta
-        _filter = A.AND(FM.md5==unicode(md5), FM.user==self.user)
+        # for now, everyone gets access to everyone else's files
+        # TODO - implement permissions on files?
+        _filter = A.AND(FM.md5==unicode(md5))
         fileitem = db.findFirst(FM, _filter)
         if fileitem is None:
             return None, ()
