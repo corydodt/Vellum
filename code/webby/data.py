@@ -16,8 +16,8 @@ else:
 
 class DataService(item.Item, service.Service, item.InstallableMixin):
     schemaVersion = 1
-    smtpFrom = A.text()
-    smtpServer = A.text()
+    smtpFrom = A.text(doc="The email address used as From: in emails")
+    smtpServer = A.text(doc="The SMTP server used for outgoing email")
 
     parent = A.inmemory()
     running = A.inmemory()
@@ -37,26 +37,18 @@ class DataService(item.Item, service.Service, item.InstallableMixin):
         # Until that is implemented, this is hardcoded.
         ## self.substore = store.Store(appdata.child('gnoll.axiom'))
 
+
 class IArticle(Interface):
     """
     A thing you can put on a map, such as a character or sound effect node
     """
+
 
 class _ArticleMixin(object):
     implements(IArticle)
 
     def installOn(self, other):
         other.powerUp(self, IArticle)
-
-class Map(item.Item):
-    """
-    The Map that a game is played on, with information about its physical
-    characteristics.
-    """
-    schemaVersion = 1
-    name = A.text(allowNone=False)
-    path = A.path(allowNone=False, relative=True)
-    scale100px = A.point4decimal() # Distance in meters of 100 map px @ 100% zoom
 
 
 class Character(item.Item, _ArticleMixin):
@@ -68,31 +60,45 @@ class Character(item.Item, _ArticleMixin):
     left = A.point4decimal()
     scale = A.point4decimal(allowNone=False)
 
+
 class User(item.Item):
     schemaVersion = 2
-    email = A.text("The username used to log in", allowNone=False)
-    nick = A.text("The default nick to use in IRC")
-    firstname = A.text()
-    lastname = A.text()
-    password = A.text()
-    confirmationKey = A.text()
-    unconfirmedPassword = A.text("Password is held here until confirmationKey is validated.")
+    email = A.text(doc="The username used to log in", allowNone=False)
+    nick = A.text(doc="The default nick to use in IRC")
+    firstname = A.text(doc="The first name of the user")
+    lastname = A.text(doc="The last name of the user")
+    password = A.text(doc="The password of the user")
+    confirmationKey = A.text(doc="A random number generated to send to the user's email address")
+    unconfirmedPassword = A.text(doc="Password is held here until confirmationKey is validated.")
+
 
 class FileMeta(item.Item):
     """A file that has been uploaded."""
     schemaVersion = 1
-    data = A.reference()
-    thumbnail = A.reference()
-    filename = A.text()
-    mimeType = A.text()
-    md5 = A.text()
-    user = A.reference()
-    width = A.integer()
-    height = A.integer()
+    data = A.reference(doc="The FileData item that holds this file's data")
+    thumbnail = A.reference(doc="The FileData item that holds the image thumbnail, if any")
+    filename = A.text(doc="The basename of the file")
+    mimeType = A.text(doc="The mime-type of the file")
+    md5 = A.text(doc="The md5 hash of the file data")
+    user = A.reference(doc="The User item who uploaded (owns?) the file")
+    width = A.integer(doc="The width in pixels of the image, if an image")
+    height = A.integer(doc="The height in pixels of the image, if an image")
+
 
 class FileData(item.Item):
     schemaVersion = 1
-    data = A.bytes()
+    data = A.bytes(doc="The bytes in the file")
 
     def __repr__(self):
         return '<FileData @%x>' % (id(self),)
+
+
+class Channel(item.Item):
+    schemaVersion = 1
+    name = A.text(doc="Name of the channel")
+    topic = A.text(doc="What the channel topic is")
+    topicAuthor = A.text(doc="Who set the topic")
+    topicTime = A.timestamp(doc="When the topic was set")
+    background = A.reference(doc="Image for the background of the channel map")
+    gameTime = A.text(doc="A representation of the time in the game session")
+    scale100px = A.point4decimal(doc="Distance in meters of 100 map px @ 100% zoom")

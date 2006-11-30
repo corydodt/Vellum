@@ -3,7 +3,9 @@ from twisted import plugin
 from axiom.scripts import axiomatic
 from axiom import iaxiom
 
-from webby.data import DataService, appdata, User
+from epsilon.extime import Time
+
+from webby.data import DataService, appdata, User, Channel
 from webby import ircserver, web, theGlobal
 
 STOREDIR = appdata.child('glassvellum.axiom')
@@ -41,6 +43,8 @@ class Install(axiomatic.AxiomaticCommand):
 
         if self['demodata']:
             s.findOrCreate(User, email=u'a@b.c', nick=u'MFen', password=u'abc')
+            s.findOrCreate(Channel, name=u'#vellum', topic=u'Welcome to #vellum',
+                    topicAuthor=u'VellumTalk', topicTime=Time())
 
 '''
         map = Map(store=s, 

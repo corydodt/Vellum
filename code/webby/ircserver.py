@@ -15,6 +15,7 @@ from webby import theGlobal, data, util
 
 from axiom import item, attributes as A
 
+from epsilon.extime import Time
 
 VELLUMTALK = u"VellumTalk!vellumtalk@vellum.berlios.de"
 VTNICK = VELLUMTALK.split('!', 1)[0]
@@ -99,12 +100,27 @@ class VellumIRCServerProtocol(IRCUser):
         messageText = u'BACKGROUND %s' % (messageText,)
 
         assert iwords.IGroup.providedBy(target), "Target must be a group"
+        
+        # TODO - permissions.  Am I allowed to do this in this channel?
 
         d = theRealm.lookupUser(u'vellumtalk')
+
         def cbUser(client):
             message = {'text': messageText}
             client.sendNotice(target, message)
+
         d.addCallback(cbUser)
+
+    def _sendTopic(self, group):
+        """
+        Look up the topic in the database
+        """
+        topic = group.channelItem.topic
+        author = group.channelItem.topicAuthor or "<noone>"
+        date = group.channelItem.topicTime.asPOSIXTimestamp() or 0
+        self.topic(self.name, '#' + group.name, topic)
+        self.topicAuthor(self.name, '#' + group.name, author, date)
+
 
 
     """
@@ -141,9 +157,15 @@ class VellumIRCServerProtocol(IRCUser):
 class VellumIRCGroup(Group):
     def __init__(self, *a, **kw):
         Group.__init__(self, *a, **kw)
+        db = theGlobal['database']
+        self.channelItem = db.findOrCreate(data.Channel,
+                data.Channel.name==self.name)
+
         d = theRealm.lookupUser(VTNICK)
+
         def cbLookup(user):
             self.users[VTNICK] = user.mind
+
         d.addCallback(cbLookup)
 
     def receiveNotice(self, sender, recipient, message):
@@ -156,6 +178,21 @@ class VellumIRCGroup(Group):
                 d.addErrback(self._ebUserCall, p=p)
                 receives.append(d)
         defer.DeferredList(receives).addCallback(self._cbUserCall)
+        return defer.succeed(None)
+
+    def setMetadata(self, meta):
+        """
+        Set the topic in the database
+        """
+        self.channelItem.topic = unicode(meta['topic'])
+        self.channelItem.topicAuthor = unicode(meta['topic_author'])
+        self.channelItem.topicTime = Time.fromPOSIXTimestamp(meta['topic_date'])
+        sets = []
+        for p in self.users.itervalues():
+            d = defer.maybeDeferred(p.groupMetaUpdate, self, meta)
+            d.addErrback(self._ebUserCall, p=p)
+            sets.append(d)
+        defer.DeferredList(sets).addCallback(self._cbUserCall)
         return defer.succeed(None)
 
 
