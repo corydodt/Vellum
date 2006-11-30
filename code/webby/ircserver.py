@@ -97,6 +97,7 @@ class VellumIRCServerProtocol(IRCUser):
         return self.getTarget(params).addCallback(self.irctarget_BACKGROUND, prefix)
 
     def irctarget_BACKGROUND(self, (target, messageText), prefix, ):
+        md5key = messageText
         messageText = u'BACKGROUND %s' % (messageText,)
 
         assert iwords.IGroup.providedBy(target), "Target must be a group"
@@ -106,6 +107,13 @@ class VellumIRCServerProtocol(IRCUser):
         d = theRealm.lookupUser(u'vellumtalk')
 
         def cbUser(client):
+            # persist!
+            db = theGlobal['database']
+            FM = data.FileMeta
+            filemeta = db.findFirst(FM, FM.md5 == unicode(md5key))
+            target.channelItem.background = filemeta
+
+            # tell others.
             message = {'text': messageText}
             client.sendNotice(target, message)
 
