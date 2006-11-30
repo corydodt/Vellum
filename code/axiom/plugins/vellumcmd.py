@@ -47,10 +47,6 @@ class Install(axiomatic.AxiomaticCommand):
                     topicAuthor=u'VellumTalk', topicTime=Time())
 
 '''
-        map = Map(store=s, 
-                  name=u"The Gnoll Huddle", 
-                  path=s.filesdir.child('gnoll-huddle.jpg'),
-                  scale100px=Decimal("30.48"))
         Character(store=s,
                   name=u"Shara",
                   path=s.filesdir.child('shara-kw.png'),
