@@ -12,6 +12,15 @@
 // import SVGMap
 
 
+// slow.  FIXME - use a schwartzian transform to sort.
+WebbyVellum.icmp = function icmp(a, b) {
+    var a = a.toLowerCase();
+    var b = b.toLowerCase();
+    if (a == b) return 0;
+    return (a.toLowerCase() > b.toLowerCase() ? 1 : -1);
+}
+
+
 WebbyVellum.TopicBar = Nevow.Athena.Widget.subclass('WebbyVellum.TopicBar');
 WebbyVellum.TopicBar.methods( // {{{
     function setTopic(self, topic) { // {{{
@@ -19,12 +28,34 @@ WebbyVellum.TopicBar.methods( // {{{
     } // }}}
 ); // }}}
 
+WebbyVellum.insertSorted = function insertSorted(name, flags, options, inserter) {
+    // TODO - sort ops at the top, voice next, lurkers last
+    var lname = name.toLowerCase();
+    for (var i=0; i < options.length; i++) {
+        if (options[i].innerHTML.toLowerCase() > lname) {
+            inserter(name, options[i]);
+            return;
+        }
+    }
+    // now we're at the end of the list
+    inserter(name, null);
+};
+
+/* return a function that can insert an item into the select list */
+function getInserter(select)
+{
+    return function _(name, before) {
+        var newName = document.createElement('option');
+        newName.innerHTML = name;
+        select.add(newName, before);
+    }
+}
+
 WebbyVellum.NameSelect = Nevow.Athena.Widget.subclass('WebbyVellum.NameSelect');
 WebbyVellum.NameSelect.methods( // {{{
     function addName(self, name, flags) { // {{{
-        var newName = document.createElement('option');
-        newName.innerHTML = name;
-        self.node.appendChild(newName);
+        WebbyVellum.insertSorted(name, flags, self.node.options, 
+                getInserter(self.node));
     }, // }}}
 
     function removeName(self, name) { // {{{
@@ -41,10 +72,14 @@ WebbyVellum.NameSelect.methods( // {{{
 
     function setNames(self, names) { // {{{
         self.node.innerHTML = '';
-        for (n=0; n<names.length; n++)
+        names.sort(WebbyVellum.icmp);
+
+        var ins = getInserter(self.node);
+        for (var n=0; n<names.length; n++)
         {
-            self.addName(names[n], null);
+            ins(names[n], null);
         }
+
     } // }}}
 ); // }}}
 

@@ -329,7 +329,33 @@ WebbyVellum.Tests.TestNameSelect.methods( // {{{
     function test_addSetRemoveNames(self) { // {{{
         d = self.setUp();
         d.addCallback(function _set(nameselect) {
-            self.assertEqual(nameselect.node.value, 'hello');
+            var insert1 = ['homer', 'maggie', 'Marge', 'bart'];
+            var sorted1 = ['bart', 'homer', 'maggie', 'Marge'];
+            nameselect.setNames(insert1);
+            /* check that all 4 are present */
+            self.assertEqual(nameselect.node.options.length, 4);
+            /* check that they are sorted */
+            var afterInsert1 = [];
+            for (var i=0; i<nameselect.node.options.length; i++)
+                afterInsert1.push(nameselect.node.options[i].innerHTML);
+
+            self.assertEqual(afterInsert1.length, sorted1.length);
+            for (i=0; i<sorted1.length; i++) {
+                self.assertEqual(afterInsert1[0], sorted1[0]);
+            }
+
+            /* check that capitalization is preserved */
+            self.assertEqual(afterInsert1[3], 'Marge');
+
+            nameselect.addName('lisa', {});
+            /* check that lisa was inserted in alphabetical order */
+            self.assertEqual(nameselect.node.options[2].innerHTML, 'lisa')
+
+            /* remove it.. */
+            nameselect.removeName('lisa');
+            self.assertEqual(nameselect.node.options.length, 4);
+            self.assertEqual(nameselect.node.options[2].innerHTML, 'maggie')
+
         });
         return d;
     }, // }}}
