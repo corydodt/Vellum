@@ -216,6 +216,7 @@ class AccountManagerElement(athena.LiveElement):
     UI element that handles changing of the nick and processing a login to the
     IRC server.
     """
+    jsClass = u"WebbyVellum.AccountManager"
     docFactory = loaders.xmlfile(RESOURCE('elements/AccountManagerElement'))
     implements(iwebby.IChatAccountManager)
 
@@ -258,8 +259,6 @@ class AccountManagerElement(athena.LiveElement):
         d.addCallback(_gotAccount)
         return d
     athena.expose(onLogOnSubmit)
-
-    jsClass = u"WebbyVellum.AccountManager"
 
 class ChatEntry(athena.LiveElement):
     docFactory = loaders.xmlfile(RESOURCE('elements/ChatEntry'))
