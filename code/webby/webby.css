@@ -119,6 +119,8 @@ input.topicBar {
     clear: right;
     width: 12em;
     height: 10em;
+    font-family: monospace;
+    font-size: 8pt;
 }
 
 .channel .textArea {
