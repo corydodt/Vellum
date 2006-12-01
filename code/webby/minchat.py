@@ -49,6 +49,7 @@ class AccountManager(baseaccount.AccountManager):
         return d
         
     def disconnect(self, account):
+        assert account.isOnline()
         key = (account.username, account.host)
         PROTOS[key].transport.loseConnection()
         del PROTOS[key]
