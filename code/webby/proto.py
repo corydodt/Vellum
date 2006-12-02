@@ -17,7 +17,6 @@ class WebbyProto(ircsupport.IRCProto):
         retarded.
         """
         self.account._clientLost(self, reason)
-        print "3 !!!!!!!!!!!!!!!!!!!!!!! abstract connectionLost", self
         self.unregisterAsAccountClient()
         return irc.IRCClient.connectionLost(self, reason)
 
