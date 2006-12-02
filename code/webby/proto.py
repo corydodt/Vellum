@@ -3,6 +3,24 @@ from twisted.internet import defer, protocol, reactor
 from twisted.words.protocols import irc
 
 class WebbyProto(ircsupport.IRCProto):
+    def connectionLost(self, reason):
+        """
+        Basically, t.words.im.basesupport.AbstractClientMixin is completely
+        *fucked* in the head.  Subclassing it is impossible, because of the
+        stupid fucking self._protoBase, which turns out to be IRCProto, not
+        this class.
+
+        I think what's happening is this proto instance has its connectionLost
+        called, then IRCProto.connectionLost(self) *also* gets called.
+
+        So, clobber connectionLost and do it ourselves, because that's fucking
+        retarded.
+        """
+        self.account._clientLost(self, reason)
+        print "3 !!!!!!!!!!!!!!!!!!!!!!! abstract connectionLost", self
+        self.unregisterAsAccountClient()
+        return irc.IRCClient.connectionLost(self, reason)
+
     def lineReceived(self, line):
         print line
         return ircsupport.IRCProto.lineReceived(self, line)
