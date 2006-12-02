@@ -166,8 +166,8 @@ class VellumIRCGroup(Group):
     def __init__(self, *a, **kw):
         Group.__init__(self, *a, **kw)
         db = theGlobal['database']
-        self.channelItem = db.findOrCreate(data.Channel,
-                data.Channel.name==self.name)
+        Ch = data.Channel
+        self.channelItem = db.findOrCreate(Ch, name=u'#%s' % (self.name,))
 
         d = theRealm.lookupUser(VTNICK)
 
