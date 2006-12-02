@@ -4,6 +4,7 @@ class IChatEntry(Interface):
     def chatMessage(self, message, id):
         """Handler to process typed chat events on the client"""
 
+
 class IChatConversations(Interface):
     def showConversation(self, conversation, conversationName):
         """Cause a conversation window to appear"""
@@ -14,13 +15,16 @@ class IChatConversations(Interface):
     def getConversation(self, id, default):
         """Return a MinConversation object having the specified id"""
 
+
 class ITextArea(Interface):
     def printClean(self, message):
         """Send text to the widget."""
 
+
 class ITopicBar(Interface):
     def setTopic(self, topic):
         """Replace the topic."""
+
 
 class INameSelect(Interface):
     def addName(self, name, flags=()):
@@ -31,6 +35,7 @@ class INameSelect(Interface):
 
     def setNames(self, name):
         """Set the name list, all at once (e.g. /NAMES reply)"""
+
 
 class IChatAccountManager(Interface):
     def onLogOnSubmit(self, username, password, channels):
