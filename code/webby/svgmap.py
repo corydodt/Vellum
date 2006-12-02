@@ -37,4 +37,4 @@ class MapWidget(athena.LiveElement):
         filemeta = db.findFirst(data.FileMeta, data.FileMeta.md5 == unicode(md5key))
         image = BackgroundImage(filemeta)
         image.setFragmentParent(self)
-        d = self.callRemote("setMapBackground", image)
+        return self.callRemote("setMapBackground", image)
