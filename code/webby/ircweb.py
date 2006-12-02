@@ -153,6 +153,7 @@ class ConversationTabs(tabs.TabsElement):
             ta.setFragmentParent(enc)
 
             # the MAP
+            # TODO - don't create one of these in 1-on-1 conversations
             mapw = svgmap.MapWidget()
             mapw.setFragmentParent(enc)
 

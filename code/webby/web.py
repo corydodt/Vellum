@@ -82,6 +82,11 @@ class StaticRoot(rend.Page):
         return static.File(RESOURCE('images'))
  
 class VellumRealm:
+    """
+    TODO - combine this with VellumIRCRealm.  Look at requestAvatar and see
+    what interfaces the irc realm looks for.  Something with the portal, too.
+    """
+
     implements(portal.IRealm)
     class LoginPage(StaticRoot):
         """Page which asks for username/password."""
