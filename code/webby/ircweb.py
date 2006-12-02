@@ -152,16 +152,18 @@ class ConversationTabs(tabs.TabsElement):
             ta = stainedglass.TextArea()
             ta.setFragmentParent(enc)
 
-            # the MAP
-            # TODO - don't create one of these in 1-on-1 conversations
-            mapw = svgmap.MapWidget()
-            mapw.setFragmentParent(enc)
-
             # assign components
             conversation.setComponent(iwebby.ITextArea, ta)
             conversation.setComponent(iwebby.ITopicBar, tb)
             conversation.setComponent(iwebby.INameSelect, ns)
-            conversation.setComponent(iwebby.IMapWidget, mapw)
+            
+            # the MAP
+            if hasattr(conversation, 'group'):
+                mapw = svgmap.MapWidget()
+                mapw.setFragmentParent(enc)
+                conversation.setComponent(iwebby.IMapWidget, mapw)
+            else:
+                mapw = []
 
             # put the little widgets into the stan tree of the container
             enc = enc[tb, T.div(_class="mapbox")[mapw], 

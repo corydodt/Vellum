@@ -12,6 +12,4 @@ http://spreadsheets.google.com/ccc?key=p1P43A77NkCmSsul4vIPpPA
 
 - after you upload a file, the ChooserIcons don't remain draggable
 
-- Need an initial /MAPDIGEST for channel joiners
-
-- 1-on-1 conversations shouldn't have a map widget.
+- no way to close 1-on-1 conversations.
