@@ -182,6 +182,9 @@ class ConversationTabs(tabs.TabsElement):
             d = defer.succeed(None)
 
         def _conversationIsReady(_):
+            if hasattr(conversation, 'group'):
+                acct = self.page.chatui.onlineClients[0].account
+                acct.client.sendLine(('MAPDIGEST %s' % (cn,)).encode('utf8'))
             return self.callRemote("show", cn)
 
         d.addCallback(_conversationIsReady)

@@ -96,26 +96,26 @@ class VellumIRCServerProtocol(IRCUser):
         """
         return self.getTarget(params).addCallback(self.irctarget_BACKGROUND, prefix)
 
-    def irctarget_BACKGROUND(self, (target, messageText), prefix, ):
+    def irctarget_BACKGROUND(self, (group, messageText), prefix, ):
         md5key = messageText
-        messageText = u'BACKGROUND %s' % (messageText,)
+        messageText = u'BACKGROUND #%s %s' % (group.name, messageText,)
 
-        assert iwords.IGroup.providedBy(target), "Target must be a group"
+        assert iwords.IGroup.providedBy(group), "Target must be a group"
         
         # TODO - permissions.  Am I allowed to do this in this channel?
 
-        d = theRealm.lookupUser(u'vellumtalk')
+        d = theRealm.lookupUser(VTNICK.lower())
 
         def cbUser(client):
             # persist!
             db = theGlobal['database']
             FM = data.FileMeta
             filemeta = db.findFirst(FM, FM.md5 == unicode(md5key))
-            target.channelItem.background = filemeta
+            group.channelItem.background = filemeta
 
             # tell others.
             message = {'text': messageText}
-            client.sendNotice(target, message)
+            client.sendNotice(group, message)
 
         d.addCallback(cbUser)
 
@@ -125,11 +125,49 @@ class VellumIRCServerProtocol(IRCUser):
         """
         topic = group.channelItem.topic
         author = group.channelItem.topicAuthor or "<noone>"
-        date = group.channelItem.topicTime.asPOSIXTimestamp() or 0
+        date = group.channelItem.topicTime
+        if date is None:
+            date = 0
+        else:
+            date = date.asPOSIXTimestamp()
         self.topic(self.name, '#' + group.name, topic)
         self.topicAuthor(self.name, '#' + group.name, author, date)
 
+    def irc_MAPDIGEST(self, prefix, params):
+        """
+        /MAPDIGEST #channel
+            Request the whole map state upon entering a channel.
+        """
+        return self.getTarget(params).addCallback(self.irctarget_MAPDIGEST, prefix)
 
+    def irctarget_MAPDIGEST(self, (group, messageText), prefix):
+        """
+        Request a digest from the channelItem.
+        We will then send:
+            MAPDIGEST #channel
+            ... all of the digested commands ...
+            ENDDIGEST #channel
+
+        The client is expected to queue any other commands it receives
+        during a digest session, and process them only after it has
+        received ENDDIGEST.
+        """
+        channel = messageText
+        assert iwords.IGroup.providedBy(group), "Target must be a group"
+        
+        d = theRealm.lookupUser(VTNICK.lower())
+
+        def cbUser(client):
+            text = u'MAPDIGEST %s' % (channel,)
+
+            message = {'text': text}
+            client.sendNotice(self, message)
+            digest = group.channelItem.getDigestedForm()
+            for command in digest:
+                client.sendNotice(self, {'text':command})
+            client.sendNotice(self, {'text':'ENDDIGEST %s' % (channel,)})
+
+        d.addCallback(cbUser)
 
     """
     /NEWMAP #channel
@@ -157,6 +195,9 @@ class VellumIRCServerProtocol(IRCUser):
 
     /DELDRAWING #channel (TBD...)
         Remove the drawing from the map
+
+    /MOVEDRAWING #channel (TBD...)
+        Move the drawing on the map
 
     (TBD ... time commands)
     """

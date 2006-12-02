@@ -20,6 +20,51 @@ class WebbyProto(ircsupport.IRCProto):
         self.unregisterAsAccountClient()
         return irc.IRCClient.connectionLost(self, reason)
 
+    def parseCommand(self, text):
+        """
+        @return: a 3-tuple of command, channel, args
+        """
+        splits = text.split(None, 2)
+        command = splits.pop(0)
+        channel = splits.pop(0)
+        if splits:
+            rest = splits[0]
+        else:
+            rest = ''
+
+        return command, channel, rest
+
+    def noticed(self, username, channel, message):
+        username = username.split('!', 1)[0]
+        if username == self.name:
+            return
+
+        # notices from VellumTalk are always special commands for the map
+        if username.lower() == 'vellumtalk':
+            command, channel, args = self.parseCommand(message)
+            if channel[0] == '#':
+                group = channel[1:]
+                conv = self.getGroupConversation(group, 
+                        hide=True)
+                conv.showMapCommand(command, channel, args)
+                return
+            # FIXME - parse, get the right group here, and use
+            # groupconv.showMapCommand
+            conv = self.chat.getConversation(self.getPerson(username),
+                    hide=True)
+            conv.showMapCommand(command, channel, args)
+        else:
+            # just a regular notice
+            metadata = {'dontAutoRespond': True}
+
+            if channel[0] == '#':
+                group = channel[1:]
+                self.getGroupConversation(group).showGroupMessage(username, 
+                        message, metadata)
+                return
+            self.chat.getConversation(self.getPerson(username)).showMessage(
+                    message, metadata)
+
     def lineReceived(self, line):
         print line
         return ircsupport.IRCProto.lineReceived(self, line)
@@ -81,6 +126,13 @@ class WebbyProto(ircsupport.IRCProto):
 
     def leaveGroup(self, name):
         self.leave(name)
+
+    def irc_333(self, prefix, params):
+        group = params[1][1:]
+        topic = self._topics.get(group, '')
+        self.getGroupConversation(group).setTopic(topic, params[2])
+        if self._topics.has_key(group):
+            del self._topics[group]
 
 
 class WebbyGroup(ircsupport.IRCGroup):

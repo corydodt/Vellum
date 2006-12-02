@@ -9,6 +9,10 @@ from axiom import store, substore, item, attributes as A
 
 from zope.interface import Interface, implements
 
+from epsilon.extime import Time
+
+EPOCH = Time.fromPOSIXTimestamp(0)
+
 if sys.platform == 'win32':
     appdata = FilePath(os.path.join(os.environ['APPDATA'], 'Vellum'))
 else:
@@ -98,7 +102,18 @@ class Channel(item.Item):
     name = A.text(doc="Name of the channel")
     topic = A.text(doc="What the channel topic is")
     topicAuthor = A.text(doc="Who set the topic")
-    topicTime = A.timestamp(doc="When the topic was set")
+    topicTime = A.timestamp(doc="When the topic was set", default=EPOCH)
     background = A.reference(doc="Image for the background of the channel map")
     gameTime = A.text(doc="A representation of the time in the game session")
     scale100px = A.point4decimal(doc="Distance in meters of 100 map px @ 100% zoom")
+
+    def getBackgroundCommand(self):
+        """Return the IRC command to represent the Background"""
+        return u"BACKGROUND %s %s" % (self.name, self.background.md5)
+
+    def getDigestedForm(self):
+        ret = []
+        if self.background:
+            ret.append(self.getBackgroundCommand())
+
+        return ret

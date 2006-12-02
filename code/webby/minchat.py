@@ -104,6 +104,47 @@ class NullConversation(components.Componentized):
                 '** Not in a channel or conversation: %s' % (text,))
 
 
+class ReceivedNoticeParser(object):
+    def __init__(self, groupConversation):
+        self.groupConversation = groupConversation
+        ## self.backlog = []
+        ## self.receivingDigest = False
+
+    def parse(self, command, channel, args):
+        try:
+            meth = getattr(self, 'command_%s' % (command.upper(),))
+            ## if self.receivingDigest:
+                ## # queue commands that aren't received as part of the digest
+                ## # TODO - differentiate simultaneous MAPDIGEST requests
+                ## d = defer.Deferred()
+                ## self.backlog.append((d, meth, command, args))
+                ## return d
+            ## else:
+            return meth(command, args)
+        except AttributeError, e:
+            return
+                
+    def command_BACKGROUND(self, command, md5key):
+        return iwebby.IMapWidget(self.groupConversation).setMapBackground(md5key)
+
+    def command_MAPDIGEST(self, command, args):
+        ## # start queueing other commands until ENDDIGEST
+        ## self.receivingDigest = True
+        return defer.succeed(None)
+
+    def command_ENDDIGEST(self, command, args):
+        ## # stop queueing
+        ## self.receivingDigest = False
+        ## # release backlogged messages
+        ## for deferred, meth, command, args in backlog:
+        ##     try:
+        ##         r = meth(command, args))
+        ##         return d.callback(r)
+        ##     except Exception, e:
+        ##         return d.errback(e)
+        return defer.succeed(None)
+
+
 class MinConversation(
         basechat.Conversation,
         components.Componentized):
@@ -125,7 +166,21 @@ class MinConversation(
     def hide(self):
         pname = unicode(self.person.name)
         iwebby.IChatConversations(self.widget).hideConversation(self, pname)
-    
+
+    def showMapCommand(self, command, channel, args):
+        """
+        Using the channel from the args, get the groupconversation for the
+        indicated map and process the command through that groupconversation.
+        """
+        # look up the groupConversation
+        # OMG this is tedious.
+        client = conversation.person.account.client
+        chatui = conversation.chatui
+        group = chatui.getGroup(channel.lstrip('#'), client) 
+        mapconv = chatui.getGroupConversation(group)
+
+        return mapconv.showMapCommand(command, channel, args)
+
     def showMessage(self, text, metadata=None):
         fmtd = IChatFormatter(self).format(text, sender=self.person.name,
                 metadata=metadata)
@@ -144,23 +199,6 @@ class MinConversation(
         event = "-!- %s is now known as %s" % (person.name, newnick)
         return iwebby.ITextArea(self).printClean(event)
 
-class ReceivedNoticeParser(object):
-    def __init__(self, widget):
-        self.widget = widget
-
-    def parse(self, sender, text, metadata):
-        if not metadata.get('dontAutoRespond', False):
-            return
-
-        if sender.lower() != 'vellumtalk':
-            return None
-
-        command, args = text.split(None, 1)
-        return getattr(self, 'command_%s' % (command.upper(),))(command, args)
-                
-    def command_BACKGROUND(self, command, args):
-        return self.widget.setMapBackground(args)
-
 
 class MinGroupConversation(
         basechat.GroupConversation,
@@ -175,6 +213,8 @@ class MinGroupConversation(
         basechat.GroupConversation.__init__(self, *a, **kw)
         self.widget = widget
 
+        self.noticeParser = ReceivedNoticeParser(self)
+
         self.setComponent(IChatFormatter, ChatFormatter())
 
     def show(self):
@@ -185,13 +225,10 @@ class MinGroupConversation(
         groupname = unicode('#' + self.group.name)
         iwebby.IChatConversations(self.widget).hideConversation(self, groupname)
 
-    def showGroupMessage(self, sender, text, metadata=None):
-        # irc notices from vellumtalk are special commands
-        noticeParser = ReceivedNoticeParser(iwebby.IMapWidget(self))
-        parseDeferred = noticeParser.parse(sender, text, metadata)
-        if parseDeferred:
-            return parseDeferred
+    def showMapCommand(self, command, channel,  args):
+        return self.noticeParser.parse(command, channel, args)
 
+    def showGroupMessage(self, sender, text, metadata=None):
         fmtd = IChatFormatter(self).format(text, sender=sender,
                 metadata=metadata)
         return iwebby.ITextArea(self).printClean(fmtd)
