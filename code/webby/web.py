@@ -196,7 +196,10 @@ def guardedRoot():
 class WebService(item.Item, util.AxiomTCPServerMixin):
     factory = STFUSite(guardedRoot())
     schemaVersion = 1
-    portNumber = A.integer()
+    portNumber = A.integer(doc="The port on which to run.")
+    interface = A.text(
+          doc="Dotted-decimal interface to run on, '' for all interfaces", 
+          default=u'')
 
     port = A.inmemory()
     parent = A.inmemory()

@@ -38,20 +38,27 @@ class Install(axiomatic.AxiomaticCommand):
     def postOptions(self):
         self.parent['dbdir'] = STOREDIR
         s = self.parent.getStore()
-        svc = s.findOrCreate(DataService,
-                             smtpFrom=self['smtpFrom'],
-                             smtpServer=self['smtpServer'],
-                             )
-        svc.installOn(s)
+        def _txn():
+            svc = s.findOrCreate(DataService,
+                                 smtpFrom=self['smtpFrom'],
+                                 smtpServer=self['smtpServer'],
+                                 )
+            svc.installOn(s)
 
-        s.findOrCreate(ircserver.IRCService, portNumber=6667,).installOn(s)
+            s.findOrCreate(ircserver.IRCService, 
+                    portNumber=6667,
+                    interface=u'127.0.0.1').installOn(s)
 
-        s.findOrCreate(web.WebService, portNumber=8080,).installOn(s)
+            s.findOrCreate(web.WebService, portNumber=8080,).installOn(s)
 
-        if self['demodata']:
-            s.findOrCreate(User, email=u'a@b.c', nick=u'MFen', password=u'abc')
-            s.findOrCreate(Channel, name=u'#vellum', topic=u'Welcome to #vellum',
-                    topicAuthor=u'VellumTalk', topicTime=Time())
+            if self['demodata']:
+                s.findOrCreate(User, email=u'a@b.c', nick=u'MFen', 
+                        password=u'abc')
+                s.findOrCreate(Channel, name=u'#vellum', 
+                        topic=u'Welcome to #vellum',
+                        topicAuthor=u'VellumTalk', 
+                        topicTime=Time())
+        s.transact(_txn)
 
 '''
         Character(store=s,
