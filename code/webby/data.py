@@ -2,7 +2,6 @@ import sys, os
 from decimal import Decimal
 
 from twisted.application import service
-from twisted.python.filepath import FilePath
 from twisted.python import log
 
 from axiom import store, substore, item, attributes as A
@@ -12,11 +11,6 @@ from zope.interface import Interface, implements
 from epsilon.extime import Time
 
 EPOCH = Time.fromPOSIXTimestamp(0)
-
-if sys.platform == 'win32':
-    appdata = FilePath(os.path.join(os.environ['APPDATA'], 'Vellum'))
-else:
-    appdata = FilePath(os.path.join(os.environ['HOME'], '.vellum'))
 
 class DataService(item.Item, service.Service, item.InstallableMixin):
     schemaVersion = 1
@@ -33,14 +27,7 @@ class DataService(item.Item, service.Service, item.InstallableMixin):
             self.setServiceParent(other)
 
     def startService(self):
-        log.msg("Starting service %r in %s" % (self, appdata,))
-
-        # TODO - substores are going to be kept in zipfiles, which can
-        # be opened from anywhere you want and used as substores from
-        # the temp directory where they will be unpacked.
-        # Until that is implemented, this is hardcoded.
-        ## self.substore = store.Store(appdata.child('gnoll.axiom'))
-
+        log.msg("Starting service %r" % (self, ))
 
 class IArticle(Interface):
     """

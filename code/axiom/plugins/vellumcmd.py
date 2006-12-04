@@ -1,12 +1,19 @@
-from twisted import plugin
+import sys, os
+
+from twisted.python.filepath import FilePath
 
 from axiom.scripts import axiomatic
 from axiom import iaxiom
 
 from epsilon.extime import Time
 
-from webby.data import DataService, appdata, User, Channel
+from webby.data import DataService, User, Channel
 from webby import ircserver, web, theGlobal
+
+if sys.platform == 'win32':
+    appdata = FilePath(os.path.join(os.environ['APPDATA'], 'Vellum'))
+else:
+    appdata = FilePath(os.path.join(os.environ['HOME'], '.vellum'))
 
 STOREDIR = appdata.child('glassvellum.axiom')
 
