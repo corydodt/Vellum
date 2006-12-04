@@ -2,6 +2,7 @@
 // with input from Tino Zijdel, Matthias Miller, Diego Perini
 
 // http://dean.edwards.name/weblog/2005/10/add-event/
+DeanEdwards = {};
 
 DeanEdwards.addEvent = function (element, type, handler) {
     if (element.addEventListener) {
