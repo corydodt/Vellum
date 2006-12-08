@@ -1,5 +1,6 @@
 import sys, os
 from decimal import Decimal
+from md5 import md5
 
 from twisted.application import service
 from twisted.python import log
@@ -9,6 +10,8 @@ from axiom import store, substore, item, attributes as A
 from zope.interface import Interface, implements
 
 from epsilon.extime import Time
+
+from webby import obscurement
 
 EPOCH = Time.fromPOSIXTimestamp(0)
 
@@ -91,6 +94,7 @@ class Channel(item.Item):
     topicAuthor = A.text(doc="Who set the topic")
     topicTime = A.timestamp(doc="When the topic was set", default=EPOCH)
     background = A.reference(doc="Image for the background of the channel map")
+    obscurement = A.reference(doc="Image that stores the obscurement overlay")
     gameTime = A.text(doc="A representation of the time in the game session")
     scale100px = A.point4decimal(doc="Distance in meters of 100 map px @ 100% zoom")
 
@@ -104,3 +108,25 @@ class Channel(item.Item):
             ret.append(self.getBackgroundCommand())
 
         return ret
+
+    def setBackground(self, fileitem):
+        def txn():
+            self.background = fileitem
+            w = fileitem.width
+            h = fileitem.height
+
+            ob = FileMeta(store=self.store)
+            ob.filename = u'%s_obscurement.png' % (self.name,)
+            ob.width = w
+            ob.height = h
+            ob.mimeType = u'image/png'
+
+            ob.data = FileData(store=self.store)
+            ob.data.data = obscurement.newBlackImage(w, h)
+
+            ob.md5 = unicode(md5(ob.data.data).hexdigest())
+
+            self.obscurement = ob
+
+        self.store.transact(txn)
+

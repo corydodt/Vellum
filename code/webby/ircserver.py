@@ -111,7 +111,7 @@ class VellumIRCServerProtocol(IRCUser):
             db = theGlobal['database']
             FM = data.FileMeta
             filemeta = db.findFirst(FM, FM.md5 == unicode(md5key))
-            group.channelItem.background = filemeta
+            group.channelItem.setBackground(filemeta)
 
             # tell others.
             message = {'text': messageText}
