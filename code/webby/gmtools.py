@@ -174,7 +174,7 @@ class UploadPage(formal.ResourceMixin, rend.Page):
                             thumb = original.copy()
                             thumb.thumbnail((48,48), Image.ANTIALIAS)
                             _tempfile = StringIO()
-                            thumb.save(_tempfile, 'PNG')
+                            thumb.save(_tempfile, 'PNG', optimize=True)
                             _tempfile.seek(0)
                             newThumbData = FileData(store=db,
                                     data=_tempfile.read())
