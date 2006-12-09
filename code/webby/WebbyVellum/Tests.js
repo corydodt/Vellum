@@ -278,6 +278,43 @@ WebbyVellum.Tests.TestFileChooser.methods( // {{{
         return d
     }, // }}}
 
+    function test_initializeWithIcons(self) { // {{{
+        var d = self.setUp(['b','a','c']);
+        d.addCallback(function _(chooser) {
+            /* verify that the chooser begins in sorted order */
+            var sorted1 = ['a','b','c'];
+            _items = chooser._iconsByLabel();
+            
+            self.assertEqual(_items.length, sorted1.length);
+            for (i=0; i<sorted1.length; i++) {
+                self.assertEqual(_items[i][0], sorted1[i]);
+            }
+            return null;
+        });
+        return d;
+    }, // }}}
+
+    function test_addIcon(self) { // {{{
+        var d = self.setUp(['b','a','c']);
+        d.addCallback(function _(chooser) {
+            var d2 = self.callRemote("addNewIcon", "ax");
+            d2.addCallback(function _(ignored) {
+                /* verify that the chooser sorts the icon in */
+                var sorted1 = ['a', 'ax', 'b', 'c'];
+                
+                var labels = chooser.nodesByAttribute('vellum:name',
+                        'chooserIconLabel');
+                self.assertEqual(labels.length, sorted1.length);
+                for (var i=0; i<sorted1.length; i++) {
+                    self.assertEqual(labels[i].innerHTML, sorted1[i]);
+                }
+                return null;
+            });
+            return d2;
+        });
+        return d;
+    }, // }}}
+
     function test_newDocumentClick(self) { // {{{
         var d = self.setUp();
         d.addCallback(function _(chooser) {
@@ -307,11 +344,14 @@ WebbyVellum.Tests.TestFileChooser.methods( // {{{
         return d;
     }, // }}}
 
-    function setUp(self) { // {{{
-        var d = self.callRemote("newFileChooser");
+    function setUp(self, /* optional */ labels) { // {{{
+        if (labels !== undefined) {
+            var d = self.callRemote("newFileChooser", labels);
+        } else {
+            var d = self.callRemote("newFileChooser");
+        }
         d.addCallback(
-            function _(wi) { return self.addChildWidgetFromWidgetInfo(wi); }
-            );
+            function _(wi) { return self.addChildWidgetFromWidgetInfo(wi); });
         return d;
     } // }}}
 ); // }}}
@@ -341,7 +381,7 @@ WebbyVellum.Tests.TestNameSelect.methods( // {{{
 
             self.assertEqual(afterInsert1.length, sorted1.length);
             for (i=0; i<sorted1.length; i++) {
-                self.assertEqual(afterInsert1[0], sorted1[0]);
+                self.assertEqual(afterInsert1[i], sorted1[i]);
             }
 
             /* check that capitalization is preserved */

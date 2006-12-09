@@ -1,5 +1,6 @@
 <table xmlns:n="http://nevow.com/ns/nevow/0.1" class="chooserIcon" 
-    n:render="liveElement">
+    n:render="liveElement"
+    xmlns:vellum="http://vellum.berlios.de/2006/vellum">
 <n:invisible n:render="chooserIcon">
   <tr>
     <td class="chooserIconIconMiddle">
@@ -10,7 +11,7 @@
   </tr>
   <tr>
     <td>
-      <div class="chooserIconLabel"><n:slot name="filename"/></div>
+      <div vellum:name="chooserIconLabel" class="chooserIconLabel"><n:slot name="filename"/></div>
     </td>
   </tr>
 </n:invisible>

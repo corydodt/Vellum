@@ -13,12 +13,12 @@
 
 
 // slow.  FIXME - use a schwartzian transform to sort.
-WebbyVellum.icmp = function icmp(a, b) {
-    var a = a.toLowerCase();
-    var b = b.toLowerCase();
+WebbyVellum.icmp = function icmp(a, b) { // {{{
+    var a = a.toString().toLowerCase();
+    var b = b.toString().toLowerCase();
     if (a == b) return 0;
-    return (a.toLowerCase() > b.toLowerCase() ? 1 : -1);
-}
+    return (a > b ? 1 : -1);
+} // }}}
 
 
 WebbyVellum.TopicBar = Nevow.Athena.Widget.subclass('WebbyVellum.TopicBar');
@@ -28,7 +28,7 @@ WebbyVellum.TopicBar.methods( // {{{
     } // }}}
 ); // }}}
 
-WebbyVellum.insertSorted = function insertSorted(name, flags, options, inserter) {
+WebbyVellum.insertSorted = function insertSorted(name, flags, options, inserter) { // {{{
     // TODO - sort ops at the top, voice next, lurkers last
     var lname = name.toLowerCase();
     for (var i=0; i < options.length; i++) {
@@ -39,17 +39,17 @@ WebbyVellum.insertSorted = function insertSorted(name, flags, options, inserter)
     }
     // now we're at the end of the list
     inserter(name, null);
-};
+}; // }}}
 
 /* return a function that can insert an item into the select list */
-function getInserter(select)
+function getInserter(select) // {{{
 {
     return function _(name, before) {
         var newName = document.createElement('option');
         newName.innerHTML = name;
         select.add(newName, before);
     }
-}
+} // }}}
 
 WebbyVellum.NameSelect = Nevow.Athena.Widget.subclass('WebbyVellum.NameSelect');
 WebbyVellum.NameSelect.methods( // {{{
@@ -216,12 +216,44 @@ WebbyVellum.FileChooser.methods( // {{{
         });
     }, // }}}
 
+    /* return 2-arrays of all icons in the chooser */
+    function _iconsByLabel(self) { // {{{
+        var ret = [];
+        for (var i=0; i<self.childWidgets.length; i++) {
+            var wid = self.childWidgets[i];
+            var label = wid.firstNodeByAttribute(
+                    'vellum:name', 'chooserIconLabel'
+            ).innerHTML;
+            ret.push([label, wid]);
+        }
+        return ret;
+    }, // }}}
+
+    /* modify in-place to put icons in label-sorted order */
+    function sortFilenames(self) { // {{{
+        var _icons = self._iconsByLabel();
+        _icons.sort(WebbyVellum.icmp);
+        self.innerHTML = '';
+        for (var i=0; i<_icons.length; i++) {
+            self.node.appendChild(_icons[i][1].node);
+        }
+    }, // }}}
+
     function handleNewDocument(self, event) { // {{{
         event.stopPropagation();
         event.preventDefault();
         self._newUploadFrame(event.pageX, event.pageY);
 
         Divmod.debug("", "Clicked on FileChooser's documentNew icon");
+    }, // }}}
+
+    function fileAdded(self, iconinfo) { // {{{
+        var d = self.addChildWidgetFromWidgetInfo(iconinfo);
+        d.addCallback(function gotIcon(icon) {
+            self.sortFilenames();
+            return null;
+        });
+        return d;
     }, // }}}
 
     function _newUploadFrame(self, x, y) { // {{{
@@ -235,14 +267,6 @@ WebbyVellum.FileChooser.methods( // {{{
         // when the iframe processing is done, refresh.
         window.closeUploadFrame = function _(cancelled) {
             body.removeChild(iframe);
-            if (!cancelled) {
-                d = self.callRemote("refresh");
-                d.addCallback(function _(data) {
-                    var span = self.firstNodeByAttribute('class', 'chooserArea');
-                    // FIXME! instead, we should be rendering the widgets
-                    span.innerHTML = data;
-                });
-            }
         };
     } // }}}
 ); // }}}

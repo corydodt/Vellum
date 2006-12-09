@@ -4,6 +4,7 @@ from md5 import md5
 
 from twisted.application import service
 from twisted.python import log
+from twisted.internet import defer
 
 from axiom import store, substore, item, attributes as A
 
@@ -12,6 +13,7 @@ from zope.interface import Interface, implements
 from epsilon.extime import Time
 
 from webby import obscurement
+from webby.iwebby import IFileObserver
 
 EPOCH = Time.fromPOSIXTimestamp(0)
 
@@ -64,7 +66,37 @@ class User(item.Item):
     password = A.text(doc="The password of the user")
     confirmationKey = A.text(doc="A random number generated to send to the user's email address")
     unconfirmedPassword = A.text(doc="Password is held here until confirmationKey is validated.")
+    observers = A.inmemory(doc="List of IFileObservers")
 
+    def activate(self):
+        self.observers = []
+
+    def fileAdded(self, fileitem):
+        assert fileitem.user is self
+        r = []
+        for o in self.observers:
+            r.append(IFileObserver(o).fileAdded(fileitem))
+        return defer.DeferredList(r, False, True)
+
+    def fileRemoved(self, fileitem):
+        assert fileitem.user is self
+        r = []
+        for o in self.observers:
+            r.append(IFileObserver(o).fileRemoved(fileitem))
+        return defer.DeferredList(r, False, True)
+
+    def fileModified(self, fileitem):
+        assert fileitem.user is self
+        r = []
+        for o in self.observers:
+            r.append(IFileObserver(o).fileModified(fileitem))
+        return defer.DeferredList(r, False, True)
+
+    def addObserver(self, observer):
+        self.observers.append(observer)
+
+    def removeObserver(self, observer):
+        self.observers.remove(observer)
 
 class FileMeta(item.Item):
     """A file that has been uploaded."""

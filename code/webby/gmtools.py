@@ -15,10 +15,13 @@ from PIL import Image
 from twisted.python.util import sibpath
 from twisted.python import log
 
+from zope.interface import implements
+
 from nevow import loaders, athena, rend, inevow, url, tags as T, flat, page
 
 from webby import tabs, util, theGlobal, data
 from webby.data import FileMeta, FileData
+from webby.iwebby import IFileObserver
 
 import formal
 
@@ -72,13 +75,22 @@ class ChooserIcon(athena.LiveElement):
     page.renderer(chooserIcon)
 
 class FileChooser(athena.LiveElement):
+    implements(IFileObserver)
     jsClass = u'WebbyVellum.FileChooser'
     docFactory = loaders.xmlfile(RESOURCE('elements/FileChooser'))
+
     def __init__(self, user, *a, **kw):
         super(FileChooser, self).__init__(*a, **kw)
         self.user = user
-
+    
     def chooser(self, req, tag):
+        # get file notifications from the user. set this as early as possible
+        # in the render (which is here)
+        self.user.addObserver(self)
+        self.page.notifyOnDisconnect().addCallback(
+                lambda reason: self.user.removeObserver(self)
+                )
+
         return tag[self._getIconsFromDatabase()]
 
     page.renderer(chooser)
@@ -90,24 +102,37 @@ class FileChooser(athena.LiveElement):
         db = theGlobal['database']
         _fileitems = db.query(data.FileMeta, data.FileMeta.user==self.user, 
                 sort=data.FileMeta.filename.ascending)
-        ret = []
-        for fi in _fileitems:
-            ch = ChooserIcon(self.user, fi)
-            ch.setFragmentParent(self)
-            ret.append(ch)
+        ret = [self._newIconFromItem(fi) for fi in _fileitems]
         return ret
 
-    def refresh(self):
-        """
-        @return a string of the icons we will display in the chooser
-        """
-        log.msg("Refreshing FileChooser")
-        # FIXME - returning them flattened like this instead of returning the
-        # widgets means they do not get __init__ called and they are not
-        # draggable.
-        return unicode(flat.flatten(self._getIconsFromDatabase()))
+    def _newIconFromItem(self, fileitem):
+        ch = ChooserIcon(self.user, fileitem)
+        ch.setFragmentParent(self)
+        return ch
 
-    athena.expose(refresh)
+    def fileAdded(self, fileitem):
+        """
+        Construct a new icon and send it to the browser
+        """
+        icon = self._newIconFromItem(fileitem)
+        return self.callRemote('fileAdded', icon)
+
+    def fileRemoved(self, fileitem):
+        """
+        Get a reference to the LiveElement for that item, and
+        make a .remove call on it directly
+        """
+        TODO
+        return eelf.fileItems[fileitem].remove(FOO)
+
+    def fileModified(self, fileitem):
+        """
+        Get a reference to the LiveElement for that item, and
+        make a .modify call in it.
+        TODO Which parts need to be sent?
+        """
+        TODO
+        return self.fileItems[fileitem].modify(FOO)
 
 class GMTools(tabs.TabsElement):
     def __init__(self, user, *a, **kw):
@@ -151,6 +176,7 @@ class UploadPage(formal.ResourceMixin, rend.Page):
             m = unicode(md5.md5(readdata).hexdigest())
             # make sure that a particular file can only be uploaded once
             if db.findFirst(FileMeta, FileMeta.md5==m) is None:
+                # so we really did get a file upload
 
                 def txn():
                     mimeType = unicode(mimetypes.guess_type(filename)[0])
@@ -181,8 +207,13 @@ class UploadPage(formal.ResourceMixin, rend.Page):
                             newfile.thumbnail = newThumbData
 
                             newfile.width, newfile.height = original.size
+
                         except IOError:
                             pass
+
+                    # notify the user, so the user can notify observers that
+                    # the file list has changed.
+                    self.user.fileAdded(newfile)
 
                 db.transact(txn)
 

@@ -2,7 +2,7 @@ from nevow import athena
 from nevow.livetrial import testcase
 
 from webby import svgmap, data, ircweb
-from webby.test.teststore import testUser, testFileMeta
+from webby.test.teststore import testUser, testFileMeta, cleanStore
 
 class TestMapWidget(testcase.TestCase):
     jsClass = u'SVGMap.Tests.TestMapWidget'
@@ -10,7 +10,7 @@ class TestMapWidget(testcase.TestCase):
         """
         Return a new SVGMap
         """
-        enc = ircweb.IRCContainer(None, testUser)
+        enc = ircweb.IRCContainer(None, testUser(cleanStore()))
         enc.setFragmentParent(self)
         return enc
 
@@ -30,7 +30,7 @@ class TestMapWidget(testcase.TestCase):
         """
         Return a new BackgroundImage object 
         """
-        bgi = svgmap.BackgroundImage(testFileMeta)
+        bgi = svgmap.BackgroundImage(testFileMeta(cleanStore()))
         bgi.setFragmentParent(self)
         return bgi
 

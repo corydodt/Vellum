@@ -5,7 +5,7 @@ from nevow.livetrial import testcase
 
 from webby import ircweb, signup, data, gmtools, iwebby
 from webby.minchat import NullConversation
-from webby.test.teststore import testStore, testUser
+from webby.test.teststore import cleanStore, testUser
 
 class MockAccountManager:
     def doConnection(self, host, username, password, channels):
@@ -28,16 +28,14 @@ class TestIRCContainer(testcase.TestCase):
         """
         Return a new IRC Container with mock conversations for the ids given
         """
+        user = testUser(cleanStore())
         # XXX warning - livetrial does not provide test isolation!
         # setting instance variables can bite you in the ass.  If this
         # method is called first from every test, life is fine, but if
         # generateConversation is called without calling this first,
         # behavior is UNDEFINED.
-        self.irc = ircweb.IRCContainer(MockAccountManager(), testUser)
+        self.irc = ircweb.IRCContainer(MockAccountManager(), user)
         self.irc.setFragmentParent(self)
-
-        # reset the default nick between each test
-        testUser.nick = u'woot'
 
         return self.irc
 
@@ -84,15 +82,33 @@ class TestSignup(testcase.TestCase):
 
 class TestFileChooser(testcase.TestCase):
     jsClass = u'WebbyVellum.Tests.TestFileChooser'
-    def newFileChooser(self, ):
+    def newFileChooser(self, labels=None):
         """
         Return a new Signup widget
+        @param labels: create ChooserIcons with the given labels as well
         """
-        fc = gmtools.FileChooser(testUser)
-        fc.setFragmentParent(self)
-        return fc
+        # if labels was given, create some test files.  FileChooser
+        # will make ChooserIcons out of these during rendering
+        self.store = cleanStore()
+        self.user = testUser(self.store)
+        if labels is not None:
+            for label in labels:
+                fileitem = data.FileMeta(store=self.store, user=self.user,
+                        filename=label, mimeType=u'text/plain')
+
+        self.fc = gmtools.FileChooser(self.user)
+        self.fc.setFragmentParent(self)
+
+        return self.fc
 
     athena.expose(newFileChooser)
+
+    def addNewIcon(self, label):
+        fileitem = data.FileMeta(store=self.store, user=self.user,
+                filename=label, mimeType=u'text/plain')
+        return self.fc.user.fileAdded(fileitem)
+
+    athena.expose(addNewIcon)
 
 class TestNameSelect(testcase.TestCase):
     jsClass = u'WebbyVellum.Tests.TestNameSelect'

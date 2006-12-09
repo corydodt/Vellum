@@ -56,3 +56,22 @@ class IChatFormatter(Interface):
         """
         Return a formatted string for sending to the channel.
         """
+
+class IFileObserver(Interface):
+    """
+    Object that can observe and be notified of changes to a list of files.
+    """
+    def fileAdded(self, fileitem):
+        """
+        A new file item was added
+        """
+
+    def fileRemoved(self, fileitem):
+        """
+        A file item was taken away.
+        """
+
+    def fileModified(self, fileitem):
+        """
+        A file item was changed.
+        """
