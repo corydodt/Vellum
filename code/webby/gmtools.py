@@ -69,7 +69,7 @@ class ChooserIcon(athena.LiveElement):
         if fi.mimeType.startswith(u'image/') and fi.thumbnail is not None:
             tag.fillSlots('icon', '/files/%s/thumb' % (fi.md5,))
         else:
-            tag.fillSlots('icon', '/images/%s' % (iconForMimeType(fi.mimeType),))
+            tag.fillSlots('icon', '/static/%s' % (iconForMimeType(fi.mimeType),))
         return tag
 
     page.renderer(chooserIcon)

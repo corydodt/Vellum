@@ -4,7 +4,7 @@
            xmlns:vellum="http://vellum.berlios.de/2006/vellum" 
            vellum:name="documentNew">
     <tr>
-      <td class="chooserIconIcon"> <img src="/images/document-new.png" /> </td>
+      <td class="chooserIconIcon"> <img src="/static/document-new.png" /> </td>
     </tr>
     <tr>
         <td><strong>Upload File...</strong></td>

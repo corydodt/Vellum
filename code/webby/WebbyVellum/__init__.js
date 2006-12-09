@@ -191,7 +191,8 @@ WebbyVellum.Signup.methods( // {{{
 
         var submit = self.node.signup;
         submit.style['display'] = 'none';
-        message.innerHTML = 'Sending email. (This may take a minute.) . . . .';
+        message.innerHTML = 'Sending email. (This may take a minute.)' +
+                '<img src="/static/loading.gif" />';
 
         var d = self.callRemote("processSignup", email, password1);
         d.addCallback(function _(status) {

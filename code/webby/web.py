@@ -69,8 +69,8 @@ class StaticRoot(rend.Page):
     Must be subclassed as it has no docFactory of its own.
     """
     addSlash = True  # yeah, we really do need this, otherwise 404 on /
-    def child_css(self, ctx, ):
-        return static.File(RESOURCE('webby.css'))
+    def child_static(self, ctx):
+        return static.File(RESOURCE('static'))
 
     def child_tabs_css(self, ctx, ):
         return static.File(RESOURCE('tabs.css'))
@@ -78,9 +78,6 @@ class StaticRoot(rend.Page):
     def child_signup(self, ctx, ):
         return SignupPage()
 
-    def child_images(self, ctx, ):
-        return static.File(RESOURCE('images'))
- 
 class VellumRealm:
     """
     TODO - combine this with VellumIRCRealm.  Look at requestAvatar and see
