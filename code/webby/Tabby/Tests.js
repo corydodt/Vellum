@@ -56,8 +56,8 @@ Tabby.Tests.TestTabs.methods( // {{{
                 return self.addChildWidgetFromWidgetInfo(wi); 
         });
         d.addCallback(function _(tabs) {
-                var pane = tabs.getPaneForId('woop');
-                self.assertEqual(pane.innerHTML.search('<b>Content</b>'), 149);
+                var content = tabs.getPaneForId('woop').childNodes[0].childNodes[0].childNodes[0].data;
+                self.assertEqual(content, 'Content');
         });
         return d;
     }, // }}}
