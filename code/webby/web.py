@@ -72,9 +72,6 @@ class StaticRoot(rend.Page):
     def child_static(self, ctx):
         return static.File(RESOURCE('static'))
 
-    def child_tabs_css(self, ctx, ):
-        return static.File(RESOURCE('tabs.css'))
-
     def child_signup(self, ctx, ):
         return SignupPage()
 
