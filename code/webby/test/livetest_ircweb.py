@@ -1,22 +1,15 @@
 from twisted.internet import defer
 
-from axiom import store
-
 from nevow import athena
 from nevow.livetrial import testcase
 
-from webby import ircweb, signup, data, theGlobal, gmtools, iwebby
+from webby import ircweb, signup, data, gmtools, iwebby
 from webby.minchat import NullConversation
+from webby.test.teststore import testStore, testUser
 
 class MockAccountManager:
     def doConnection(self, host, username, password, channels):
         return defer.succeed(None)
-
-# define our in-memory test store
-testStore = store.Store()
-testUser = data.User(store=testStore, 
-        email=u'woot@woot.com', nick=u'woot', password=u'ninjas')
-theGlobal['database'] = testStore
 
 
 class TestIRCContainer(testcase.TestCase):
