@@ -85,7 +85,7 @@ class VellumRealm:
     class LoginPage(StaticRoot):
         """Page which asks for username/password."""
         addSlash = True
-        docFactory = loaders.xmlfile(RESOURCE('login.xhtml'))
+        docFactory = loaders.xmlfile(RESOURCE('templates/login.xhtml'))
 
         def child_game(self, ctx,):
             """Redirect to the login page when you attempt to return to /game"""

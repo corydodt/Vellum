@@ -59,7 +59,7 @@ Confirm your signup on the Vellum website by clicking on the following link:
 
 class SignupPage(athena.LivePage):
     addSlash = 1
-    docFactory = loaders.xmlfile(RESOURCE('signup.xhtml'))
+    docFactory = loaders.xmlfile(RESOURCE('templates/signup.xhtml'))
 
     def render_signup(self, ctx, data):
         pageURL = flat.flatten(url.URL.fromContext(ctx))
@@ -84,7 +84,8 @@ class SignupPage(athena.LivePage):
                 u.password = u.unconfirmedPassword
                 u.unconfirmedPassword = None
                 req.args.clear()
-                self.docFactory = loaders.xmlfile(RESOURCE('confirmed.xhtml'))
+                self.docFactory = loaders.xmlfile(
+                        RESOURCE('templates/confirmed.xhtml'))
             else:
                 self.docFactory = loaders.stan(['Could not confirm that account.'])
         return super(SignupPage, self).renderHTTP(ctx)

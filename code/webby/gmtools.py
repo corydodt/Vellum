@@ -145,14 +145,14 @@ class GMTools(tabs.TabsElement):
         self.addInitialTab(u'files', u'Images & Sounds', chooser)
 
 class UploadDone(rend.Page):
-    docFactory = loaders.xmlfile(RESOURCE('uploaddone.xhtml'))
+    docFactory = loaders.xmlfile(RESOURCE('templates/uploaddone.xhtml'))
 
 class UploadPage(formal.ResourceMixin, rend.Page):
     """
     Perform file uploads which will be stored in the Axiom store.
     """
     addSlash = True
-    docFactory = loaders.xmlfile(RESOURCE('upload.xhtml'))
+    docFactory = loaders.xmlfile(RESOURCE('templates/upload.xhtml'))
     def __init__(self, user, *a, **kw):
         formal.ResourceMixin.__init__(self, *a, **kw)
         rend.Page.__init__(self, *a, **kw)

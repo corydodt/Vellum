@@ -401,7 +401,7 @@ class IRCPage(athena.LivePage):
     """
     addSlash = True
 
-    docFactory = loaders.xmlfile(RESOURCE('webby.xhtml'))
+    docFactory = loaders.xmlfile(RESOURCE('templates/webby.xhtml'))
 
     def renderHTTP(self, ctx):
         """Set XHTML as the mime type so SVG can be rendered."""
