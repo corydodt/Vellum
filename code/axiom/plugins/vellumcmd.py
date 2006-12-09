@@ -17,14 +17,14 @@ else:
 
 STOREDIR = appdata.child('glassvellum.axiom')
 
-class Install(axiomatic.AxiomaticCommand):
+class Vellum(axiomatic.AxiomaticCommand):
     """Create the initial Vellum database, and attach all services."""
 
     longdesc = __doc__
 
     description = __doc__
 
-    name = "install"
+    name = "vellum"
 
     optParameters = [
         ('smtpFrom',   'f', u'vellum@vellum.berlios.de',
@@ -60,23 +60,6 @@ class Install(axiomatic.AxiomaticCommand):
                         topicTime=Time())
         s.transact(_txn)
 
-'''
-        Character(store=s,
-                  name=u"Shara",
-                  path=s.filesdir.child('shara-kw.png'),
-                  top=900, left=1000, scale=Decimal("1.0"),
-                  ).installOn(map)
-        Character(store=s,
-                  name=u"Halbren",
-                  path=s.filesdir.child('halbren.png'),
-                  top=1000, left=1020, scale=Decimal("1.0"),
-                  ).installOn(map)
-        Character(store=s, 
-                  name=u"Crom Grumdalsen", 
-                  path=s.filesdir.child('crom.png'),
-                  scale=Decimal("1.0"),
-                  ).installOn(map)
-'''
 
 class StartVellum(axiomatic.Start, axiomatic.AxiomaticCommand):
     """Start Vellum, using $HOME/.vellum or equivalent to find the store"""
@@ -92,4 +75,18 @@ class StartVellum(axiomatic.Start, axiomatic.AxiomaticCommand):
         theGlobal['database'] = self.parent.getStore()
 
         return super(StartVellum, self).postOptions()
+
+
+class StopVellum(axiomatic.Stop, axiomatic.AxiomaticCommand):
+    """Stop Vellum, using $HOME/.vellum or equivalent to find the store"""
+    longdesc = __doc__
+
+    description = __doc__
+
+    name = "stop-vellum"
+
+    def postOptions(self):
+        self.parent['dbdir'] = STOREDIR.path
+
+        return super(StopVellum, self).postOptions()
 
