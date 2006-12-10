@@ -7,9 +7,7 @@ from twisted.mail import smtp
 
 from nevow import athena, loaders, url, flat, inevow
 
-from webby import theGlobal, data, util
-
-RESOURCE = lambda f: sibpath(__file__, f)
+from webby import theGlobal, data, util, RESOURCE
 
 class Signup(athena.LiveElement):
     docFactory = loaders.xmlfile(RESOURCE('elements/Signup'))

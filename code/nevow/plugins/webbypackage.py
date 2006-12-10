@@ -2,6 +2,6 @@ import os
 
 from nevow import athena
 
-import webby
+from webby import RESOURCE
 
-webbyPkg = athena.AutoJSPackage(os.path.dirname(webby.__file__))
+webbyPkg = athena.AutoJSPackage(RESOURCE('static'))

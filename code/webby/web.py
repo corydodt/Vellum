@@ -11,10 +11,8 @@ from twisted.python import log
 
 from webby.ircweb import IRCPage 
 from webby.signup import SignupPage
-from webby import theGlobal, data, gmtools, util
+from webby import theGlobal, data, gmtools, util, RESOURCE
 
-
-RESOURCE = lambda f: sibpath(__file__, f)
 
 
 class STFUSite(appserver.NevowSite):

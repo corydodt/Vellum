@@ -5,9 +5,7 @@ from zope.interface import implements
 
 from nevow import athena, loaders, tags as T
 
-from webby import theGlobal, data, iwebby
-
-RESOURCE = lambda f: sibpath(__file__, f)
+from webby import theGlobal, data, iwebby, RESOURCE
 
 class BackgroundImage(athena.LiveElement):
     ## jsClass = u'SVGMap.BackgroundImage'

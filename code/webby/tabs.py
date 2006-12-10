@@ -18,7 +18,7 @@ from twisted.python.util import sibpath
 
 from nevow import loaders, athena
 
-RESOURCE = lambda f: sibpath(__file__, f)
+from webby import RESOURCE
 
 EMPTY = ()
 

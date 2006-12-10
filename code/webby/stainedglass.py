@@ -37,9 +37,7 @@ from nevow import loaders, athena
 
 from zope.interface import implements
 
-from webby import util, iwebby
-
-RESOURCE = lambda f: sibpath(__file__, f)
+from webby import util, iwebby, RESOURCE
 
 class Enclosure(athena.LiveElement):
     """

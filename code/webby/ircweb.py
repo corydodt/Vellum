@@ -8,9 +8,7 @@ from nevow import rend, loaders, athena, url, static, inevow, tags as T
 
 from webby import minchat, svgmap, parseirc, stainedglass, util, signup, gmtools, \
                           tabs
-from webby import iwebby
-
-RESOURCE = lambda f: sibpath(__file__, f)
+from webby import iwebby, RESOURCE
 
 
 class IRCContainer(stainedglass.Enclosure, components.Componentized):

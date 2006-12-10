@@ -19,13 +19,12 @@ from zope.interface import implements
 
 from nevow import loaders, athena, rend, inevow, url, tags as T, flat, page
 
-from webby import tabs, util, theGlobal, data
+from webby import tabs, util, theGlobal, data, RESOURCE
 from webby.data import FileMeta, FileData
 from webby.iwebby import IFileObserver
 
 import formal
 
-RESOURCE = lambda f: sibpath(__file__, f)
 
 # load our own mime-types, because the set python comes with by default is
 # *pathetic*
