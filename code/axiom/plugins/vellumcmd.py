@@ -40,8 +40,8 @@ class Vellum(axiomatic.AxiomaticCommand):
         s = self.parent.getStore()
         def _txn():
             svc = s.findOrCreate(DataService,
-                                 smtpFrom=self['smtpFrom'],
-                                 smtpServer=self['smtpServer'],
+                                 smtpFrom=unicode(self['smtpFrom']),
+                                 smtpServer=unicode(self['smtpServer']),
                                  )
             svc.installOn(s)
 
