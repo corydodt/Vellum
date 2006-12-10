@@ -125,7 +125,8 @@ class ReceivedNoticeParser(object):
             return
                 
     def command_BACKGROUND(self, command, md5key):
-        return iwebby.IMapWidget(self.groupConversation).setMapBackground(md5key)
+        return iwebby.IMapWidget(self.groupConversation
+                ).setMapBackgroundFromChannel()
 
     def command_MAPDIGEST(self, command, args):
         ## # start queueing other commands until ENDDIGEST

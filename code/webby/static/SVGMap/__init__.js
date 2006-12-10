@@ -71,15 +71,21 @@ SVGMap.MapWidget.methods( // {{{
     function setMapBackground(self, backgroundInfo) { // {{{
         var d = self.addChildWidgetFromWidgetInfo(backgroundInfo);
         d.addCallback(function _(background) {
+            var images = background.node.getElementsByTagName('image');
+            var bgimage = images[0];
+            var obimage = images[1];
+
+            var w = bgimage.getAttribute('width');
+            var h = bgimage.getAttribute('height');
+
             var nn = self.node;
-            var w = background.node.getAttribute('width');
-            var h = background.node.getAttribute('height');
             nn.setAttribute('width', w);
             nn.setAttribute('height', h);
             nn.appendChild(background.node);
+
             // FIXME - don't know why I have to set the href again.
-            background.node.setAttributeNS(XLINKNS, 'href', 
-                    background.node.href.baseVal);
+            bgimage.setAttributeNS(XLINKNS, 'href', bgimage.href.baseVal);
+            obimage.setAttributeNS(XLINKNS, 'href', obimage.href.baseVal);
             return null;
         });
         return d;

@@ -6,8 +6,8 @@ from zope.interface import implements
 
 from nevow import rend, loaders, athena, url, static, inevow, tags as T
 
-from webby import minchat, svgmap, parseirc, stainedglass, util, signup, gmtools, \
-                          tabs
+from webby import minchat, svgmap, parseirc, stainedglass, util, signup, \
+                  gmtools, tabs, theGlobal, data
 from webby import iwebby, RESOURCE
 
 
@@ -157,7 +157,9 @@ class ConversationTabs(tabs.TabsElement):
             
             # the MAP
             if hasattr(conversation, 'group'):
-                mapw = svgmap.MapWidget()
+                db = theGlobal['database']
+                channel = db.findFirst(data.Channel, data.Channel.name==cn)
+                mapw = svgmap.MapWidget(channel)
                 mapw.setFragmentParent(enc)
                 conversation.setComponent(iwebby.IMapWidget, mapw)
             else:

@@ -1,7 +1,7 @@
 from nevow import athena
 from nevow.livetrial import testcase
 
-from webby import svgmap, data, ircweb
+from webby import svgmap, data, ircweb, obscurement
 from webby.test.teststore import testUser, testFileMeta, cleanStore
 
 class TestMapWidget(testcase.TestCase):
@@ -20,7 +20,9 @@ class TestMapWidget(testcase.TestCase):
         """
         Return a new SVGMap
         """
-        mapw = svgmap.MapWidget()
+        st = cleanStore()
+        chan = data.Channel(store=st, name=u'#foo')
+        mapw = svgmap.MapWidget(chan)
         mapw.setFragmentParent(self)
         return mapw
 
@@ -30,7 +32,21 @@ class TestMapWidget(testcase.TestCase):
         """
         Return a new BackgroundImage object 
         """
-        bgi = svgmap.BackgroundImage(testFileMeta(cleanStore()))
+        st = cleanStore()
+        chan = data.Channel(store=st, name=u'#foo')
+        fileitem = testFileMeta(st)
+        odata = data.FileData(store=st, data=obscurement.newBlackImage(100,100))
+        obsc = data.FileMeta(store=st,
+                data=odata,
+                filename=u'#foo_obscurement.png',
+                mimeType=u'image/png',
+                md5=u'316ca7b4c921a204797dfbb70becfef9',
+                width=100,
+                height=100,
+                )
+        chan.background = fileitem
+        chan.obscurement = obsc
+        bgi = svgmap.BackgroundImage(chan)
         bgi.setFragmentParent(self)
         return bgi
 

@@ -5,21 +5,24 @@ from zope.interface import implements
 
 from nevow import athena, loaders, tags as T
 
-from webby import theGlobal, data, iwebby, RESOURCE
+from webby import iwebby, RESOURCE
 
 class BackgroundImage(athena.LiveElement):
     ## jsClass = u'SVGMap.BackgroundImage'
     docFactory = loaders.xmlfile(RESOURCE('elements/BackgroundImage'))
-    def __init__(self, fileitem, *a, **kw):
+    def __init__(self, channel, *a, **kw):
         super(BackgroundImage, self).__init__(*a, **kw)
-        self.fileitem = fileitem
+        self.channel = channel
 
     def imageLiveElement(self, req, tag):
         # FIXME - don't hardcode href netloc
-        href = u'/files/%s' % (self.fileitem.md5,)
-        tag.fillSlots('width', self.fileitem.width)
-        tag.fillSlots('height', self.fileitem.height)
+        ch = self.channel
+        href = u'/files/%s' % (ch.background.md5,)
+        obscurementHref = u'/files/%s' % (ch.obscurement.md5,)
+        tag.fillSlots('width', ch.background.width)
+        tag.fillSlots('height', ch.background.height)
         tag.fillSlots('href', href)
+        tag.fillSlots('obscurementHref', obscurementHref)
         return tag(render=T.directive("liveElement"))
 
     athena.renderer(imageLiveElement)
@@ -28,11 +31,11 @@ class MapWidget(athena.LiveElement):
     implements(iwebby.IMapWidget)
     jsClass = u'SVGMap.MapWidget'
     docFactory = loaders.xmlfile(RESOURCE('elements/MapWidget'))
+    def __init__(self, channel, *a, **kw):
+        super(MapWidget, self).__init__(*a, **kw)
+        self.channel = channel
 
-    def setMapBackground(self, md5key):
-        db = theGlobal['database']
-        # TODO - assert that this really is an image
-        filemeta = db.findFirst(data.FileMeta, data.FileMeta.md5 == unicode(md5key))
-        image = BackgroundImage(filemeta)
+    def setMapBackgroundFromChannel(self):
+        image = BackgroundImage(self.channel)
         image.setFragmentParent(self)
         return self.callRemote("setMapBackground", image)
