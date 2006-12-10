@@ -177,6 +177,10 @@ input.chatentry {
     background-color: gold;
 }
 
+.cancelLink {
+    text-align: right;
+}
+
 /* TEMP */
 /* UNCOMMENT THESE when debugging CSS! You will be glad. */
 /* .enclosedRegion { border: 5px dashed blue; } */
