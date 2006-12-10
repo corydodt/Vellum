@@ -12,12 +12,13 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         form { background-color: white; padding: 2pt; }
         input { margin: 4pt; }
         .cancelLink * { color: white; }
-        .cancelLink { margin: 2pt; }
+        .cancelLink { margin: 2pt; text-align: right;}
       </style>
   </head>
   <body>
     <div class="cancelLink">
-      <a href="#" onclick="window.parent.closeUploadFrame(true)">Cancel Upload [X]</a>
+      <a href="#" 
+        onclick="window.parent.closeUploadFrame(true)">Cancel Upload [X]</a>
     </div>
     <n:invisible n:render="form upload" />
   </body>
