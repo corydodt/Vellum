@@ -7,20 +7,39 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   <head>
       <title>Upload</title>
       <link rel="stylesheet" type="text/css" href="/static/webby.css" />
+      <script type="text/javascript" src="/static/DeanEdwards.js"></script>
       <style type="text/css">
         body { background-color: blue; padding: 2pt; }
         form { background-color: white; padding: 2pt; }
         input { margin: 4pt; }
         .cancelLink * { color: white; }
         .cancelLink { margin: 2pt; text-align: right;}
+        .hiddenBusyWait { display: none; }
+        #busy-wait { background-color: white; height: 96px; }
       </style>
   </head>
   <body>
     <div class="cancelLink">
-      <a href="#" 
+      <a href="#" id="cancel-bar"
         onclick="window.parent.closeUploadFrame(true)">Cancel Upload [X]</a>
     </div>
     <n:invisible n:render="form upload" />
+    <div id="busy-wait" class="hiddenBusyWait">
+      <img src="/static/loading.gif" alt="Uploading..." />
+      Uploading . . .
+    </div>
+    <script type="text/javascript">
+/* hide the form and show a busy-waiter while large files upload */
+var upload = document.forms['upload'];
+
+DeanEdwards.addEvent(upload, 'submit', function onload(event) {
+    upload.style.display = 'none';
+    document.getElementById('busy-wait').className = '';
+    /* hide the canceller while we're at it, since cancelling is not an option
+     */
+    document.getElementById('cancel-bar').style.display = 'none';
+});
+    </script>
   </body>
 </html>
 
