@@ -77,8 +77,7 @@ SVGMap.MapWidget.methods( // {{{
             nn.setAttribute('width', w);
             nn.setAttribute('height', h);
             nn.appendChild(background.node);
-            // FIXME - this appears to be a firefox bug requiring that I
-            // set the href again.
+            // FIXME - don't know why I have to set the href again.
             background.node.setAttributeNS(XLINKNS, 'href', 
                     background.node.href.baseVal);
             return null;
