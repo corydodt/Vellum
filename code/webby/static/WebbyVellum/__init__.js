@@ -138,7 +138,7 @@ WebbyVellum.ChatEntry.methods( // {{{
     function submit(self, event) { // {{{
         event.stopPropagation();
         event.preventDefault();
-        var input = self.firstNodeByAttribute('class', 'chatentry');
+        var input = self.node.chatentry;
         var ret = self.sendChatText(input.value);
         input.value = "";
         return ret;

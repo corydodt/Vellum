@@ -24,7 +24,7 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
             var chat = irc.childWidgets[2];
             self.failIf(chat.submit === undefined);
 
-            var chatentry = chat.firstNodeByAttribute('class', 'chatentry');
+            var chatentry = chat.node.chatentry;
 
             // entry field should start empty
             self.assertEqual(chatentry.value, '');
@@ -60,7 +60,7 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
         var d = self.setUp();
         d.addCallback(function _(irc) {
             var chat = irc.getChatEntry();
-            var chatentry = chat.firstNodeByAttribute('class', 'chatentry');
+            var chatentry = chat.node.chatentry;
 
             chatentry.value = 'hello';
             var event = new MockEvent(chat.node);

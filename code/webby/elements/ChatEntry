@@ -1,4 +1,4 @@
     <form xmlns:n="http://nevow.com/ns/nevow/0.1"
        xmlns:athena="http://divmod.org/ns/athena/0.7"
-       n:render="liveElement"><input class="chatentry" />
+       n:render="liveElement" class="chatentry"><input name="chatentry" />
     </form>
