@@ -4,6 +4,26 @@
 
 .formLabel { float: left; width: 12em; }
 
+.accountManager {
+    width: 1000px;
+    position: absolute;
+}
+
+.accountManager .haze { 
+    width: 1000px; height: 593px;
+    opacity: 0.5;
+    -moz-opacity: 0.5
+    filter: alpha(50);
+    position: absolute;
+    background-color: black;
+}
+
+.accountManagerInputs {
+    color: white;
+    position: absolute;
+    top: 200px;
+    left: 200px;
+}
 
 h1 { font-family: sans-serif; } 
 

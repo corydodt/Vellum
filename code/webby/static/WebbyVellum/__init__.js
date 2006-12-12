@@ -111,6 +111,12 @@ WebbyVellum.AccountManager.methods( // {{{
         var channels = node.channels.value;
         // FIXME - handle blank
         var d = self.callRemote("onLogOnSubmit", nick, channels);
+        d.addCallback(function finishedLogOn(r) {
+            if (r.match(/connected .*/)) {
+                self.node.style['display'] = 'none';
+            }
+            return r;
+        });
         return d;
     } // }}}
 ); // }}}

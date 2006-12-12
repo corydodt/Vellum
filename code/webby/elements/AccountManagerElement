@@ -1,7 +1,10 @@
     <form xmlns:n="http://nevow.com/ns/nevow/0.1" 
         xmlns:athena="http://divmod.org/ns/athena/0.7"
         n:render="liveElement"
-        >Nick: <input name="nick" class="corner" />
+        class="accountManager"
+        ><div class="haze"/><div class="accountManagerInputs">Nick: <input name="nick" class="corner" />
+        <br />
         Channels: <input name="channels" value="#vellum" class="corner" />
-        <input type="submit" value="Join!" />
+        <br />
+        <input type="submit" value="Join!" /></div>
     </form>
