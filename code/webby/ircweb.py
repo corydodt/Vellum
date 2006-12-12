@@ -4,7 +4,7 @@ from twisted.internet import defer
 
 from zope.interface import implements
 
-from nevow import rend, loaders, athena, url, static, inevow, tags as T
+from nevow import rend, loaders, athena, url, static, inevow, tags as T, guard
 
 from webby import minchat, svgmap, parseirc, stainedglass, util, signup, \
                   gmtools, tabs, theGlobal, data
@@ -433,3 +433,9 @@ class IRCPage(athena.LivePage):
 
         return ctx.tag[enc[gmt]]
 
+    def render_topLinks(self, ctx, _):
+        ss = inevow.ISession(ctx)
+        ctx.tag.fillSlots('email', ss.user.email)
+        ctx.tag.fillSlots('logoutHref', url.root.child(guard.LOGOUT_AVATAR))
+        ctx.tag.fillSlots('adminLink', T.a['Admin (TODO)'])
+        return ctx.tag

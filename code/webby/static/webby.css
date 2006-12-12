@@ -1,5 +1,16 @@
 @import url(/static/tabs.css);
 
+.topLinks { 
+    font-family: sans-serif;
+    padding: 0px;
+    padding-left: 805px;
+    margin: 0px;
+    font-size: 8pt;
+}
+.topLinks a {
+    margin-left: 1em;
+}
+
 .error { color: red; font-weight: bold; }
 
 .formLabel { float: left; width: 12em; }
