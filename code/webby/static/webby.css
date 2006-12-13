@@ -141,6 +141,12 @@ body {
 .gameTab {
 }
 
+.controlBar {
+    width: 130px;
+    float: left;
+    height: 570px;
+}
+
 input.topicBar {
     width: 400px;
     float: left;

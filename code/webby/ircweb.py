@@ -5,7 +5,7 @@ from twisted.internet import defer
 from zope.interface import implements
 
 from nevow import rend, loaders, athena, url, static, inevow, \
-        tags as T, guard, page
+                  tags as T, guard, page
 
 from webby import minchat, svgmap, parseirc, stainedglass, util, signup, \
                   gmtools, tabs, theGlobal, data
@@ -77,15 +77,21 @@ class NameSelect(util.RenderWaitLiveElement):
 
 NODEFAULT = object()
 
+class ControlBar(page.Element):
+    docFactory = loaders.xmlfile(RESOURCE('elements/ControlBar'))
+
+
 class ChannelLayout(page.Element):
     docFactory = loaders.xmlfile(RESOURCE('elements/ChannelLayout'))
-    def __init__(self, topicBar, mapDiv, channelDiv, chatEntry):
+    def __init__(self, controlBar, topicBar, mapDiv, channelDiv, chatEntry):
+        self.controlBar = controlBar
         self.topicBar = topicBar
         self.mapDiv = mapDiv
         self.channelDiv = channelDiv
         self.chatEntry = chatEntry
 
     def layout(self, req, tag):
+        tag.fillSlots('controlBar', self.controlBar)
         tag.fillSlots('topicBar', self.topicBar)
         tag.fillSlots('mapDiv', self.mapDiv)
         tag.fillSlots('channelDiv', self.channelDiv)
@@ -180,13 +186,16 @@ class ConversationTabs(tabs.TabsElement):
                 mapw = svgmap.MapWidget(channel, ce)
                 mapw.setFragmentParent(enc)
                 conversation.setComponent(iwebby.IMapWidget, mapw)
+                # the buttons etc.
+                controlBar = ControlBar()
                 
                 mapdiv = T.div(_class="mapbox")[mapw]
             else:
+                controlBar = []
                 mapdiv = []
 
             # put the little widgets into the stan tree of the container
-            layout = ChannelLayout(tb, mapdiv,
+            layout = ChannelLayout(controlBar, tb, mapdiv,
                     T.div(_class="channel")[ta, ns], ce)
             enc = enc[layout]
 

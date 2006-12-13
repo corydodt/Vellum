@@ -1,5 +1,6 @@
 <div class="channelLayout" xmlns:n="http://nevow.com/ns/nevow/0.1"
     n:render="layout">
+    <n:slot name="controlBar" />
     <div style="float: left;">
         <n:slot name="topicBar" />
         <n:slot name="mapDiv" />
