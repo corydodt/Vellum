@@ -42,15 +42,14 @@ SVGMap.MapWidget.methods( // {{{
                 }
 
                 /* send a /BACKGROUND command through the ChatEntry widget */
-                var container = self.getContainer();
-                var ce = container.getChatEntry();
-                var tabid = container.activeTabId();
+                var tabid = self.getContainer().activeTabId();
                 var md5key = self._parseSrcForMd5key(img.src);
                 var command = "/BACKGROUND " + tabid + " " + md5key;
-                var d = ce.sendChatText(command);
+                var d = self.callRemote("sendCommand", command);
                 d.addErrback(function _(failure) {
                     Divmod.debug("", failure);
                     debugger;
+                    return failure;
                 });
                 return d;
             }

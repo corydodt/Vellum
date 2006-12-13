@@ -21,13 +21,6 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
             self.failIf(accountManager.onLogOnSubmit === undefined);
             var conv = irc.childWidgets[1];
             self.failIf(conv.appendToTab === undefined);
-            var chat = irc.childWidgets[2];
-            self.failIf(chat.submit === undefined);
-
-            var chatentry = chat.node.chatentry;
-
-            // entry field should start empty
-            self.assertEqual(chatentry.value, '');
 
             var fgtab = irc.firstNodeByAttribute('class', 'tab');
 
@@ -50,46 +43,6 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
                 var testTabs = irc.nodesByAttribute('id', '#test');
                 self.assertEqual(testTabs.length, 1);
                 self.assertEqual(irc.activeTabId(), '#test');
-            });
-            return d2;
-        });
-        return d;
-    }, // }}}
-
-    function test_submitText(self) { // {{{
-        var d = self.setUp();
-        d.addCallback(function _(irc) {
-            var chat = irc.getChatEntry();
-            var chatentry = chat.node.chatentry;
-
-            chatentry.value = 'hello';
-            var event = new MockEvent(chat.node);
-            var d2 = chat.submit(event);
-            d2.addCallback(function (_) { 
-                // should reset the entry field to empty
-                self.assertEqual(chatentry.value, '');
-
-                var fgtab = irc.firstNodeByAttribute('class', 'tab');
-
-                // the server tab should contain a span with the text
-                self.assertEqual(fgtab.innerHTML.search('hello') > 0, true);
-            });
-            return d2;
-        });
-        return d;
-    }, // }}}
-
-    /* test that we can send a string without the event around it */
-    function test_sendChatText(self) { // {{{
-        var d = self.setUp();
-        d.addCallback(function _(irc) {
-            var ce = irc.getChatEntry();
-            var d2 = ce.sendChatText('hello2');
-            d2.addCallback(function (_) {
-                var fgtab = irc.firstNodeByAttribute('class', 'tab');
-
-                // the server tab should contain a span with the text
-                self.assertEqual(fgtab.innerHTML.search('hello2') > 0, true);
             });
             return d2;
         });
@@ -131,22 +84,8 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
         return d;
     }, // }}}
 
-    /* test that getChatEntry returns a ChatEntry widget */
-    function test_getChatEntry(self) { // {{{
-        d = self.setUp();
-        d.addCallback(function _(irc) {
-            var ce = irc.getChatEntry();
-            self.failUnless(ce.firstNodeByAttribute('class', 'chatentry'));
-        });
-        return d;
-    }, // }}}
-
-    // TODO - test keyboard login submit vs. click button submit?
-
-
     // TODO - tests for the window.location after clicking on a tab (make sure
     // there's no #fragment added by the act of clicking on the link
-
 
     function setUp(self) { // {{{
         var d = self.callRemote("newContainer");
@@ -156,6 +95,55 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
         return d;
     } // }}}
 ); // }}}
+
+WebbyVellum.Tests.TestChatEntry = Nevow.Athena.Test.TestCase.subclass("WebbyVellum.Tests.TestChatEntry");
+WebbyVellum.Tests.TestChatEntry.methods(
+    function test_initialize(self) { // {{{
+        var d = self.setUp();
+        d.addCallback(function gotChatEntry(chatentry) {
+            self.assertEqual(chatentry.node.chatentry.value, '');
+        });
+        return d;
+    }, // }}}
+
+    /* test that we can send a string without the event around it */
+    function test_sendChatText(self) { // {{{
+        var d = self.setUp();
+        d.addCallback(function _(chatentry) {
+            var d2 = chatentry.sendChatText('hello2');
+            d2.addCallback(function gotResponse(value) {
+                self.assertEqual(value, 'ok');
+            });
+            return d2;
+        });
+        return d;
+    }, // }}}
+
+    /* test that we can use an event to send the string */
+    function test_submitText(self) { // {{{
+        var d = self.setUp();
+        d.addCallback(function _(chatentry) {
+            var input = chatentry.node.chatentry;
+
+            input.value = 'hello';
+            var event = new MockEvent(input);
+            var d2 = chatentry.submit(event);
+            d2.addCallback(function gotResponse(value) {
+                self.assertEqual(value, 'ok');
+            });
+            return d2;
+        });
+        return d;
+    }, // }}}
+
+    function setUp(self) { // {{{
+        var d = self.callRemote("newChatEntry");
+        d.addCallback(
+            function _(wi) { return self.addChildWidgetFromWidgetInfo(wi); }
+            );
+        return d;
+    } // }}}
+);
 
 WebbyVellum.Tests.TestTopicBar = Nevow.Athena.Test.TestCase.subclass("WebbyVellum.Tests.TestTopicBar");
 WebbyVellum.Tests.TestTopicBar.methods( // {{{

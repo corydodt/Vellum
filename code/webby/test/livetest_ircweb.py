@@ -11,6 +11,22 @@ class MockAccountManager:
     def doConnection(self, host, username, password, channels):
         return defer.succeed(None)
 
+class MockConversation:
+    def sendText(self, message):
+        pass
+
+class TestChatEntry(testcase.TestCase):
+    jsClass = u'WebbyVellum.Tests.TestChatEntry'
+    def newChatEntry(self, ):
+        """
+        Return a new chat entry
+        """
+        chatentry = ircweb.ChatEntry(MockConversation())
+        chatentry.setFragmentParent(self)
+        return chatentry
+
+    athena.expose(newChatEntry)
+
 
 class TestIRCContainer(testcase.TestCase):
     jsClass = u'WebbyVellum.Tests.TestIRCContainer'

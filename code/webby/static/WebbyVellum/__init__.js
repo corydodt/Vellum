@@ -145,8 +145,7 @@ WebbyVellum.ChatEntry.methods( // {{{
     }, // }}}
 
     function sendChatText(self, text) { // {{{
-        var active = self.widgetParent.activeTabId();
-        var d = self.callRemote("chatMessage", text, active);
+        var d = self.callRemote("chatMessage", text);
         return d;
     } // }}}
 ); // }}}
@@ -155,10 +154,6 @@ WebbyVellum.IRCContainer = StainedGlass.Enclosure.subclass('WebbyVellum.IRCConta
 WebbyVellum.IRCContainer.methods( // {{{
     function activeTabId(self) { // {{{
         return self.childWidgets[1].activeTabId();
-    }, // }}}
-
-    function getChatEntry(self) { // {{{
-        return self.childWidgets[2];
     } // }}}
 ); // }}}
 

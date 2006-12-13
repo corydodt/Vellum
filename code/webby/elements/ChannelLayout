@@ -1,0 +1,10 @@
+<div class="channelLayout" xmlns:n="http://nevow.com/ns/nevow/0.1"
+    n:render="layout">
+    <div style="float: left;">
+        <n:slot name="topicBar" />
+        <n:slot name="mapDiv" />
+        <n:slot name="channelDiv" />
+        <n:slot name="chatEntry" />
+    </div>
+    <div style="clear:both;" />
+</div>

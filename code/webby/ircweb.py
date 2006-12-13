@@ -4,7 +4,8 @@ from twisted.internet import defer
 
 from zope.interface import implements
 
-from nevow import rend, loaders, athena, url, static, inevow, tags as T, guard
+from nevow import rend, loaders, athena, url, static, inevow, \
+        tags as T, guard, page
 
 from webby import minchat, svgmap, parseirc, stainedglass, util, signup, \
                   gmtools, tabs, theGlobal, data
@@ -34,14 +35,9 @@ class IRCContainer(stainedglass.Enclosure, components.Componentized):
         am = AccountManagerElement(self.accountManager, cw, self.user)
         am.setFragmentParent(self)
         self.setComponent(iwebby.IChatAccountManager, am)
-
-        ce = ChatEntry()
-        ce.setFragmentParent(self)
-        self.setComponent(iwebby.IChatEntry, ce)
-        return tag[am, cw, ce]
+        return tag[am, cw]
 
     athena.renderer(enclosedRegion)
-
 
 
 class TopicBar(util.RenderWaitLiveElement):
@@ -80,6 +76,24 @@ class NameSelect(util.RenderWaitLiveElement):
         return self.callRemote('setNames', map(unicode, names))
 
 NODEFAULT = object()
+
+class ChannelLayout(page.Element):
+    docFactory = loaders.xmlfile(RESOURCE('elements/ChannelLayout'))
+    def __init__(self, topicBar, mapDiv, channelDiv, chatEntry):
+        self.topicBar = topicBar
+        self.mapDiv = mapDiv
+        self.channelDiv = channelDiv
+        self.chatEntry = chatEntry
+
+    def layout(self, req, tag):
+        tag.fillSlots('topicBar', self.topicBar)
+        tag.fillSlots('mapDiv', self.mapDiv)
+        tag.fillSlots('channelDiv', self.channelDiv)
+        tag.fillSlots('chatEntry', self.chatEntry)
+        return tag
+
+    page.renderer(layout)
+
 
 class ConversationTabs(tabs.TabsElement):
     """
@@ -150,25 +164,31 @@ class ConversationTabs(tabs.TabsElement):
             ta = stainedglass.TextArea()
             ta.setFragmentParent(enc)
 
+            # the thing you can type at
+            ce = ChatEntry(conversation)
+            ce.setFragmentParent(enc)
+
             # assign components
             conversation.setComponent(iwebby.ITextArea, ta)
             conversation.setComponent(iwebby.ITopicBar, tb)
             conversation.setComponent(iwebby.INameSelect, ns)
             
-            # the MAP
             if hasattr(conversation, 'group'):
+                # the MAP
                 db = theGlobal['database']
                 channel = db.findFirst(data.Channel, data.Channel.name==cn)
-                mapw = svgmap.MapWidget(channel)
+                mapw = svgmap.MapWidget(channel, ce)
                 mapw.setFragmentParent(enc)
                 conversation.setComponent(iwebby.IMapWidget, mapw)
+                
+                mapdiv = T.div(_class="mapbox")[mapw]
             else:
-                mapw = []
+                mapdiv = []
 
             # put the little widgets into the stan tree of the container
-            enc = enc[tb, T.div(_class="mapbox")[mapw], 
-                      T.div(_class="channel")[ta, ns]
-                      ]
+            layout = ChannelLayout(tb, mapdiv,
+                    T.div(_class="channel")[ta, ns], ce)
+            enc = enc[layout]
 
             d = self.addTab(cn, cn)
 
@@ -210,12 +230,14 @@ class ConversationTabs(tabs.TabsElement):
         # FIXME - we do not return this deferred.  Need to see whether
         # minchat deals with deferreds returned by this stack
 
+
 def webClean(st):
     return unicode(st.replace('<','&lt;').replace('>','&gt;'))
 
 GREETING = util.flattenMessageString(
 u'''Vellum IRC v0.1
 Click "Join!" to connect.''')
+
 
 class AccountManagerElement(athena.LiveElement):
     """
@@ -266,14 +288,17 @@ class AccountManagerElement(athena.LiveElement):
         return d
     athena.expose(onLogOnSubmit)
 
+
 class ChatEntry(athena.LiveElement):
     docFactory = loaders.xmlfile(RESOURCE('elements/ChatEntry'))
-    implements(iwebby.IChatEntry)
-
     jsClass = u"WebbyVellum.ChatEntry"
 
-    def chatMessage(self, message, tabid):
-        conv = iwebby.IChatConversations(self.fragmentParent).getConversation(tabid)
+    def __init__(self, conversation, *a, **kw):
+        super(ChatEntry, self).__init__(*a, **kw)
+        self.conversation = conversation
+
+    def chatMessage(self, message):
+        conv = self.conversation
 
         parsed = parseirc.line.parseString(message)
         if parsed.command:
@@ -289,6 +314,7 @@ class ChatEntry(athena.LiveElement):
             m(parsed.commandArgs.encode('utf8'), conv)
         else:
             self.say(parsed.nonCommand[0].encode('utf8'), conv)
+
         return u'ok'
 
     athena.expose(chatMessage)
@@ -394,6 +420,7 @@ class ChatEntry(athena.LiveElement):
                 newConv.sendText(mesg)
         except:
                 conv.sendText("Problems with /query, bailing out.")
+
 
 class IRCPage(athena.LivePage):
     """

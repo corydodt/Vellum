@@ -4,6 +4,10 @@ from nevow.livetrial import testcase
 from webby import svgmap, data, ircweb, obscurement
 from webby.test.teststore import testUser, testFileMeta, cleanStore
 
+class MockChatEntry(object):
+    def chatMessage(self, message):
+        return u'ok'
+
 class TestMapWidget(testcase.TestCase):
     jsClass = u'SVGMap.Tests.TestMapWidget'
     def newMapWidgetInContainer(self):
@@ -22,7 +26,7 @@ class TestMapWidget(testcase.TestCase):
         """
         st = cleanStore()
         chan = data.Channel(store=st, name=u'#foo')
-        mapw = svgmap.MapWidget(chan)
+        mapw = svgmap.MapWidget(chan, MockChatEntry())
         mapw.setFragmentParent(self)
         return mapw
 

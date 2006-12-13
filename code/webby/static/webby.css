@@ -1,21 +1,34 @@
 @import url(/static/tabs.css);
 
-.topLinks { 
+/* general {{{ */
+h1 { font-family: sans-serif; } 
+
+body { 
+  padding: 0px; 
+  margin: 0px; 
+  font-size: 9pt; 
+}
+/* }}} */
+
+/* login form {{{ */
+.error { color: red; font-weight: bold; }
+
+.formLabel { float: left; width: 12em; }
+/* }}} */
+
+.topLinks {  /* {{{ */
     font-family: sans-serif;
     padding: 0px;
     padding-left: 805px;
     margin: 0px;
     font-size: 8pt;
 }
+
 .topLinks a {
     margin-left: 1em;
-}
+} /* }}} */
 
-.error { color: red; font-weight: bold; }
-
-.formLabel { float: left; width: 12em; }
-
-.accountManager {
+.accountManager { /* {{{ */
     width: 1000px;
     position: absolute;
 }
@@ -34,17 +47,9 @@
     position: absolute;
     top: 200px;
     left: 200px;
-}
+} /* }}} */
 
-h1 { font-family: sans-serif; } 
-
-body { 
-  padding: 0px; 
-  margin: 0px; 
-  font-size: 9pt; 
-}
-
-.tab {
+.tab { /* {{{ */
     border: none;
     border-top: 1px outset black;
 }
@@ -60,9 +65,19 @@ body {
     border-top: 1px outset black;
     border-left: 1px outset black;
     border-right: 1px outset black;
+} /* }}} */
+
+.enclosure.decorated { /* {{{ */
+    border: 2px outset blue;
+    background-color: white;
+    margin: 2pt;
 }
 
-.iconified { 
+.enclosure-hidden {
+    display: none;
+}
+
+.iconified {
   float: left;
   clear: left;
   width: 3em;
@@ -79,24 +94,10 @@ body {
     height: 30pt;
 }
 
-.enclosure-hidden {
-    display: none;
-}
-
-.enclosure.decorated {
-    border: 2px outset blue;
-    background-color: white;
-    margin: 2pt;
-}
-
-
-
 .draggable:hover .titlebar:hover {
     background-color: green;
     cursor: pointer;
 }
-
-
 
 .titlebar {
     background-color: #33c;
@@ -119,21 +120,13 @@ body {
     margin: 1pt;
     font-size: 7pt;
     cursor: pointer;
-}
+} /* }}} */
 
-input.topicBar {
-    width: 100%;
+.irc { /* {{{ */
+    width: 1000px; /* TODO - adjust this width and mapbox width on demand */
 }
 
 .irc .tab {
-    height: 550px;
-}
-
-.irc {
-    width: 1000px;
-}
-
-.gameTab {
 }
 
 .irc .textArea {
@@ -145,36 +138,52 @@ input.topicBar {
     height: 100%;
 }
 
+.gameTab {
+}
+
+input.topicBar {
+    width: 400px;
+    float: left;
+    clear: left;
+} 
+
+.mapbox {
+    height: 420px;
+    width: 800px;
+    overflow: auto;
+    float: left;
+    clear: left;
+}
+
+.channel {
+    float: left;
+    clear: left;
+}
+
+.channel .textArea {
+    width: 630px;
+    height: 10em;
+    float: left;
+}
+
 .nameSelect {
     float: left;
-    clear: right;
-    width: 12em;
+    width: 140px;
     height: 10em;
     font-family: monospace;
     font-size: 8pt;
 }
 
-.channel .textArea {
-    width: 60em;
-    height: 10em;
+.chatentry {
     float: left;
     clear: left;
 }
 
-.mapbox {
-    width: 1000px;
-    height: 420px;
-    overflow: auto;
-}
+.chatentry input {
+    width: 765px;
+} /* }}} */
 
-input.chatentry {
-    display: block;
-    width: 100%;
-}
-
-
-
-.gmtools {
+.gmtools { /* {{{ */
     width: 400px;
     height: 330px;
     float: left;
@@ -206,10 +215,9 @@ input.chatentry {
  
 .chooserIconIconMiddle:hover, .chooserIconIcon:hover { 
     background-color: gold;
-}
+} /* }}} */
 
-/* TEMP */
-/* UNCOMMENT THESE when debugging CSS! You will be glad. */
+/* UNCOMMENT THESE when debugging CSS! You will be glad. {{{ */
 /* .enclosedRegion { border: 5px dashed blue; } */
 /* .tab { border: 5px solid green; } */
 /* .enclosure { border: 5px solid red; } */
@@ -218,3 +226,7 @@ input.chatentry {
 body:before { 
     content: "dashed blue=enclosedRegion, green=tab, red=enclosure, dotted red=iconified-hidden" }
 */
+/* }}} */
+
+/* vi:foldmethod=marker
+ *  */

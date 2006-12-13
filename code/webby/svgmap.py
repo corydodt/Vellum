@@ -31,11 +31,17 @@ class MapWidget(athena.LiveElement):
     implements(iwebby.IMapWidget)
     jsClass = u'SVGMap.MapWidget'
     docFactory = loaders.xmlfile(RESOURCE('elements/MapWidget'))
-    def __init__(self, channel, *a, **kw):
+    def __init__(self, channel, chatEntry, *a, **kw):
         super(MapWidget, self).__init__(*a, **kw)
         self.channel = channel
+        self.chatEntry = chatEntry
 
     def setMapBackgroundFromChannel(self):
         image = BackgroundImage(self.channel)
         image.setFragmentParent(self)
         return self.callRemote("setMapBackground", image)
+
+    def sendCommand(self, command):
+        return self.chatEntry.chatMessage(command)
+
+    athena.expose(sendCommand)

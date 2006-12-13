@@ -1,10 +1,5 @@
 from zope.interface import Interface
 
-class IChatEntry(Interface):
-    def chatMessage(self, message, id):
-        """Handler to process typed chat events on the client"""
-
-
 class IChatConversations(Interface):
     def showConversation(self, conversation, conversationName):
         """Cause a conversation window to appear"""
