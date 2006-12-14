@@ -1,3 +1,43 @@
 <div class="controlBar" xmlns:n='http://nevow.com/ns/nevow/0.1'>
-    control bar
+    <div class="toolbar">
+        <div class="buttonRow">
+            <div class="toolButton"><img title="Reveal Tool" alt="Reveal Tool" 
+                    src="/static/tog-reveal-22.png" />
+            </div>
+            <div class="toolButton"><img title="Obscurement Tool"
+                    alt="Obscurement Tool" 
+                    src="/static/tog-obscurement-22.png" />
+            </div>
+            <div class="toolButton"><img title="Reveal All" alt="Reveal All"
+                    src="/static/reveal-all-22.png" />
+            </div>
+            <div class="toolButton"><img title="Obscure All" alt="Obscure All"
+                    src="/static/obscure-all-22.png" />
+            </div>
+            <div class="toolButton"><img title="Clear Map..." alt="Clear Map..."
+                    src="/static/document-new-22.png" />
+            </div>
+        </div>
+        <div class="buttonRow">
+            <div class="toolButton"><img title="Draw Shapes" alt="Draw Shapes"
+                    src="/static/draw-path-22.png" />
+            </div>
+            <div class="toolButton"><img title="Pan Map" alt="Pan Map"
+                    src="/static/pan-22.png" />
+            </div>
+            <div class="toolButton"><img title="Zoom Fit Tool" 
+                    alt="Zoom Fit Tool" src="/static/zoom-22.png" />
+            </div>
+            <div class="toolButton"><img title="Zoom All" alt="Zoom All"
+                    src="/static/zoom-full-22.png" />
+            </div>
+            <div class="toolButton"><img title="Set Map Distance" 
+                    alt="Set Map Distance" src="/static/measure-22.png" />
+            </div>
+        </div>
+    </div>
+    <div class="tokenList">
+        Token<br />Token<br />Token<br />
+    </div>
+    <div class="quickCharacters">Quick Characters</div>
 </div>

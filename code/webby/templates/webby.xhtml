@@ -10,11 +10,14 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
       <link rel="stylesheet" type="text/css" href="/static/webby.css" />
   </head>
   <body>
-    <p class="topLinks" n:render="topLinks">
-      <n:slot name="adminLink" />
-      <a><n:attr name="href"><n:slot name="logoutHref" /></n:attr
+    <div class="topLinks" n:render="topLinks">
+      <div class="topLink">
+        <a><n:attr name="href"><n:slot name="logoutHref" /></n:attr
         >Log Out <n:slot name="email" /></a>
-    </p>
+      </div>
+      <div class="topLink"><n:slot name="adminLink" /></div>
+    </div>
+    <div style="clear: both;" />
     <n:invisible n:render="chat" />
     <n:invisible n:render="gmtools" />
   </body>
