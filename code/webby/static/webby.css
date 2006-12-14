@@ -67,7 +67,9 @@ body {
     border-top: 1px outset black;
     border-left: 1px outset black;
     border-right: 1px outset black;
-} /* }}} */
+}
+
+/* }}} */
 
 .enclosure.decorated { /* {{{ */
     border: 2px outset blue;
@@ -129,24 +131,31 @@ body {
 }
 
 .irc .tab {
+    height: 572px;
+    background-image: url(/static/bluishpaper_64.png);
+    background-repeat: repeat;
+    border: 1px inset;
 }
 
-.irc .textArea {
+.textArea {
     color: #aaa;
     background-color: black;
     font-family: monospace;
     font-size: 8pt;
     overflow: auto;
-    height: 100%;
+    width: 630px;
+    height: 10em;
+    float: left;
 }
 
 .gameTab {
 }
 
 .controlBar {
-    width: 160px;
+    width: 150px;
     float: left;
     height: 570px;
+    margin-right: 3px;
 }
 
 input.topicBar {
@@ -157,7 +166,7 @@ input.topicBar {
 
 .mapbox {
     height: 420px;
-    width: 800px;
+    width: 840px;
     overflow: auto;
     float: left;
     clear: left;
@@ -166,12 +175,6 @@ input.topicBar {
 .channel {
     float: left;
     clear: left;
-}
-
-.channel .textArea {
-    width: 630px;
-    height: 10em;
-    float: left;
 }
 
 .nameSelect {
@@ -226,7 +229,8 @@ input.topicBar {
     clear: left;
     border: 1px solid black;
     width: 100%;
-    height: 420px;
+    height: 368px;
+    background-color: white;
 }
 
 .quickCharacters {
@@ -234,7 +238,8 @@ input.topicBar {
     clear: left;
     border: 1px solid black;
     width: 100%;
-    height: 80px;
+    height: 132px;
+    background-color: white;
 }
 /* }}} */
 

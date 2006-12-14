@@ -15,5 +15,3 @@ http://spreadsheets.google.com/ccc?key=p1P43A77NkCmSsul4vIPpPA
 - bring back the chatentry for the server conversation
 
 - the server conversation should report stuff like motd, connected/dc messages
-
-- server conversation needs to be as large as channel convs
