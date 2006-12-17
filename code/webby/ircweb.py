@@ -287,9 +287,8 @@ class AccountManagerElement(athena.LiveElement):
 
         def _gotAccount(acct):
             # set up disconnection callback for browser close etc.
-            d = self.page.notifyOnDisconnect()
             logOff = lambda _: self.accountManager.disconnect(acct)
-            d.addBoth(logOff)
+            self.page.notifyOnDisconnect().addBoth(logOff)
 
             return u'connected %s@%s and joined %s' % (username, host, channels)
 

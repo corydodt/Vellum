@@ -86,7 +86,7 @@ class FileChooser(athena.LiveElement):
         # get file notifications from the user. set this as early as possible
         # in the render (which is here)
         self.user.addObserver(self)
-        self.page.notifyOnDisconnect().addCallback(
+        self.page.notifyOnDisconnect().addBoth(
                 lambda reason: self.user.removeObserver(self)
                 )
 
