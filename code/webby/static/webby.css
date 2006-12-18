@@ -202,7 +202,7 @@ input.topicBar {
     margin: 1px;
     background-color: white;
     text-align: center;
-    vertical-align: center;
+    vertical-align: middle;
     border: 1px outset black;
 }
 
