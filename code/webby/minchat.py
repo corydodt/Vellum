@@ -145,6 +145,14 @@ class ReceivedNoticeParser(object):
         ##         return d.errback(e)
         return defer.succeed(None)
 
+    def command_OBSCUREALL(self, command, args):
+        return iwebby.IMapWidget(self.groupConversation
+                ).updateObscurementFromChannel()
+
+    def command_REVEALALL(self, command, args):
+        return iwebby.IMapWidget(self.groupConversation
+                ).updateObscurementFromChannel()
+
 
 class MinConversation(
         basechat.Conversation,

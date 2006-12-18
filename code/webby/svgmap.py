@@ -37,9 +37,19 @@ class MapWidget(athena.LiveElement):
         self.chatEntry = chatEntry
 
     def setMapBackgroundFromChannel(self):
+        """
+        Create a new BackgroundImage widget and send it to the channel.
+        """
         image = BackgroundImage(self.channel)
         image.setFragmentParent(self)
         return self.callRemote("setMapBackground", image)
+
+    def updateObscurementFromChannel(self):
+        """
+        Just send a new md5key for the obscurement, which the client-side
+        widget will use to reset the background.
+        """
+        return self.callRemote("updateObscurement", self.channel.obscurement.md5)
 
     def sendCommand(self, command):
         return self.chatEntry.chatMessage(command)

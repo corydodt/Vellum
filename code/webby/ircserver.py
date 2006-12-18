@@ -119,6 +119,60 @@ class VellumIRCServerProtocol(IRCUser):
 
         d.addCallback(cbUser)
 
+    def irc_OBSCUREALL(self, prefix, params):
+        """
+        /OBSCUREALL #channel
+
+        Make the map completely covered by obscurement.
+        """
+        return self.getTarget(params).addCallback(self.irctarget_OBSCUREALL, prefix)
+
+    def irctarget_OBSCUREALL(self, (group, messageText), prefix, ):
+        messageText = u'OBSCUREALL #%s' % (group.name, )
+
+        assert iwords.IGroup.providedBy(group), "Target must be a group"
+        
+        # TODO - permissions.  Am I allowed to do this in this channel?
+
+        d = theRealm.lookupUser(VTNICK.lower())
+
+        def cbUser(client):
+            # persist!
+            group.channelItem.obscureAll()
+
+            # tell others.
+            message = {'text': messageText}
+            client.sendNotice(group, message)
+
+        d.addCallback(cbUser)
+
+    def irc_REVEALALL(self, prefix, params):
+        """
+        /REVEALALL #channel
+
+        Make the map completely covered by obscurement.
+        """
+        return self.getTarget(params).addCallback(self.irctarget_REVEALALL, prefix)
+
+    def irctarget_REVEALALL(self, (group, messageText), prefix, ):
+        messageText = u'REVEALALL #%s' % (group.name, )
+
+        assert iwords.IGroup.providedBy(group), "Target must be a group"
+        
+        # TODO - permissions.  Am I allowed to do this in this channel?
+
+        d = theRealm.lookupUser(VTNICK.lower())
+
+        def cbUser(client):
+            # persist!
+            group.channelItem.revealAll()
+
+            # tell others.
+            message = {'text': messageText}
+            client.sendNotice(group, message)
+
+        d.addCallback(cbUser)
+
     def _sendTopic(self, group):
         """
         Look up the topic in the database

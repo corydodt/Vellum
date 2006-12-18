@@ -67,6 +67,7 @@ SVGMap.MapWidget.methods( // {{{
         return Nevow.Athena.Widget.get(nn);
     }, // }}}
 
+    /* place a new BackgroundImage widget in the empty channel map */
     function setMapBackground(self, backgroundInfo) { // {{{
         var d = self.addChildWidgetFromWidgetInfo(backgroundInfo);
         d.addCallback(function _(background) {
@@ -89,6 +90,14 @@ SVGMap.MapWidget.methods( // {{{
         });
         return d;
     }, // }}}
+
+    /* replace the href for the obscurement widget in the existing channel map
+     */
+     function updateObscurement(self, md5key) { // {{{
+        var images = self.childWidgets[0].node.getElementsByTagName('image');
+        var obimage = images[1];
+        obimage.setAttributeNS(XLINKNS, 'href', '/files/' + md5key);
+     }, // }}}
 
     /* takes a string of the form /files/...md5.../thumb or similar and
        returns the md5 key

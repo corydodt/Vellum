@@ -141,24 +141,50 @@ class Channel(item.Item):
 
         return ret
 
+    def setObscurement(self, bytes):
+        def txn():
+            ob = FileMeta(store=self.store)
+            ob.filename = u'%s_obscurement.png' % (self.name,)
+            ob.width = self.background.width
+            ob.height = self.background.height
+            ob.mimeType = u'image/png'
+
+            ob.data = FileData(store=self.store)
+            ob.data.data = bytes
+
+            ob.md5 = unicode(md5(ob.data.data).hexdigest())
+
+            orig = self.obscurement
+            self.obscurement = ob
+
+            if orig is not None: 
+                orig.deleteFromStore()
+
+        self.store.transact(txn)
+
     def setBackground(self, fileitem):
         def txn():
             self.background = fileitem
             w = fileitem.width
             h = fileitem.height
 
-            ob = FileMeta(store=self.store)
-            ob.filename = u'%s_obscurement.png' % (self.name,)
-            ob.width = w
-            ob.height = h
-            ob.mimeType = u'image/png'
-
-            ob.data = FileData(store=self.store)
-            ob.data.data = obscurement.newBlackImage(w, h)
-
-            ob.md5 = unicode(md5(ob.data.data).hexdigest())
-
-            self.obscurement = ob
+            # reset the obscurement every time the background is updated
+            self.obscureAll()
 
         self.store.transact(txn)
 
+    def obscureAll(self):
+        def txn():
+            w = self.background.width
+            h = self.background.height
+            self.setObscurement(obscurement.newBlackImage(w, h))
+
+        self.store.transact(txn)
+
+    def revealAll(self):
+        def txn():
+            w = self.background.width
+            h = self.background.height
+            self.setObscurement(obscurement.newTransparentImage(w, h))
+
+        self.store.transact(txn)
