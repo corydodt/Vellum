@@ -1,8 +1,6 @@
 <div xmlns:n="http://nevow.com/ns/nevow/0.1" n:render="liveElement"
      class="fileChooser">
-    <table class="chooserIcon documentNew" 
-           xmlns:vellum="http://vellum.berlios.de/2006/vellum" 
-           vellum:name="documentNew">
+    <table class="chooserIcon documentNew" id="documentNew">
     <tr>
       <td class="chooserIconIcon"> <img src="/static/document-new.png" /> </td>
     </tr>
