@@ -223,9 +223,7 @@ WebbyVellum.FileChooser.methods( // {{{
         var ret = [];
         for (var i=0; i<self.childWidgets.length; i++) {
             var wid = self.childWidgets[i];
-            var label = wid.firstNodeByAttribute(
-                    'vellum:name', 'chooserIconLabel'
-            ).innerHTML;
+            var label = wid.nodeById('chooserIconLabel').innerHTML;
             ret.push([label, wid]);
         }
         return ret;

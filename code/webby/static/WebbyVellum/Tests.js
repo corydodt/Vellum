@@ -289,8 +289,7 @@ WebbyVellum.Tests.TestFileChooser.methods( // {{{
                 /* verify that the chooser sorts the icon in */
                 var sorted1 = ['a', 'ax', 'b', 'c'];
                 
-                var labels = chooser.nodesByAttribute('vellum:name',
-                        'chooserIconLabel');
+                var labels = chooser.nodesByClass('chooserIconLabel');
                 self.assertEqual(labels.length, sorted1.length);
                 for (var i=0; i<sorted1.length; i++) {
                     self.assertEqual(labels[i].innerHTML, sorted1[i]);
