@@ -29,3 +29,13 @@ http://spreadsheets.google.com/ccc?key=p1P43A77NkCmSsul4vIPpPA
 - "Nick" textarea for changing nick.
 
 - reverseproxy/vhostmonster resources for gluing vellum into thesoftworld.com/
+
+- mismatched tag error in firefox.  Reproduce:
+
+  1. Restart the server.  It only happens on the first request served.
+
+  2. Restart the browser.  It only happens the first time the browser visits
+     the site in a session.
+
+  3. Log in to the site.
+
