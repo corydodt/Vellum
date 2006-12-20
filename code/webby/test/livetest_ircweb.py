@@ -11,6 +11,9 @@ class MockAccountManager:
     def doConnection(self, host, username, password, channels):
         return defer.succeed(None)
 
+    def disconnect(self, *a, **kw):
+        """Just to make nit happy"""
+
 class MockConversation:
     def sendText(self, message):
         pass
