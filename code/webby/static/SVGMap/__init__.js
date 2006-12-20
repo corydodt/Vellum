@@ -10,9 +10,20 @@ SVGMap.MapWidget.methods( // {{{
     function __init__(self, node) // {{{
     {
         SVGMap.MapWidget.upcall(self, '__init__', node);
-        DeanEdwards.addEvent(node, 'mouseup', 
-                function onmouseup(event) { return self.checkForDrop(event); 
+        DeanEdwards.addEvent(node, 'mouseup', function onmouseup(event) { 
+            return self.checkForDrop(event); 
         });
+    }, // }}}
+
+    /* true if there is a background image set for this widget */
+    function hasBackground(self) { // {{{
+        if (self.childWidgets === undefined) return false;
+        try {
+            if (self.childWidgets[0].nodeById('map-background')) return true;
+            return false;
+        } catch (e) {
+            return false;
+        }
     }, // }}}
 
     /* if a node is being dropped here, do something about it */
@@ -20,40 +31,33 @@ SVGMap.MapWidget.methods( // {{{
         if (window.droppable) {
             var chooserIcon = window.droppable;
             var cl = chooserIcon.className;
-            if (cl.match(/.*\bchooserIcon\b.*/)) {
-                /* only set a new background if background is blank */
-                try {
-                    var bg = self.firstNodeByAttribute('vellum:name', 'map-background');
-                    if (bg !== undefined) return;
-                } catch (e) {
-                    if (!e.toString().match(
-                        /Failed to discover node with vellum:name value map-background.*/)
-                        ) {
-                        throw e;
-                    } else {
-                        // nothin
-                    }
-                }
 
-                /* only set if the chooserIcon that was dropped is an image */
-                var img = chooserIcon.getElementsByTagName('img')[0];
-                if (img === undefined || !img.src.match(/.*\/thumb$/)) {
-                    return;
-                }
+            /* ignore any droppables that don't have class chooserIcon */
+            if (! cl.match(/.*\bchooserIcon\b.*/)) return;
 
-                /* send a /BACKGROUND command through the ChatEntry widget */
-                var tabid = self.getContainer().activeTabId();
-                var md5key = self._parseSrcForMd5key(img.src);
-                var command = "/BACKGROUND " + tabid + " " + md5key;
-                var d = self.callRemote("sendCommand", command);
-                d.addErrback(function _(failure) {
-                    Divmod.debug("", failure);
-                    debugger;
-                    return failure;
-                });
-                return d;
-            }
+            /* only set a new background if background is blank */
+            if (self.hasBackground()) return;
+
+            /* only set if the chooserIcon that was dropped is an image */
+            var img = chooserIcon.getElementsByTagName('img')[0];
+            if (img === undefined || ! img.src.match(/.*\/thumb$/)) return;
+
+            return self.sendBackgroundCommand(img);
         }
+    }, // }}}
+
+    /* send a /BACKGROUND command */
+    function sendBackgroundCommand(self, img) { // {{{
+        var tabid = self.getContainer().activeTabId();
+        var md5key = self._parseSrcForMd5key(img.src);
+        var command = "/BACKGROUND " + tabid + " " + md5key;
+        var d = self.callRemote("sendCommand", command);
+        d.addErrback(function _(failure) {
+            Divmod.debug("", failure);
+            debugger;
+            return failure;
+        });
+        return d;
     }, // }}}
 
     /* search upwards until we find the irc container
@@ -70,7 +74,7 @@ SVGMap.MapWidget.methods( // {{{
     /* place a new BackgroundImage widget in the empty channel map */
     function setMapBackground(self, backgroundInfo) { // {{{
         var d = self.addChildWidgetFromWidgetInfo(backgroundInfo);
-        d.addCallback(function _(background) {
+        d.addCallback(function gotBackgroundWidget(background) {
             var images = background.node.getElementsByTagName('image');
             var bgimage = images[0];
             var obimage = images[1];
@@ -86,7 +90,7 @@ SVGMap.MapWidget.methods( // {{{
             // FIXME - don't know why I have to set the href again.
             bgimage.setAttributeNS(XLINKNS, 'href', bgimage.href.baseVal);
             obimage.setAttributeNS(XLINKNS, 'href', obimage.href.baseVal);
-            return null;
+            return background;
         });
         return d;
     }, // }}}

@@ -1,14 +1,13 @@
-<g xmlns:vellum="http://vellum.berlios.de/2006/vellum"
-xmlns="http://www.w3.org/2000/svg" xmlns:n="http://nevow.com/ns/nevow/0.1"
+<g xmlns="http://www.w3.org/2000/svg" xmlns:n="http://nevow.com/ns/nevow/0.1"
 n:render="imageLiveElement" xmlns:xlink="http://www.w3.org/1999/xlink">
 
-<image vellum:name="map-background">
+<image id="map-background">
 <n:attr name="xlink:href"><n:slot name="href"/></n:attr>
 <n:attr name="width"><n:slot name="width"/></n:attr>
 <n:attr name="height"><n:slot name="height"/></n:attr>
 </image>
 
-<image vellum:name="map-obscurement" opacity="0.53">
+<image id="map-obscurement" opacity="0.53">
 <n:attr name="xlink:href"><n:slot name="obscurementHref"/></n:attr>
 <n:attr name="width"><n:slot name="width"/></n:attr>
 <n:attr name="height"><n:slot name="height"/></n:attr>
