@@ -152,11 +152,11 @@ SVGMap.Tests.TestMapWidget.methods( // {{{
         d.addCallback(function gotBackgroundInfo(info) { 
             return mymap.setMapBackground(info);
         });
-        d.addCallback(function gotBackground(background) {
+        d.addCallback(function gotBackground(ignored) {
             self.assertEqual(mymap.node.getAttribute('width'), '100');
             self.assertEqual(mymap.node.getAttribute('height'), '100');
 
-            var images = background.node.getElementsByTagName('image');
+            var images = mymap.childWidgets[0].node.getElementsByTagName('image');
             var bgimage = images[0];
             var obimage = images[1];
 

@@ -90,7 +90,7 @@ SVGMap.MapWidget.methods( // {{{
             // FIXME - don't know why I have to set the href again.
             bgimage.setAttributeNS(XLINKNS, 'href', bgimage.href.baseVal);
             obimage.setAttributeNS(XLINKNS, 'href', obimage.href.baseVal);
-            return background;
+            return null;
         });
         return d;
     }, // }}}
