@@ -29,3 +29,8 @@ http://spreadsheets.google.com/ccc?key=p1P43A77NkCmSsul4vIPpPA
 - "Nick" textarea for changing nick.
 
 - reverseproxy/vhostmonster resources for gluing vellum into thesoftworld.com/
+
+-   XML Parsing Error: mismatched tag. Expected: </body>.
+    Location: http://thesoftworld.com:8080/game/
+    Line Number 64, Column 5:  </body>
+    ----^
