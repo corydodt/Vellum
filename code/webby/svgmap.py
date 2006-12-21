@@ -15,7 +15,6 @@ class BackgroundImage(athena.LiveElement):
         self.channel = channel
 
     def imageLiveElement(self, req, tag):
-        # FIXME - don't hardcode href netloc
         ch = self.channel
         href = u'/files/%s' % (ch.background.md5,)
         obscurementHref = u'/files/%s' % (ch.obscurement.md5,)
