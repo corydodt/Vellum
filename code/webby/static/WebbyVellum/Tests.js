@@ -259,7 +259,7 @@ WebbyVellum.Tests.TestFileChooser.methods( // {{{
         var d = self.setUp();
         d.addCallback(function _(chooser) {
             /* verify that there is a New File icon present */
-            var newDocumentNode = chooser.nodeById('documentNew');
+            var newDocumentNode = chooser.firstNodeByClass('documentNew');
             self.assertEqual(newDocumentNode.tagName, 'table');
         });
         return d

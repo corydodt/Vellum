@@ -1,6 +1,6 @@
 <div xmlns:n="http://nevow.com/ns/nevow/0.1" n:render="liveElement"
      class="fileChooser">
-    <table class="chooserIcon documentNew" id="documentNew">
+    <table class="chooserIcon documentNew">
     <tr>
       <td class="chooserIconIcon"> <img src="/static/document-new.png" /> </td>
     </tr>
