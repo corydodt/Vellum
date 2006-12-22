@@ -34,3 +34,14 @@ http://spreadsheets.google.com/ccc?key=p1P43A77NkCmSsul4vIPpPA
     Location: http://thesoftworld.com:8080/game/
     Line Number 64, Column 5:  </body>
     ----^
+
+- private conversations should be bigger, shouldn't have a topic bar.
+
+- when trying to /part from a private conversation (or similar error
+  condition), the /part'ing user actually *says* the error message into the
+  conversation.
+
+- if i do "/query mfen", I get one conversation tab named "mfen".  If "MFen"
+  then responds, I get another conversation tab named "MFen".
+
+- shouldn't be able to /query nicks that don't exist on the server
