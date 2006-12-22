@@ -145,8 +145,7 @@ WebbyVellum.ChatEntry.methods( // {{{
     }, // }}}
 
     function sendChatText(self, text) { // {{{
-        var d = self.callRemote("chatMessage", text);
-        return d;
+        return self.callRemote("chatMessage", text);
     } // }}}
 ); // }}}
 
@@ -277,6 +276,60 @@ WebbyVellum.ChooserIcon.methods( // {{{
         WebbyVellum.ChooserIcon.upcall(self, '__init__', node);
         // draggable with droppable=true
         StainedGlass.draggable(node, null, true);
+    } // }}}
+); // }}}
+
+WebbyVellum.ConversationEnclosure = Nevow.Athena.Widget.subclass('WebbyVellum.ConversationEnclosure');
+WebbyVellum.ConversationEnclosure.methods( // {{{
+    function __init__(self, node, conversationName) { // {{{
+        WebbyVellum.ConversationEnclosure.upcall(self, '__init__', node);
+        self.conversationName = conversationName;
+        self.chatentry = null;
+        // Using nodesByAttribute instead of firstNodeByAttribute because
+        // it doesn't raise an exception when no nodes are found.
+        // Channel conversations have this, private convs do not.
+        self.toolbar = self.nodesByClass('toolbar')[0];
+        if (self.toolbar !== undefined) {
+            var makeHandler = function (handler, src) {
+                var button = self.firstNodeByAttribute('src', src);
+                DeanEdwards.addEvent(button, 'click', handler);
+            };
+            /*
+            makeHandler(self.onRevealClicked, "/static/tog-reveal-22.png");
+            makeHandler(self.onObscureClicked, "/static/tog-obscurement-22.png");
+            */
+            makeHandler(function (event) { self.onRevealAllClicked(event) }, 
+                    "/static/reveal-all-22.png");
+            makeHandler(function (event) { self.onObscureAllClicked(event) }, 
+                    "/static/obscure-all-22.png");
+            /*
+            makeHandler(, "/static/document-new-22.png");
+            makeHandler(, "/static/draw-path-22.png");
+            makeHandler(, "/static/pan-22.png");
+            makeHandler(, "/static/zoom-22.png");
+            makeHandler(, "/static/zoom-full-22.png");
+            makeHandler(, "/static/measure-22.png" );
+            */
+        }
+    }, // }}}
+
+    /* get, and memoize (as self.chatentry) the chatentry widget */
+    function getChatEntry(self) { // {{{
+        if (self.chatentry === null) {
+            self.chatentry = Nevow.Athena.Widget.get(
+                    self.widgetParent.firstNodeByClass('chatentry'));
+        }
+        return self.chatentry;
+    }, // }}}
+
+    function onRevealAllClicked(self, event) { // {{{
+        var ce = self.getChatEntry();
+        return ce.sendChatText("/REVEALALL " + self.conversationName);
+    }, // }}}
+
+    function onObscureAllClicked(self, event) { // {{{
+        var ce = self.getChatEntry();
+        return ce.sendChatText("/OBSCUREALL " + self.conversationName);
     } // }}}
 ); // }}}
 

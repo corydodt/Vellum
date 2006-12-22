@@ -141,3 +141,15 @@ class TestNameSelect(testcase.TestCase):
 
     athena.expose(newNameSelect)
 
+
+class TestConversationEnclosure(testcase.TestCase):
+    jsClass = u'WebbyVellum.Tests.TestConversationEnclosure'
+    def newConversationEnclosure(self, ):
+        """Return a new ConversationEnclosure"""
+        ce = ircweb.ConversationEnclosure(u"#foo",
+                    userClass="gameTab", 
+                    decorated=False)
+        ce.setFragmentParent(self)
+        return ce
+
+    athena.expose(newConversationEnclosure)

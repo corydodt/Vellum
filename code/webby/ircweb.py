@@ -101,6 +101,15 @@ class ChannelLayout(page.Element):
     page.renderer(layout)
 
 
+class ConversationEnclosure(stainedglass.Enclosure):
+    jsClass = u'WebbyVellum.ConversationEnclosure'
+    def __init__(self, conversationName, *a, **kw):
+        super(ConversationEnclosure, self).__init__(*a, **kw)
+        self.conversationName = conversationName
+
+    def getInitialArguments(self):
+        return (self.conversationName,)
+
 class ConversationTabs(tabs.TabsElement):
     """
     UI element - For each conversation, one tab.
@@ -155,7 +164,10 @@ class ConversationTabs(tabs.TabsElement):
         cn = unicode(conversationName)
         if cn not in self.conversations:
             # create an Enclosure to hold the contents of the tab
-            enc = stainedglass.Enclosure(userClass="gameTab", decorated=False)
+            enc = ConversationEnclosure(
+                    conversationName,
+                    userClass="gameTab", 
+                    decorated=False)
             enc.setFragmentParent(self)
 
             # space for the topic

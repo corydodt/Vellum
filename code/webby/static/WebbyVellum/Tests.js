@@ -10,6 +10,13 @@ MockEvent.methods( // {{{
     function preventDefault(self) { /* */ }
 ); // }}}
 
+MockChatEntry = Divmod.Class.subclass('MockChatEntry');
+MockChatEntry.methods( // {{{
+    function sendChatText(self, message) { // {{{
+        self.message = message;
+    } // }}}
+); // }}}
+
 
 WebbyVellum.Tests.TestIRCContainer = Nevow.Athena.Test.TestCase.subclass("WebbyVellum.Tests.TestIRCContainer");
 WebbyVellum.Tests.TestIRCContainer.methods( // {{{
@@ -342,7 +349,7 @@ WebbyVellum.Tests.TestFileChooser.methods( // {{{
     } // }}}
 ); // }}}
 
-WebbyVellum.Tests.TestNameSelect = Nevow.Athena.Test.TestCase.subclass("WebbyVellum.Tests.NameSelect");
+WebbyVellum.Tests.TestNameSelect = Nevow.Athena.Test.TestCase.subclass("WebbyVellum.Tests.TestNameSelect");
 WebbyVellum.Tests.TestNameSelect.methods( // {{{
     function test_initialize(self) { // {{{
         d = self.setUp();
@@ -391,6 +398,63 @@ WebbyVellum.Tests.TestNameSelect.methods( // {{{
         d.addCallback(
             function _(wi) { return self.addChildWidgetFromWidgetInfo(wi); }
             );
+        return d;
+    } // }}}
+); // }}}
+
+WebbyVellum.Tests.TestConversationEnclosure = Nevow.Athena.Test.TestCase.subclass("WebbyVellum.Tests.TestConversationEnclosure");
+WebbyVellum.Tests.TestConversationEnclosure.methods( // {{{
+    function test_initialize(self) { // {{{
+        var d = self.setUp();
+        d.addCallback(function gotEnclosure(enclosure) {
+            self.failUnless(enclosure.conversationName == '#foo');
+        });
+        return d;
+    }, // }}}
+
+    function test_getChatEntry(self) { // {{{
+        var d = self.setUp();
+        d.addCallback(function gotEnclosure(enclosure) {
+            self.assertThrows(Divmod.Runtime.NodeAttributeError,
+                function () { enclosure.getChatEntry() });
+            enclosure.chatentry = 'fake';
+            self.assertEqual(enclosure.getChatEntry(), 'fake');
+            enclosure.chatentry = null;
+            var chatNode = document.createElement('div');
+            chatNode.setAttribute('class', 'chatentry');
+            self.node.appendChild(enclosure.node);
+            enclosure.node.appendChild(chatNode);
+            /* we are not actually going to get a chatentry back,
+             * since we never created one.  Just check for enclosure,
+             * which is the nearest enclosing widget to the chatentry node
+             */
+            self.assertEqual(enclosure.getChatEntry(), enclosure);
+        });
+        return d;
+    }, // }}}
+
+    function test_obscureAllRevealAll(self) { // {{{
+        var d = self.setUp();
+        d.addCallback(function gotEnclosure(enclosure) {
+            enclosure.chatentry = new MockChatEntry();
+            var ev = new MockEvent(enclosure.node);
+            enclosure.onRevealAllClicked(ev);
+            self.assertEqual(enclosure.chatentry.message, "/REVEALALL #foo");
+            enclosure.onObscureAllClicked(ev);
+            self.assertEqual(enclosure.chatentry.message, "/OBSCUREALL #foo");
+        });
+        return d;
+    }, // }}}
+
+    function setUp(self) { // {{{
+        var d = self.callRemote("newConversationEnclosure");
+        d.addCallback(function gotEnclosure(enclosureInfo) {
+            var d2 = self.addChildWidgetFromWidgetInfo(enclosureInfo);
+            d2.addCallback(function gotEnclosure(enclosure) {
+                return enclosure;
+            });
+            return d2;
+        });
         return d;
     } // }}}
 ); // }}}
