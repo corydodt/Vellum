@@ -174,17 +174,19 @@ class Channel(item.Item):
         self.store.transact(txn)
 
     def obscureAll(self):
-        def txn():
-            w = self.background.width
-            h = self.background.height
-            self.setObscurement(obscurement.newBlackImage(w, h))
+        if self.background:
+            def txn():
+                w = self.background.width
+                h = self.background.height
+                self.setObscurement(obscurement.newBlackImage(w, h))
 
-        self.store.transact(txn)
+            self.store.transact(txn)
 
     def revealAll(self):
-        def txn():
-            w = self.background.width
-            h = self.background.height
-            self.setObscurement(obscurement.newTransparentImage(w, h))
+        if self.background:
+            def txn():
+                w = self.background.width
+                h = self.background.height
+                self.setObscurement(obscurement.newTransparentImage(w, h))
 
-        self.store.transact(txn)
+            self.store.transact(txn)
