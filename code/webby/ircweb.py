@@ -170,28 +170,27 @@ class ConversationTabs(tabs.TabsElement):
                     decorated=False)
             enc.setFragmentParent(self)
 
-            # space for the topic
-            tb = TopicBar()
-            tb.setFragmentParent(enc)
-
-            # create the corresponding names list
-            ns = NameSelect()
-            ns.setFragmentParent(enc)
-
             # create a textarea around the conversation
             ta = stainedglass.TextArea()
             ta.setFragmentParent(enc)
+            # assign components
+            conversation.setComponent(iwebby.ITextArea, ta)
 
             # the thing you can type at
             ce = ChatEntry(conversation)
             ce.setFragmentParent(enc)
-
-            # assign components
-            conversation.setComponent(iwebby.ITextArea, ta)
-            conversation.setComponent(iwebby.ITopicBar, tb)
-            conversation.setComponent(iwebby.INameSelect, ns)
             
             if hasattr(conversation, 'group'):
+                # create the corresponding names list
+                ns = NameSelect()
+                ns.setFragmentParent(enc)
+                conversation.setComponent(iwebby.INameSelect, ns)
+
+                # space for the topic
+                tb = TopicBar()
+                tb.setFragmentParent(enc)
+                conversation.setComponent(iwebby.ITopicBar, tb)
+
                 # the MAP
                 db = theGlobal['database']
                 channel = db.findFirst(data.Channel, data.Channel.name==cn)
@@ -203,6 +202,8 @@ class ConversationTabs(tabs.TabsElement):
                 
                 mapdiv = T.div(_class="mapbox")[mapw]
             else:
+                ns = []
+                tb = []
                 controlBar = []
                 mapdiv = []
 
