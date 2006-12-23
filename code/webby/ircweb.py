@@ -27,7 +27,7 @@ class IRCContainer(stainedglass.Enclosure, components.Componentized):
         self.user = user
 
     def enclosedRegion(self, request, tag):
-        cw = ConversationTabs()
+        cw = ConversationTabs(self.user)
         cw.setFragmentParent(self)
         self.setComponent(iwebby.IChatConversations, cw)
         cw.initServerTab()
@@ -117,9 +117,18 @@ class ConversationTabs(tabs.TabsElement):
     ## jsClass = u"WebbyVellum.ConversationTabs"
     implements(iwebby.IChatConversations)
 
-    def __init__(self, *a, **kw):
+    def __init__(self, user, *a, **kw):
         super(ConversationTabs, self).__init__(*a, **kw)
         self.conversations = {}
+        self.user = user
+
+    def _joinConversation(self, conversationName, conversation):
+        self.conversations[conversationName] = conversation
+        self.user.addRecentChannel(conversationName)
+
+    def _partConversation(self, conversationName):
+        del self.conversations[conversationName]
+        self.user.removeRecentChannel(conversationName)
 
     def getConversation(self, id, default=NODEFAULT):
         """
@@ -221,7 +230,7 @@ class ConversationTabs(tabs.TabsElement):
 
             d.addCallback(_added)
 
-            self.conversations[cn] = conversation
+            self._joinConversation(cn, conversation)
         else:
             d = defer.succeed(None)
 
@@ -234,7 +243,7 @@ class ConversationTabs(tabs.TabsElement):
         d.addCallback(_conversationIsReady)
 
         def _conversationFailed(e):
-            del self.conversations[cn]
+            self._partConversation(cn)
             return e
 
         d.addErrback(_conversationFailed)
@@ -248,7 +257,7 @@ class ConversationTabs(tabs.TabsElement):
         cn = unicode(conversationName)
         if cn in self.conversations:
             d = self.removeTab(cn)
-            del self.conversations[cn]
+            self._partConversation(cn)
         else:
             d = defer.succeed(None)
         # FIXME - we do not return this deferred.  Need to see whether
@@ -279,7 +288,7 @@ class AccountManagerElement(athena.LiveElement):
         self.user = user
 
     def getInitialArguments(self):
-        return (self.user.nick,)
+        return (self.user.nick, self.user.recentChannels)
 
     def onLogOnSubmit(self, nick, channels):
         """

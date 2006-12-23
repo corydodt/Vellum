@@ -59,12 +59,35 @@ class User(item.Item):
     firstname = A.text(doc="The first name of the user")
     lastname = A.text(doc="The last name of the user")
     password = A.text(doc="The password of the user")
+    recentChannels = A.text(doc="Channels the user was in most recently",
+            default=u'#vellum')
     confirmationKey = A.text(doc="A random number generated to send to the user's email address")
     unconfirmedPassword = A.text(doc="Password is held here until confirmationKey is validated.")
     observers = A.inmemory(doc="List of IFileObservers")
 
     def activate(self):
         self.observers = []
+
+    def addRecentChannel(self, channelName):
+        if self.recentChannels == u'':
+            channels = []
+        else:
+            channels = self.recentChannels.split(u',')
+
+        if channelName not in channels:
+            # TODO - clean up duplicates?
+            channels.append(unicode(channelName))
+            self.recentChannels = u','.join(channels)
+
+    def removeRecentChannel(self, channelName):
+        if self.recentChannels == u'':
+            channels = []
+        else:
+            channels = self.recentChannels.split(u',')
+
+        if channelName in channels:
+            channels.remove(channelName)
+            self.recentChannels = u','.join(channels)
 
     def fileAdded(self, fileitem):
         assert fileitem.user is self

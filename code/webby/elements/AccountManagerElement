@@ -4,7 +4,7 @@
         class="accountManager"
         ><div class="haze"/><div class="accountManagerInputs">Nick: <input name="nick" class="corner" />
         <br />
-        Channels: <input name="channels" value="#vellum" class="corner" />
+        Channels: <input name="channels" value="" class="corner" />
         <br />
         <input type="submit" value="Join!" /></div>
     </form>
