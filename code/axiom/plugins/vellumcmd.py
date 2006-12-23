@@ -3,6 +3,7 @@ import sys, os
 from twisted.python.filepath import FilePath
 
 from axiom.scripts import axiomatic
+from axiom.dependency import installOn
 from axiom import iaxiom
 
 from epsilon.extime import Time
@@ -43,13 +44,15 @@ class Vellum(axiomatic.AxiomaticCommand):
                                  smtpFrom=unicode(self['smtpFrom']),
                                  smtpServer=unicode(self['smtpServer']),
                                  )
-            svc.installOn(s)
+            installOn(svc, s)
 
-            s.findOrCreate(ircserver.IRCService, 
+            ircsvc = s.findOrCreate(ircserver.IRCService, 
                     portNumber=6667,
-                    interface=u'127.0.0.1').installOn(s)
+                    interface=u'127.0.0.1')
+            installOn(ircsvc, s)
 
-            s.findOrCreate(web.WebService, portNumber=8080,).installOn(s)
+            websvc = s.findOrCreate(web.WebService, portNumber=8080,)
+            installOn(websvc, s)
 
             if self['demodata']:
                 s.findOrCreate(User, email=u'a@b.c', nick=u'MFen', 

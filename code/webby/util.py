@@ -54,17 +54,11 @@ def label():
     key_b = unicode(random.random() * 10000000)
     return key_a + key_b 
 
-class AxiomTCPServerMixin(TCPServer, item.InstallableMixin):
+class AxiomTCPServerMixin(TCPServer):
+    powerupInterfaces = (IService,)
     def privilegedStartService(self):
         pass
 
     def startService(self):
         self.port = reactor.listenTCP(self.portNumber, self.factory,
                 interface=(self.interface or ''))
-
-    def installOn(self, other):
-        super(AxiomTCPServerMixin, self).installOn(other)
-        other.powerUp(self, IService)
-        if self.parent is None:
-            self.setServiceParent(other)
-

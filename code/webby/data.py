@@ -17,19 +17,14 @@ from webby.iwebby import IFileObserver
 
 EPOCH = Time.fromPOSIXTimestamp(0)
 
-class DataService(item.Item, service.Service, item.InstallableMixin):
+class DataService(item.Item, service.Service):
+    powerupInterfaces = (service.IService,)
     schemaVersion = 1
     smtpFrom = A.text(doc="The email address used as From: in emails")
     smtpServer = A.text(doc="The SMTP server used for outgoing email")
 
     parent = A.inmemory()
     running = A.inmemory()
-
-    def installOn(self, other):
-        super(DataService, self).installOn(other)
-        other.powerUp(self, service.IService)
-        if self.parent is None:
-            self.setServiceParent(other)
 
     def startService(self):
         log.msg("Starting service %r" % (self, ))
