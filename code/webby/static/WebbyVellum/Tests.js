@@ -58,7 +58,7 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
 
     function test_logOn(self) { // {{{
         var d = self.setUp();
-        d.addCallback(function _(irc) {
+        d.addCallback(function gotIrc(irc) {
             // try it with one channel
             var acctManager = irc.childWidgets[0];
             var amnode = acctManager.node;
@@ -75,19 +75,21 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
             );
 
             // try it with two channels
-            amnode.channels.value = '#vellum,#stuff';
-            var event = new MockEvent(amnode);
-            var d3 = acctManager.onLogOnSubmit(event);
-            d3.addCallback(function _(response) {
-                // check username/password/host are a match
-                self.assertEqual(response, 
-                    'connected MFen@localhost and joined #vellum,#stuff');
-                }
-            );
+            d2.addCallback(function finishedTest1(ignored) {
+                amnode.channels.value = '#vellum,#stuff';
+                var event = new MockEvent(amnode);
+                var d3 = acctManager.onLogOnSubmit(event);
+                d3.addCallback(function finishedSubmit(response) {
+                    // check username/password/host are a match
+                    self.assertEqual(response, 
+                        'connected MFen@localhost and joined #vellum,#stuff');
+                    }
+                );
+                return d3;
+            });
 
-            return Divmod.Defer.DeferredList([d2, d3], false, true);
-            }
-        );
+            return d2;
+        });
         return d;
     }, // }}}
 
@@ -104,7 +106,7 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
 ); // }}}
 
 WebbyVellum.Tests.TestChatEntry = Nevow.Athena.Test.TestCase.subclass("WebbyVellum.Tests.TestChatEntry");
-WebbyVellum.Tests.TestChatEntry.methods(
+WebbyVellum.Tests.TestChatEntry.methods( // {{{
     function test_initialize(self) { // {{{
         var d = self.setUp();
         d.addCallback(function gotChatEntry(chatentry) {
@@ -150,7 +152,7 @@ WebbyVellum.Tests.TestChatEntry.methods(
             );
         return d;
     } // }}}
-);
+); // }}}
 
 WebbyVellum.Tests.TestTopicBar = Nevow.Athena.Test.TestCase.subclass("WebbyVellum.Tests.TestTopicBar");
 WebbyVellum.Tests.TestTopicBar.methods( // {{{
