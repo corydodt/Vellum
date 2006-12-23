@@ -166,7 +166,6 @@ class ConversationTabs(tabs.TabsElement):
             # create an Enclosure to hold the contents of the tab
             enc = ConversationEnclosure(
                     conversationName,
-                    userClass="gameTab", 
                     decorated=False)
             enc.setFragmentParent(self)
 
@@ -181,6 +180,9 @@ class ConversationTabs(tabs.TabsElement):
             ce.setFragmentParent(enc)
             
             if hasattr(conversation, 'group'):
+                # the userClass for the enclosure should annotate the
+                # contents
+                enc.userClassStan = "gameTab"
                 # create the corresponding names list
                 ns = NameSelect()
                 ns.setFragmentParent(enc)

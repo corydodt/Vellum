@@ -143,9 +143,13 @@ body {
     font-family: monospace;
     font-size: 8pt;
     overflow: auto;
-    width: 630px;
-    height: 10em;
     float: left;
+    width: 630px;
+    height: 30em;
+}
+
+.gameTab .textArea {
+    height: 10em;
 }
 
 .gameTab {
@@ -190,9 +194,13 @@ input.topicBar {
     clear: left;
 }
 
-.chatentry input {
+.gameTab .chatentry input {
     width: 765px;
 } 
+
+.chatentry input {
+    width: 630px;
+}
 
 .toolButton {
     float: left;
