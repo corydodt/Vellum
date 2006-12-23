@@ -24,8 +24,6 @@ http://spreadsheets.google.com/ccc?key=p1P43A77NkCmSsul4vIPpPA
 
 - shouldn't be able to open the upload box twice.. once opened, it won't close
 
-- upload box doesn't fit right
-
 - "free" tab where you can type in a name to join that channel
 
 - remember channels user was in and automatically join them

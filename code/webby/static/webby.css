@@ -258,8 +258,8 @@ input.topicBar {
 }
 
 .uploadBox {
-    height: 80pt;
-    width: 230px;
+    height: 10em;
+    width: 20em;
     position: absolute;
     border: none;
 }
