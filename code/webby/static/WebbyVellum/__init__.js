@@ -215,6 +215,7 @@ WebbyVellum.FileChooser.methods( // {{{
             function handleNewDocument(event) { 
                 return self.handleNewDocument(event) 
         });
+        window.closeUploadFrame = null;
     }, // }}}
 
     /* return 2-arrays of all icons in the chooser */
@@ -256,16 +257,19 @@ WebbyVellum.FileChooser.methods( // {{{
     }, // }}}
 
     function _newUploadFrame(self, x, y) { // {{{
-        var iframe = document.createElement('iframe');
-        iframe.className = 'uploadBox';
-        iframe.style['top'] = y + 'px';
-        iframe.style['left'] = x + 'px';
-        var body = document.getElementsByTagName('body')[0];
-        iframe.src = '/upload/';
-        body.appendChild(iframe);
-        // when the iframe processing is done, refresh.
-        window.closeUploadFrame = function _(cancelled) {
-            body.removeChild(iframe);
+        if (window.closeUploadFrame === null) {
+            var iframe = document.createElement('iframe');
+            iframe.className = 'uploadBox';
+            iframe.style['top'] = y + 'px';
+            iframe.style['left'] = x + 'px';
+            var body = document.getElementsByTagName('body')[0];
+            iframe.src = '/upload/';
+            body.appendChild(iframe);
+            // when the iframe processing is done, refresh.
+            window.closeUploadFrame = function _(cancelled) {
+                body.removeChild(iframe);
+                window.closeUploadFrame = null;
+            };
         };
     } // }}}
 ); // }}}

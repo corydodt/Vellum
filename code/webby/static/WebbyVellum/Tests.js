@@ -316,7 +316,7 @@ WebbyVellum.Tests.TestFileChooser.methods( // {{{
             ev.pageY = 100;
 
             /* verify that, initially, there is no closeUploadFrame set */
-            self.failUnless(window.closeUploadFrame === undefined);
+            self.failUnless(window.closeUploadFrame === null);
 
             try {
                 chooser.handleNewDocument(ev);
@@ -329,6 +329,14 @@ WebbyVellum.Tests.TestFileChooser.methods( // {{{
 
                 /* verify that a closeUploadFrame function has been set */
                 self.failIf(window.closeUploadFrame === undefined);
+
+                /* verify that nothing happens if you click twice */
+                var currentCloser = window.closeUploadFrame;
+                chooser.handleNewDocument(ev);
+                self.failUnless(window.closeUploadFrame === currentCloser);
+                self.failUnless(iframe ===
+                        Nevow.Athena.FirstNodeByAttribute(document, 'class',
+                        'uploadBox'));
             } finally {
                 /* clean up the iframe, since it will never be closed */
                 iframe.parentNode.removeChild(iframe);
