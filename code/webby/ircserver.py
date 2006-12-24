@@ -1,3 +1,6 @@
+"""
+Implement the SERVER-SIDE IRC protocol.
+"""
 from time import time
 
 from zope.interface import implements
