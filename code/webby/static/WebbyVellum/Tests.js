@@ -42,6 +42,7 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
         return d;
     }, // }}}
 
+    /* test that the server can send us a conversation pane */
     function test_conversationTabs(self) { // {{{
         var d = self.setUp();
         d.addCallback(function _(irc) {
