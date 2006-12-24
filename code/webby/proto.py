@@ -1,3 +1,7 @@
+"""
+Implement the CLIENT-SIDE low-level IRC protocol.  Objects in here communicate
+directly with an IRC server.
+"""
 from twisted.words.im import ircsupport, basesupport
 from twisted.internet import defer, protocol, reactor
 from twisted.words.protocols import irc
