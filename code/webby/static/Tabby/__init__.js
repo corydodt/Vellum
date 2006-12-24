@@ -145,8 +145,7 @@ Tabby.TabsElement.methods( // {{{
         return self.firstNodeByAttribute('href', '#' + id);
     }, // }}}
 
-    function __init__(self, node /* optional arguments */)
-    {
+    function __init__(self, node /* optional arguments */) { // {{{
         Tabby.TabsElement.upcall(self, '__init__', node);
         for (var i=2; i<arguments.length; i++) {
             var tab = arguments[i];
