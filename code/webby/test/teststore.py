@@ -5,7 +5,7 @@ from webby import theGlobal, data
 
 def testUser(st):
     return data.User(store=st, 
-            email=u'woot@woot.com', nick=u'woot', password=u'ninjas')
+            email=u'woot@woot.com', password=u'ninjas')
 
 def testFileMeta(st):
     testFileData = data.FileData(store=st,

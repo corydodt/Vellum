@@ -34,8 +34,8 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
             // the server tab should be in the foreground
             self.assertEqual(fgtab.id, '**SERVER**');
 
-            // the nick field should be populated.
-            self.assertEqual(accountManager.node.nick.value, 'woot');
+            // the nick field should not be populated.
+            self.assertEqual(accountManager.node.nick.value, '');
 
             // TODO - assert something about accountManager
         });
@@ -51,43 +51,6 @@ WebbyVellum.Tests.TestIRCContainer.methods( // {{{
                 self.assertEqual(testTabs.length, 1);
                 self.assertEqual(irc.activeTabId(), '#test');
             });
-            return d2;
-        });
-        return d;
-    }, // }}}
-
-    function test_logOn(self) { // {{{
-        var d = self.setUp();
-        d.addCallback(function gotIrc(irc) {
-            // try it with one channel
-            var acctManager = irc.childWidgets[0];
-            var amnode = acctManager.node;
-            amnode.nick.value = 'MFen';
-            amnode.channels.value = '#vellum';
-            var event = new MockEvent(amnode);
-
-            var d2 = acctManager.onLogOnSubmit(event );
-            d2.addCallback(function _(response) {
-                // check username/password/host are a match
-                self.assertEqual(response, 
-                    'connected MFen@localhost and joined #vellum');
-                }
-            );
-
-            // try it with two channels
-            d2.addCallback(function finishedTest1(ignored) {
-                amnode.channels.value = '#vellum,#stuff';
-                var event = new MockEvent(amnode);
-                var d3 = acctManager.onLogOnSubmit(event);
-                d3.addCallback(function finishedSubmit(response) {
-                    // check username/password/host are a match
-                    self.assertEqual(response, 
-                        'connected MFen@localhost and joined #vellum,#stuff');
-                    }
-                );
-                return d3;
-            });
-
             return d2;
         });
         return d;
@@ -262,6 +225,75 @@ WebbyVellum.Tests.TestSignup.methods( // {{{
     } // }}}
 ); // }}}
 
+WebbyVellum.Tests.TestAccountManager = Nevow.Athena.Test.TestCase.subclass("WebbyVellum.Tests.TestAccountManager");
+WebbyVellum.Tests.TestAccountManager.methods( // {{{
+    function test_initialize(self) { // {{{
+        var d = self.setUp();
+        d.addCallback(function gotAccountManager(am) {
+            // the nick field should not be populated.
+            self.assertEqual(am.node.nick.value, '');
+            var d2 = self.setUp({'nick':'woot'});
+            d2.addCallback(function gotAccountManager2(am2) {
+                // the nick field *should* be populated.
+                self.assertEqual(am2.node.nick.value, 'woot');
+                // check autoHide
+                self.assertEqual(am2.node.style['display'], 'none');
+            });
+            return d2;
+        });
+        return d;
+    }, // }}}
+
+    function test_logOn(self) { // {{{
+        var d = self.setUp();
+        d.addCallback(function gotAccountManager(acctManager) {
+            // try it with one channel
+            var amnode = acctManager.node;
+            amnode.nick.value = 'MFen';
+            amnode.channels.value = '#vellum';
+            var event = new MockEvent(amnode);
+
+            var d2 = acctManager.onLogOnSubmit(event );
+            d2.addCallback(function _(response) {
+                // check username/password/host are a match
+                self.assertEqual(response, 
+                    'connected MFen@localhost and joined #vellum');
+                }
+            );
+
+            // try it with two channels
+            d2.addCallback(function finishedTest1(ignored) { // {{{
+                amnode.channels.value = '#vellum,#stuff';
+                var event = new MockEvent(amnode);
+                var d3 = acctManager.onLogOnSubmit(event);
+                d3.addCallback(function finishedSubmit(response) {
+                    // check username/password/host are a match
+                    self.assertEqual(response, 
+                        'connected MFen@localhost and joined #vellum,#stuff');
+                    }
+                );
+                return d3;
+            }); // }}}
+
+            return d2;
+        });
+        return d;
+    }, // }}}
+
+    function setUp(self, config) { // {{{
+        if (config === undefined) config = {};
+
+        nickArg = (config.nick || null);
+        autoHideArg = (config.autoHide || null);
+
+        d = self.callRemote("newAccountManager", nickArg);
+        d.addCallback(function gotAccountManager(aminfo) {
+            return self.addChildWidgetFromWidgetInfo(aminfo);
+        });
+        return d;
+    } // }}}
+); // }}}
+ 
 WebbyVellum.Tests.TestFileChooser = Nevow.Athena.Test.TestCase.subclass("WebbyVellum.Tests.TestFileChooser");
 WebbyVellum.Tests.TestFileChooser.methods( // {{{
     function test_initialize(self) { // {{{

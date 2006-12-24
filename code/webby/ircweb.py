@@ -288,7 +288,16 @@ class AccountManagerElement(athena.LiveElement):
         self.user = user
 
     def getInitialArguments(self):
-        return (self.user.nick, self.user.recentChannels)
+        nick = self.user.nick
+        channels = self.user.recentChannels
+        if nick and channels:
+            # when both nick and channels are already set, log the irc user
+            # straight in.
+            self.onLogOnSubmit(nick, channels)
+            # set autoHide = True on the widget because login will be
+            # automatic
+            return (nick, channels, True)
+        return (nick, channels)
 
     def onLogOnSubmit(self, nick, channels):
         """

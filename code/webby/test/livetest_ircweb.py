@@ -60,6 +60,23 @@ class TestIRCContainer(testcase.TestCase):
 
     athena.expose(newContainer)
 
+
+class TestAccountManager(testcase.TestCase):
+    jsClass = u'WebbyVellum.Tests.TestAccountManager'
+    def newAccountManager(self, nick=None, autoHide=None):
+        """
+        Return a new Account Manager
+        """
+        user = testUser(cleanStore())
+        if nick is not None:
+            user.nick = nick
+        am = ircweb.AccountManagerElement(MockAccountManager(), None, user)
+        am.setFragmentParent(self)
+        return am
+
+    athena.expose(newAccountManager)
+
+
 class TestTopicBar(testcase.TestCase):
     jsClass = u'WebbyVellum.Tests.TestTopicBar'
     def newTopicBar(self, ):

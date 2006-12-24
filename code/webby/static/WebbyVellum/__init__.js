@@ -85,7 +85,7 @@ WebbyVellum.NameSelect.methods( // {{{
 
 WebbyVellum.AccountManager = Nevow.Athena.Widget.subclass('WebbyVellum.AccountManager');
 WebbyVellum.AccountManager.methods( // {{{
-    function __init__(self, node, nick, channels) { // {{{
+    function __init__(self, node, nick, channels, autoHide) { // {{{
         WebbyVellum.AccountManager.upcall(self, '__init__', node);
         // Do this stuff instead of using athena:handler because this 
         // is the only way we get access to the event, and having access
@@ -97,6 +97,10 @@ WebbyVellum.AccountManager.methods( // {{{
 
         if (nick !== undefined) self.node.nick.value = nick;
         if (channels !== undefined) self.node.channels.value = channels;
+        /* if autoHide is true, connecting will happen without user
+         * interaction so just hide the node
+         */
+        if (autoHide) self.node.style['display'] = 'none';
     }, // }}}
 
     function onLogOnSubmit(self, event) { // {{{
