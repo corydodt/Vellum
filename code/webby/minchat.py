@@ -1,4 +1,10 @@
-"""Chat functionality"""
+"""
+Implement the CLIENT-SIDE GUI glue of the IRC functionality.  Objects in here
+are components used by the web GUI, and glue the low-level client-side IRC
+protocol in proto.py to the raw GUI in ircweb.py.
+
+Most likely this stuff could all be moved into existing classes in ircweb.py.
+"""
 
 from twisted.words.im import basechat, baseaccount, ircsupport
 from twisted.internet import defer, protocol, reactor
@@ -191,11 +197,18 @@ class MinConversation(
         return mapconv.showMapCommand(command, channel, args)
 
     def showMessage(self, text, metadata=None):
+        """
+        Handle text received from the IRC server by printing it in my GUI
+        """
         fmtd = IChatFormatter(self).format(text, sender=self.person.name,
                 metadata=metadata)
         return iwebby.ITextArea(self).printClean(fmtd)
 
     def sendText(self, text, metadata=None):
+        """
+        Handle text that was sent by my client by sending it to the IRC server
+        and printing it in the local client gui
+        """
         r = self.person.sendMessage(text, metadata)
         me = self.person.account.client.name
         fmtd = IChatFormatter(self).format(text, sender=me, metadata=metadata)
