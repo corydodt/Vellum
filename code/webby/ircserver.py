@@ -361,8 +361,11 @@ class DummyStringTransport(proto_helpers.StringTransport):
 
 
 class IRCService(item.Item, util.AxiomTCPServerMixin):
-    factory = IRCFactory(theRealm, thePortal)
-    factory.protocol = VellumIRCServerProtocol
+    @staticmethod
+    def factory():
+        f = IRCFactory(theRealm, thePortal)
+        f.protocol = VellumIRCServerProtocol
+        return f
 
     schemaVersion = 1
     portNumber = A.integer(doc="The port on which to run.")

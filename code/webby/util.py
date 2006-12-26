@@ -60,5 +60,5 @@ class AxiomTCPServerMixin(TCPServer):
         pass
 
     def startService(self):
-        self.port = reactor.listenTCP(self.portNumber, self.factory,
+        self.port = reactor.listenTCP(self.portNumber, self.factory(),
                 interface=(self.interface or ''))

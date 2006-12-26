@@ -5,6 +5,8 @@ from nevow import inevow, rend, tags, guard, loaders, static, url, appserver, st
 
 from axiom import attributes as A, item
 
+from xmantissa import websession
+
 from twisted.cred import portal, checkers, credentials, error
 from twisted.python.util import sibpath
 from twisted.python import log
@@ -172,7 +174,7 @@ class AxiomEmailChecker(object):
 
         raise error.UnauthorizedLogin()
 
-def guardedRoot():
+def guardedRoot(db):
     realm = VellumRealm()
     port = portal.Portal(realm)
 
@@ -181,12 +183,15 @@ def guardedRoot():
     port.registerChecker(checkers.AllowAnonymousAccess(), credentials.IAnonymous)
     port.registerChecker(myChecker)
 
-    res = guard.SessionWrapper(port)
+    res = websession.PersistentSessionWrapper(db, port)
     
     return res
 
 class WebService(item.Item, util.AxiomTCPServerMixin):
-    factory = STFUSite(guardedRoot())
+    @staticmethod
+    def factory():
+        return STFUSite(guardedRoot(theGlobal['database']))
+
     schemaVersion = 1
     portNumber = A.integer(doc="The port on which to run.")
     interface = A.text(
