@@ -3,7 +3,7 @@ from zope.interface import implements
  
 from nevow import inevow, rend, tags, guard, loaders, static, url, appserver, static
 
-from axiom import attributes as A, item
+from axiom import attributes as A, item, userbase
 
 from xmantissa import websession
 
@@ -149,28 +149,35 @@ class AxiomEmailChecker(object):
     This is also pasted over in webby.ircserver as AxiomNickChecker.
     """
     implements(checkers.ICredentialsChecker)
-    credentialInterfaces = credentials.IUsernamePassword,
+    credentialInterfaces = (credentials.IUsernamePassword, 
+            userbase.IPreauthCredentials)
 
     def requestAvatarId(self, credentials):
         store = theGlobal['database']
 
         username = unicode(credentials.username)
-        password = unicode(credentials.password)
 
         u = store.findFirst(data.User, data.User.email==username)
 
-        # Note: If the account has not been confirmed from the email
-        # address, u.password will be None.
-        if u is not None and u.password == password:
-            # clear unconfirmedPassword here.  This is needed if either of the
-            # following occurs:
-            # a) user visits the forgot password page but subsequently
-            # remembers the original password
-            # b) malicious user visits the forgot password page but can't
-            # confirm the new password, and the real user logs in at some
-            # point.
-            u.unconfirmedPassword = None
-            return u
+        if u is not None:
+            if userbase.IPreauthCredentials.providedBy(credentials):
+                return u
+
+            elif credentials.IUsernamePassword.providedBy(credentials):
+                password = unicode(credentials.password)
+
+                # Note: If the account has not been confirmed from the email
+                # address, u.password will be None.
+                if u is not None and u.password == password:
+                    # clear unconfirmedPassword here.  This is needed if
+                    # either of the following occurs:
+                    # a) user visits the forgot password page but subsequently
+                    # remembers the original password
+                    # b) malicious user visits the forgot password page but
+                    # can't confirm the new password, and the real user logs
+                    # in at some point.
+                    u.unconfirmedPassword = None
+                    return u
 
         raise error.UnauthorizedLogin()
 
