@@ -152,19 +152,19 @@ class AxiomEmailChecker(object):
     credentialInterfaces = (credentials.IUsernamePassword, 
             userbase.IPreauthCredentials)
 
-    def requestAvatarId(self, credentials):
+    def requestAvatarId(self, creds):
         store = theGlobal['database']
 
-        username = unicode(credentials.username)
+        username = unicode(creds.username)
 
         u = store.findFirst(data.User, data.User.email==username)
 
         if u is not None:
-            if userbase.IPreauthCredentials.providedBy(credentials):
+            if userbase.IPreauthCredentials.providedBy(creds):
                 return u
 
-            elif credentials.IUsernamePassword.providedBy(credentials):
-                password = unicode(credentials.password)
+            elif credentials.IUsernamePassword.providedBy(creds):
+                password = unicode(creds.password)
 
                 # Note: If the account has not been confirmed from the email
                 # address, u.password will be None.
