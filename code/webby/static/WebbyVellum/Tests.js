@@ -209,8 +209,8 @@ WebbyVellum.Tests.TestSignup.methods( // {{{
                 self.assert(0, "This should have called errback.");
             });
             d3.addErrback(function _(ignored) {
-                self.assertEqual(message.innerHTML,
-'An error occurred signing you up.  Maybe that account is already signed up.');
+                self.assertEqual(message.innerHTML, 
+                        'An error occurred signing you up.');
             });
             return Divmod.Defer.DeferredList([d2, d3], false, true);
         });

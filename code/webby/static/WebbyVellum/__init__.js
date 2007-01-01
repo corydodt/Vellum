@@ -161,6 +161,16 @@ WebbyVellum.IRCContainer.methods( // {{{
     } // }}}
 ); // }}}
 
+/* clear the node and replace contents with the text */
+function replaceText(node, newText) {
+    /* clear message node */
+    while (node.childNodes.length > 0) 
+            node.removeChild(node.childNodes[0]);
+    var tn = document.createTextNode(newText);
+            
+    node.appendChild(tn);
+}
+
 WebbyVellum.Signup = Nevow.Athena.Widget.subclass('WebbyVellum.Signup');
 WebbyVellum.Signup.methods( // {{{
     function __init__(self, node) { // {{{
@@ -172,12 +182,12 @@ WebbyVellum.Signup.methods( // {{{
     function submit(self, event) { // {{{
         event.stopPropagation();
         event.preventDefault();
-        var message = self.firstNodeByAttribute('class', 'message');
+        var message = self.firstNodeByClass('message');
 
         var email = self.node.email.value;
         if (email == '')
         {
-            message.innerHTML = 'Please fill in your email address.';
+            replaceText(message, 'Please fill in your email address.');
             return null;
         }
 
@@ -185,26 +195,28 @@ WebbyVellum.Signup.methods( // {{{
         var password2 = self.node.password2.value;
         if (password1 == '' || password2 == '')
         {
-            message.innerHTML = 'Please fill in your new password twice.';
+            replaceText(message, 'Please fill in your new password twice.');
             return null;
         }
         if (password1 != password2)
         {
-            message.innerHTML = "Passwords don't match! Try again.";
+            replaceText(message, "Passwords don't match! Try again.");
             return null;
         }
 
         var submit = self.node.signup;
         submit.style['display'] = 'none';
-        message.innerHTML = 'Sending email. (This may take a minute.)' +
-                '<img src="/static/loading.gif" />';
+        replaceText(message, 'Sending email. (This may take a minute.)');
+        var loading = document.createElement('img');
+        loading.setAttribute('src', "/static/loading.gif");
+        message.appendChild(loading);
 
         var d = self.callRemote("processSignup", email, password1);
         d.addCallback(function _(status) {
-            message.innerHTML = 'An email has been sent to the above address.';
+            replaceText(message, 'An email has been sent to the above address.');
         });
         d.addErrback(function _(failure) {
-            message.innerHTML = 'An error occurred signing you up.  Maybe that account is already signed up.';
+            replaceText(message, 'An error occurred signing you up.');
             submit.style['display'] = '';
         });
         return d;
@@ -238,7 +250,6 @@ WebbyVellum.FileChooser.methods( // {{{
     function sortFilenames(self) { // {{{
         var _icons = self._iconsByLabel();
         _icons.sort(WebbyVellum.icmp);
-        self.innerHTML = '';
         for (var i=0; i<_icons.length; i++) {
             self.node.appendChild(_icons[i][1].node);
         }
