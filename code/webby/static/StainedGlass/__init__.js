@@ -177,21 +177,22 @@ StainedGlass.draggable = function _(vehicle, handle, droppable) { // {{{
 StainedGlass.Enclosure = Nevow.Athena.Widget.subclass('StainedGlass.Enclosure');
 StainedGlass.Enclosure.methods( // {{{
     /* adds the title to the iconified node */
-    function _decorateTitle(self, titleNode, iconifiedNode) {
-        var title2 = titleNode.cloneNode();
+    function _decorateIconifiedTitle(self, titleNode) {
+        var title2 = titleNode.cloneNode(true /* clone children */);
         var structure = document.createElement('div');
         structure.setAttribute('class', 'titlebar');
         var windowTitleNode = document.createElement('div');
         windowTitleNode.setAttribute('class', 'windowTitle');
         while (title2.childNodes.length > 0) {
-            title2.removeChild(title2.childNodes[0]);
-            windowTitleNode.appendChild(title2.childNodes[0]);
+            var n = title2.removeChild(title2.childNodes[0]);
+            windowTitleNode.appendChild(n);
         }
         structure.appendChild(windowTitleNode);
         var minimizer = document.createElement('a');
         minimizer.setAttribute('class', 'minimizer');
+        minimizer.appendChild(document.createTextNode('^'));
         structure.appendChild(minimizer);
-        iconifiedNode.appendChild(structure);
+        self.iconified.appendChild(structure);
     },
 
     function __init__(self, node) { // {{{
