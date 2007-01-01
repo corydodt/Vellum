@@ -176,25 +176,35 @@ StainedGlass.draggable = function _(vehicle, handle, droppable) { // {{{
 
 StainedGlass.Enclosure = Nevow.Athena.Widget.subclass('StainedGlass.Enclosure');
 StainedGlass.Enclosure.methods( // {{{
+    /* adds the title to the iconified node */
+    function _decorateTitle(self, titleNode, iconifiedNode) {
+        var title2 = titleNode.cloneNode();
+        var structure = document.createElement('div');
+        structure.setAttribute('class', 'titlebar');
+        var windowTitleNode = document.createElement('div');
+        windowTitleNode.setAttribute('class', 'windowTitle');
+        while (title2.childNodes.length > 0) {
+            title2.removeChild(title2.childNodes[0]);
+            windowTitleNode.appendChild(title2.childNodes[0]);
+        }
+        structure.appendChild(windowTitleNode);
+        var minimizer = document.createElement('a');
+        minimizer.setAttribute('class', 'minimizer');
+        structure.appendChild(minimizer);
+        iconifiedNode.appendChild(structure);
+    },
+
     function __init__(self, node) { // {{{
         StainedGlass.Enclosure.upcall(self, '__init__', node);
         try {
-            var minimizer = self.firstNodeByAttribute('class', 'minimizer', null);
+            var minimizer = self.firstNodeByClass('minimizer');
             DeanEdwards.addEvent(minimizer, 'click', 
                 function onMinimize(event) { return self.minimize() });
             // Create an iconified node at the end of the widget's parent.
             // The iconfied version is what is shown when the widget minimizes.
             self.iconified = document.createElement('div');
             self.iconified.className = 'iconified-hidden';
-            var titleParent = self.firstNodeByAttribute('class', 'windowTitle');
-            var title = titleParent.innerHTML;
-            self.iconified.innerHTML = '<div class="titlebar">' +
-                                         '<div class="windowTitle">' +
-                                            title + 
-                                         '</div>' + 
-                                         '<a class="minimizer">^</a>' + 
-                                       '</div>';
-
+            self._decorateIconifiedTitle(self.firstNodeByClass('windowTitle'));
             var restore = RT.firstNodeByAttribute(self.iconified, 'class', 
                     'minimizer');
             DeanEdwards.addEvent(restore, 'click', 

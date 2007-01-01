@@ -38,3 +38,6 @@ http://spreadsheets.google.com/ccc?key=p1P43A77NkCmSsul4vIPpPA
   the user who responds, the same /query conversation and tab are reused.
 
 - disable buttons when there's no map background
+
+- race condition between obscurement image and background image. make sure
+  background image can NOT load unless obscurement image has loaded already.
