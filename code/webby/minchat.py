@@ -275,13 +275,13 @@ class MinGroupConversation(
 
     def memberJoined(self, member):
         basechat.GroupConversation.memberJoined(self, member)
-        event = "-!- %s joined %s" % (member, self.group.name)
+        event = "-!- %s joined #%s" % (member, self.group.name)
         iwebby.INameSelect(self).addName(member, None)
         return iwebby.ITextArea(self).printClean(event)
 
     def memberChangedNick(self, oldnick, newnick):
         basechat.GroupConversation.memberChangedNick(self, oldnick, newnick)
-        event = "-!- %s is now known as %s in %s" % (oldnick, newnick,
+        event = "-!- %s is now known as %s in #%s" % (oldnick, newnick,
             self.group.name)
         namesel = iwebby.INameSelect(self)
         namesel.removeName(oldnick)
@@ -290,7 +290,7 @@ class MinGroupConversation(
 
     def memberLeft(self, member):
         basechat.GroupConversation.memberLeft(self, member)
-        event = "-!- %s left %s" % (member, self.group.name)
+        event = "-!- %s left #%s" % (member, self.group.name)
         iwebby.INameSelect(self).removeName(member)
         return iwebby.ITextArea(self).printClean(event)
 
