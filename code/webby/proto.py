@@ -5,6 +5,7 @@ directly with an IRC server.
 from twisted.words.im import ircsupport, basesupport
 from twisted.internet import defer, protocol, reactor
 from twisted.words.protocols import irc
+from twisted.python import log
 
 class WebbyProto(ircsupport.IRCProto):
     def connectionLost(self, reason):
@@ -70,16 +71,16 @@ class WebbyProto(ircsupport.IRCProto):
                     message, metadata)
 
     def lineReceived(self, line):
-        print line
+        log.msg(line)
         return ircsupport.IRCProto.lineReceived(self, line)
 
     def joined(self, channel):
-        print "Joining %s" % channel
+        log.msg("Joining %s" % (channel,))
         conv = self.getGroupConversation(channel.lstrip('#'))
         return conv.show()
 
     def left(self, channel):
-        print "Left %s" % channel
+        log.msg("Left %s" % (channel,))
         conv = self.getGroupConversation(channel.lstrip('#'), 1)
         return conv.hide()
 
@@ -97,7 +98,7 @@ class WebbyProto(ircsupport.IRCProto):
             self._ingroups[nickname].remove(groupName)
             self.getGroupConversation(groupName).memberLeft(nickname)
         else:
-            print "%s left %s, but wasn't in the room."%(nickname,group)
+            log.msg("%s left %s, but wasn't in the room."%(nickname,group))
 
     def userQuit(self, nickname, group):
         if self._ingroups.has_key(nickname):
@@ -105,7 +106,7 @@ class WebbyProto(ircsupport.IRCProto):
                 self.getGroupConversation(group).memberLeft(nickname)
             self._ingroups[nickname] = []
         else:
-            print '*** WARNING: ingroups had no such key %s' % nickname
+            log.msg('*** WARNING: ingroups had no such key %s' % (nickname,))
 
     def irc_JOIN(self, prefix, params):
 
