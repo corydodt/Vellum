@@ -33,8 +33,8 @@ class AccountManager(baseaccount.AccountManager):
 
     def doConnection(self, host, username, password, channels):
         key = (username, host)
-        if key in ACCOUNTS and ACCOUNTS[key].isOnline():
-            self.disconnect(ACCOUNTS[key])
+        if key in ACCOUNTS:
+            self.disconnectAsNeeded(ACCOUNTS[key])
 
         # If we make it so we use our own subclass of IRCAccount here, instead
         # of the stock one, and overload _startLogin, we can do protocol
@@ -53,9 +53,12 @@ class AccountManager(baseaccount.AccountManager):
         d.addCallback(_addProto, acct, key)
 
         return d
+
+    def disconnectAsNeeded(self, account):
+        if account.isOnline():
+            self.disconnect(account)
         
     def disconnect(self, account):
-        assert account.isOnline()
         key = (account.username, account.host)
         PROTOS[key].transport.loseConnection()
         del PROTOS[key]
