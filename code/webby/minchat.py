@@ -21,14 +21,13 @@ PROTOS = {}
 
 IRCPORT = 6667
 
-class AccountManager(baseaccount.AccountManager):
-    """This class is a minimal implementation of the Acccount Manager.
-
-    Most implementations will show some screen that lets the user add and
-    remove accounts, but we're not quite that sophisticated.
+class MinAccountManager(baseaccount.AccountManager):
+    """
+    This class is a minimal implementation of the Acccount Manager.
     """
 
     def __init__(self, chatui):
+        baseaccount.AccountManager.__init__(self)
         self.chatui = chatui
 
     def doConnection(self, host, username, password, channels):

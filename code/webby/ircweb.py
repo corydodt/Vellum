@@ -14,7 +14,7 @@ from webby import iwebby, RESOURCE
 
 class IRCContainer(stainedglass.Enclosure, components.Componentized):
     """
-    Contains all the IRC components: AccountManagerElement, ConversationTabs,
+    Contains all the IRC components: AccountManager, ConversationTabs,
     ChatEntry.
     """ 
     jsClass = u"WebbyVellum.IRCContainer"
@@ -32,7 +32,7 @@ class IRCContainer(stainedglass.Enclosure, components.Componentized):
         self.setComponent(iwebby.IChatConversations, cw)
         cw.initServerTab()
 
-        am = AccountManagerElement(self.accountManager, cw, self.user)
+        am = AccountManager(self.accountManager, cw, self.user)
         am.setFragmentParent(self)
         self.setComponent(iwebby.IChatAccountManager, am)
         return tag[am, cw]
@@ -273,17 +273,17 @@ u'''Vellum IRC v0.1
 Click "Join!" to connect.''')
 
 
-class AccountManagerElement(athena.LiveElement):
+class AccountManager(athena.LiveElement):
     """
     UI element that handles changing of the nick and processing a login to the
     IRC server.
     """
     jsClass = u"WebbyVellum.AccountManager"
-    docFactory = loaders.xmlfile(RESOURCE('elements/AccountManagerElement'))
+    docFactory = loaders.xmlfile(RESOURCE('elements/AccountManager'))
     implements(iwebby.IChatAccountManager)
 
     def __init__(self, accountManager, conversationTabs, user, *a, **kw):
-        super(AccountManagerElement, self).__init__(*a, **kw)
+        super(AccountManager, self).__init__(*a, **kw)
         self.accountManager = accountManager
         self.conversationTabs = conversationTabs
         self.user = user
@@ -310,7 +310,7 @@ class AccountManagerElement(athena.LiveElement):
         username = nick.encode('utf8')
 
         # SET the permanent nick to the nick we were provided, trust it.
-        # We can trust the nick because use of AccountManagerElement
+        # We can trust the nick because use of AccountManager 
         # implies that the user is *already* authenticated, through
         # the web.  Users visiting using a regular IRC client will 
         # naturally have to supply their passwords the normal way.
@@ -483,7 +483,7 @@ class IRCPage(athena.LivePage):
         self.chatui = minchat.MinChat()
 
     def render_chat(self, ctx, _):
-        accountManager = minchat.AccountManager(self.chatui)
+        accountManager = minchat.MinAccountManager(self.chatui)
         ss = inevow.ISession(ctx)
         irc = IRCContainer(accountManager, ss.user)
         irc.setFragmentParent(self)

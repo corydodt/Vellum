@@ -7,7 +7,7 @@ from webby import ircweb, data, gmtools, iwebby
 from webby.minchat import NullConversation
 from webby.test.teststore import cleanStore, testUser
 
-class MockAccountManager:
+class MockMinAccountManager:
     def doConnection(self, host, username, password, channels):
         return defer.succeed(None)
 
@@ -53,7 +53,7 @@ class TestIRCContainer(testcase.TestCase):
         # method is called first from every test, life is fine, but if
         # generateConversation is called without calling this first,
         # behavior is UNDEFINED.
-        self.irc = ircweb.IRCContainer(MockAccountManager(), user)
+        self.irc = ircweb.IRCContainer(MockMinAccountManager(), user)
         self.irc.setFragmentParent(self)
 
         return self.irc
@@ -70,7 +70,7 @@ class TestAccountManager(testcase.TestCase):
         user = testUser(cleanStore())
         if nick is not None:
             user.nick = nick
-        am = ircweb.AccountManagerElement(MockAccountManager(), None, user)
+        am = ircweb.AccountManager(MockMinAccountManager(), None, user)
         am.setFragmentParent(self)
         return am
 
