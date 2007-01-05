@@ -124,7 +124,8 @@ class ConversationTabs(tabs.TabsElement):
 
     def _joinConversation(self, conversationName, conversation):
         self.conversations[conversationName] = conversation
-        self.user.addRecentChannel(conversationName)
+        if hasattr(conversation, 'group'):
+            self.user.addRecentChannel(conversationName)
 
     def _partConversation(self, conversationName):
         del self.conversations[conversationName]
