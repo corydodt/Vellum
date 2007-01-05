@@ -11,7 +11,7 @@ from webby import theGlobal, data, util, RESOURCE
 
 class Signup(athena.LiveElement):
     docFactory = loaders.xmlfile(RESOURCE('elements/Signup'))
-    jsClass = u'WebbyVellum.Signup'
+    jsClass = u'Signup.Signup'
     def __init__(self, pageURL, *a, **kw):
         super(Signup, self).__init__(*a, **kw)
         self.pageURL = pageURL
