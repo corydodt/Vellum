@@ -33,6 +33,8 @@ http://spreadsheets.google.com/ccc?key=p1P43A77NkCmSsul4vIPpPA
     Line Number 64, Column 5:  </body>
     ----^
 
+    - this seems to happen when "channels" is populated in the AccountManager
+
 - /query should create a new MinConversation that the ircweb server is aware
   of.  Test that if /query nick has a different case than canonical nick of
   the user who responds, the same /query conversation and tab are reused.
