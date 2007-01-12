@@ -55,8 +55,9 @@ class Vellum(axiomatic.AxiomaticCommand):
             installOn(websvc, s)
 
             if self['demodata']:
-                s.findOrCreate(User, email=u'a@b.c', nick=u'MFen', 
-                        password=u'abc')
+                s.findOrCreate(User, email=u'testvellum@mailinator.com', 
+                        nick=u'MFen', 
+                        password=u'password')
                 s.findOrCreate(Channel, name=u'#vellum', 
                         topic=u'Welcome to #vellum',
                         topicAuthor=u'VellumTalk', 
