@@ -290,7 +290,6 @@ class AccountManager(athena.LiveElement):
 
     def getInitialArguments(self):
         nick = self.user.nick
-        return (nick, u'') ## FIXME
         channels = self.user.recentChannels
         if nick and channels:
             # when both nick and channels are already set, log the irc user
