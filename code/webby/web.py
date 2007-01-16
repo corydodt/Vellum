@@ -1,7 +1,8 @@
 """The core web server on which the Vellum application is based."""
 from zope.interface import implements
  
-from nevow import inevow, rend, tags, guard, loaders, static, url, appserver, static
+from nevow import (inevow, rend, tags, guard, loaders, static, url, appserver,
+        static, vhost)
 
 from axiom import attributes as A, item, userbase
 
@@ -194,10 +195,31 @@ def guardedRoot(db):
     
     return res
 
+class VhostFakeRoot:
+    """
+    I am a wrapper to be used at site root when you want to combine 
+    vhost.VHostMonsterResource with nevow.guard. If you are using guard, you 
+    will pass me a guard.SessionWrapper resource.
+    """
+    implements(inevow.IResource)
+    def __init__(self, wrapped):
+        self.wrapped = wrapped
+    
+    def renderHTTP(self, ctx):
+        return self.wrapped.renderHTTP(ctx)
+        
+    def locateChild(self, ctx, segments):
+        """Returns a VHostMonster if the first segment is "vhost". Otherwise
+        delegates to the wrapped resource."""
+        if segments[0] == "VHOST":
+            return vhost.VHostMonsterResource(), segments[1:]
+        else:
+            return self.wrapped.locateChild(ctx, segments)
+
 class WebService(item.Item, util.AxiomTCPServerMixin):
     @staticmethod
     def factory():
-        return STFUSite(guardedRoot(theGlobal['database']))
+        return STFUSite(VhostFakeRoot(guardedRoot(theGlobal['database'])))
 
     schemaVersion = 1
     portNumber = A.integer(doc="The port on which to run.")
