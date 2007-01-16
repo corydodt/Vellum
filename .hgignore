@@ -3,3 +3,5 @@ aliases
 encounters
 images
 downloads
+.pyc$
+(^|/)dropin.cache$
