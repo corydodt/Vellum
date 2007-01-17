@@ -11,33 +11,25 @@
 
 - a very long list in the chooser will send a lot of data.. pager?
 
-- no way to close 1-on-1 conversations.
-
 - when trying to /part from a private conversation (or similar error
   condition), the /part'ing user actually *says* the error message into the
   conversation.
 
 - bring back the chatentry for the server conversation
 
-- the server conversation should report stuff like motd, connected/dc messages
-
 - dragging items is very flaky, icons frequently jump back
 
-- "free" tab where you can type in a name to join that channel
+- XML Parsing Error: mismatched tag. Expected: </body>.
+  Location: http://thesoftworld.com:8080/game/
+  Line Number 64, Column 5:  </body>
+  ----^
 
-- "Nick" textarea for changing nick.
-
--   XML Parsing Error: mismatched tag. Expected: </body>.
-    Location: http://thesoftworld.com:8080/game/
-    Line Number 64, Column 5:  </body>
-    ----^
-
-    - new clue: VERIFIED!  a@b.c demo account is the only account to which
-      this ever happens.  Another 5-character email address x@y.z also
-      triggers this behavior.  The only factor seems to be byte length
-      of the email address.  No clue why.
-    - There might also be stray bytes before and after the document in the
-      HTTP sent by Nevow.
+  - new clue: VERIFIED!  a@b.c demo account is the only account to which
+    this ever happens.  Another 5-character email address x@y.z also
+    triggers this behavior.  The only factor seems to be byte length
+    of the email address.  No clue why.
+  - There might also be stray bytes before and after the document in the
+    HTTP sent by Nevow.
 
 - /query should create a new MinConversation that the ircweb server is aware
   of.  Test that if /query nick has a different case than canonical nick of
