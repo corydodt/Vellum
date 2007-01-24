@@ -28,8 +28,6 @@
     this ever happens.  Another 5-character email address x@y.z also
     triggers this behavior.  The only factor seems to be byte length
     of the email address.  No clue why.
-  - There might also be stray bytes before and after the document in the
-    HTTP sent by Nevow.
 
 - /query should create a new MinConversation that the ircweb server is aware
   of.  Test that if /query nick has a different case than canonical nick of
