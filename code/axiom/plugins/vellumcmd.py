@@ -30,7 +30,7 @@ class Vellum(axiomatic.AxiomaticCommand):
     optParameters = [
         ('smtpFrom',   'f', u'vellum@vellum.berlios.de',
          'The email address to use when sending emails.'),
-        ('smtpServer', 's', u'smtp.comcast.net',
+        ('smtpServer', 's', u'localhost',
          'The outgoing SMTP server.  Email will be sent through here.'),
         ]
 
