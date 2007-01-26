@@ -37,3 +37,7 @@
 
 - race condition between obscurement image and background image. make sure
   background image can NOT load unless obscurement image has loaded already.
+
+- when running on demo.thesoftworld.com, small XHR requests sometimes take
+  extremely long to complete (5 minutes!).  Other times they are instant
+  as they should be.
