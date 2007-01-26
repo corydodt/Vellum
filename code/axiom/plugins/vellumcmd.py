@@ -51,7 +51,7 @@ class Vellum(axiomatic.AxiomaticCommand):
                     interface=u'127.0.0.1')
             installOn(ircsvc, s)
 
-            websvc = s.findOrCreate(web.WebService, portNumber=8080,)
+            websvc = s.findOrCreate(web.WebService, portNumber=18080,)
             installOn(websvc, s)
 
             if self['demodata']:
