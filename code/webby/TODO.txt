@@ -40,4 +40,6 @@
 
 - when running on demo.thesoftworld.com, small XHR requests sometimes take
   extremely long to complete (5 minutes!).  Other times they are instant
-  as they should be.
+  as they should be.  THIS APPEARS TO BE CAUSED BY VHOSTMONSTER.
+  Figure out how to run this as a resource under demo.thesoftworld.com on a
+  separate IP address, instead.
