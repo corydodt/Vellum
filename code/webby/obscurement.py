@@ -13,7 +13,7 @@ TRANS = 1
 
 def newTransparentImage(w, h):
     """
-    @return a string containing the PNG bytes of a black image with
+    @return a string containing the PNG bytes of a transparent image with
     the specified dimensions.
     """
     i = Image.new('P', (w, h), TRANS)
